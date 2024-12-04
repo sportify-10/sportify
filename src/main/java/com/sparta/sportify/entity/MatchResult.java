@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long matchResultId;
+    private Long id;
 
     private Integer teamAScore;
     private Integer teamBScore;

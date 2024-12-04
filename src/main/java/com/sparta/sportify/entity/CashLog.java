@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class CashLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cashTransactionId;
+    private Long id;
 
     private Integer price;
     private String datetime;
