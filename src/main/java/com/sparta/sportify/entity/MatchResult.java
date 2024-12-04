@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "match_result")
+@Table(name = "match_results")
 public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
