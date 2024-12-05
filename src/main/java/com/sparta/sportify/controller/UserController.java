@@ -91,4 +91,36 @@ public class UserController {
             );
         }
     }
+
+    // 자신의 계정 삭제
+    @DeleteMapping("/profile")
+    public ResponseEntity<ApiResult<String>> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        userService.deactivateUser(userDetails.getUser().getId());
+        return new ResponseEntity<>(
+                ApiResult.success("계정이 비활성화되었습니다.", null),
+                HttpStatus.OK
+        );
+    }
+
+    // 관리자가 특정 유저 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResult<String>> deleteUserByAdmin(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        // 관리자 권한 확인
+        if (userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            userService.deactivateUser(id);
+            return new ResponseEntity<>(
+                    ApiResult.success("사용자 계정이 비활성화되었습니다.", null),
+                    HttpStatus.OK
+            );
+        } else {
+            return new ResponseEntity<>(
+                    ApiResult.failure("접근 권한이 없습니다.", null),
+                    HttpStatus.FORBIDDEN
+            );
+        }
+    }
+
 }

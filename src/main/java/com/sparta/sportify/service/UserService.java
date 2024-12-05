@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -65,6 +66,10 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
+//        if (!user.isActive()) {
+//            throw new IllegalStateException("비활성화된 계정입니다.");
+//        }
+
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
         return "Bearer " + jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
@@ -78,4 +83,17 @@ public class UserService {
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
+
+    @Transactional
+    public void deactivateUser(Long userId) {
+        // 요청한 사용자 ID가 존재하는지 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 사용자 비활성화
+        user.setActive(false);
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
 }
