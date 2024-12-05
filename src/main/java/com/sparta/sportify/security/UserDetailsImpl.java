@@ -1,5 +1,7 @@
 package com.sparta.sportify.security;
 
+import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.UserRole;
 import lombok.Getter;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
@@ -9,17 +11,21 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 public class UserDetailsImpl implements UserDetails {
-    private String username;
-    private String role;
+    private String name;
+    private UserRole role;
+    private User user;
 
-    public UserDetailsImpl(String username, String role) {
-        this.username = username;
+    public UserDetailsImpl(String name, UserRole role, User user) {
+        this.name = name;
         this.role = role;
+        this.user = user;
     }
+
 
     @Override
     public Collection<? extends SimpleGrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        // ROLE_ 접두어를 추가하여 권한을 반환
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -29,7 +35,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return name;
     }
 
     @Override
@@ -52,5 +58,6 @@ public class UserDetailsImpl implements UserDetails {
         return true;
     }
 
-    
+
+
 }

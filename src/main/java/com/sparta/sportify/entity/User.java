@@ -47,4 +47,7 @@ public class User {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public void setRole(UserRole role) {
+    }
 }
