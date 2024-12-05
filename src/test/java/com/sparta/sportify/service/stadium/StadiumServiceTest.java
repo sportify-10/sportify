@@ -3,6 +3,7 @@ package com.sparta.sportify.service.stadium;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
@@ -97,5 +99,17 @@ class StadiumServiceTest {
 
 		assertEquals("구장이 존재하지 않습니다", thrown.getMessage());
 		verify(stadiumRepository, times(0)).save(any(Stadium.class));
+	}
+
+	@Test
+	@DisplayName("구장 삭제")
+	void deleteStadium() {
+		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
+		when(stadiumRepository.save(any(Stadium.class))).thenReturn(stadium);
+
+		stadiumService.deleteStadium(stadiumId);
+
+		assertTrue(stadium.isDeletedAt());
 	}
 }
