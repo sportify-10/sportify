@@ -26,7 +26,7 @@ public class UserDetailsService implements org.springframework.security.core.use
         }
 
         // 사용자 역할 가져오기
-        UserRole userRole = user.getUserRole();
+        UserRole userRole = user.getRole();
 
         // UserDetailsImpl로 변환하여 반환
         return new UserDetailsImpl(

@@ -36,8 +36,8 @@ public class User {
     private LocalDateTime deletedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole userRole;
+    @Column(name = "user_role", nullable = false)
+    private UserRole role;
 
     private Long cash;
 
@@ -48,6 +48,5 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public void setRole(UserRole role) {
-    }
+
 }

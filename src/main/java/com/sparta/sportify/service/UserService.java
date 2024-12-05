@@ -3,24 +3,30 @@ package com.sparta.sportify.service;
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
+import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     // 회원가입
     @Transactional
-    public User signup(UserRequestDto requestDto) {
+    public User signup(UserRequestDto requestDto, boolean isAdmin) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
@@ -28,6 +34,9 @@ public class UserService {
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+
+        // UserRole 설정
+        UserRole role = isAdmin ? UserRole.ADMIN : UserRole.USER;
 
         // User 객체 생성
         User user = new User();
@@ -37,7 +46,7 @@ public class UserService {
         user.setRegion(requestDto.getRegion());
         user.setGender(requestDto.getGender());
         user.setAge(Long.valueOf(requestDto.getAge()));
-        user.setUserRole(UserRole.USER); // 기본 역할 설정
+        user.setRole(role); // 수정된 부분: role을 설정하도록 수정
 
         // 저장
         userRepository.save(user);
@@ -57,6 +66,16 @@ public class UserService {
         }
 
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
-        return "Bearer " + jwtUtil.generateToken(user.getEmail());
+        return "Bearer " + jwtUtil.generateToken(user.getEmail(), user.getRole());
+    }
+
+    // 특정 유저 정보 조회 (ID로 유저 정보 반환)
+    public SignupResponseDto getUserById(Long userId) {
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // 유저 정보 DTO로 변환 후 응답 반환
+        return new SignupResponseDto(user);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
 }

@@ -1,5 +1,6 @@
 package com.sparta.sportify.dto.user.req;
 
+import com.sparta.sportify.entity.UserRole;
 import jakarta.validation.constraints.*;
 
 import lombok.AllArgsConstructor;
@@ -38,4 +39,6 @@ public class UserRequestDto {
     @NotNull(message = "나이는 필수 항목입니다.")
     @Min(value = 1, message = "나이는 1살 이상이어야 합니다.")
     private Integer age;
+
+    private UserRole role;
 }
