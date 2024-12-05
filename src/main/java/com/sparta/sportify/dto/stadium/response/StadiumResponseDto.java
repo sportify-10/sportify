@@ -1,5 +1,7 @@
 package com.sparta.sportify.dto.stadium.response;
 
+import java.time.LocalDateTime;
+
 import com.sparta.sportify.entity.Stadium;
 
 import lombok.Getter;
@@ -16,7 +18,7 @@ public class StadiumResponseDto {
 	private String description;
 	private int price;
 	private String status;
-	private boolean deletedAt;
+	private LocalDateTime deletedAt;
 
 	public StadiumResponseDto(Stadium stadium) {
 		this.id = stadium.getId();
@@ -27,6 +29,6 @@ public class StadiumResponseDto {
 		this.description = getDescription();
 		this.price = getPrice();
 		this.status = stadium.getStatus();
-		this.deletedAt = stadium.isDeletedAt();
+		this.deletedAt = stadium.getDeletedAt();
 	}
 }

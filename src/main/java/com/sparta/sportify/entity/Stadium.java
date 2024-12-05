@@ -26,7 +26,7 @@ public class Stadium {
     private String description;
     private int price;
     private String status;
-    private boolean deletedAt;
+    private LocalDateTime deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -40,7 +40,7 @@ public class Stadium {
         this.description = description;
         this.price = price;
         this.status = "pending";
-        this.deletedAt = false;
+        this.deletedAt = null;
     }
 
     public static Stadium createOf(StadiumCreateRequestDto stadiumCreateRequestDto) {
@@ -64,7 +64,7 @@ public class Stadium {
     }
 
     public void deleteOf() {
-        this.deletedAt = true;
+        this.deletedAt = LocalDateTime.now();
     }
 }
 
