@@ -1,9 +1,15 @@
 package com.sparta.sportify.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
@@ -11,21 +17,34 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String password;
+
     private String oauthId;
     private String oauthProvider;
     private String region;
     private String gender;
-    private Integer age;
-    private Integer levelPoints;
+    private Long age;
+    private Long levelPoints;
+
     private LocalDateTime deletedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole userRole;
 
-    private Integer cash;
+    private Long cash;
 
-    // Getters and Setters
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }
