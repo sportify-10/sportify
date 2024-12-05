@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class StadiumCreateRequestDto {
+public class StadiumUpdateRequestDto {
 	private String stadiumName;
 	private String location;
 	private int aTeamCount;

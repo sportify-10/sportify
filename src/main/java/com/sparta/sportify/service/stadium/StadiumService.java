@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
+import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
 import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.repository.StadiumRepository;
@@ -16,8 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class StadiumService {
 	private final StadiumRepository stadiumRepository;
 
-	public StadiumResponseDto CreateStadium(StadiumCreateRequestDto stadiumCreateRequestDto) {
-
+	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto) {
 		Optional<Stadium> stadiumName = stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName());
 
 		if(stadiumName.isPresent()) {
@@ -25,6 +25,16 @@ public class StadiumService {
 		}
 
 		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+
+		return new StadiumResponseDto(stadiumRepository.save(stadium));
+	}
+
+	public StadiumResponseDto updateStadium(Long stadiumId, StadiumUpdateRequestDto stadiumUpdateRequestDto) {
+		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
+
+		//구장 자기껀지 확인
+
+		stadium.updateOf(stadiumUpdateRequestDto);
 
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}

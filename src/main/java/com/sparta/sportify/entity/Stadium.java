@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
+import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 
 @NoArgsConstructor
 @Getter
@@ -46,11 +47,20 @@ public class Stadium {
         return new Stadium(
             stadiumCreateRequestDto.getStadiumName(),
             stadiumCreateRequestDto.getLocation(),
-            stadiumCreateRequestDto.getTeamACount(),
-            stadiumCreateRequestDto.getTeamBCount(),
+            stadiumCreateRequestDto.getATeamCount(),
+            stadiumCreateRequestDto.getBTeamCount(),
             stadiumCreateRequestDto.getDescription(),
             stadiumCreateRequestDto.getPrice()
         );
+    }
+
+    public void updateOf(StadiumUpdateRequestDto stadiumUpdateRequestDto) {
+        this.stadiumName = stadiumUpdateRequestDto.getStadiumName();
+        this.location = stadiumUpdateRequestDto.getLocation();
+        this.aTeamCount = stadiumUpdateRequestDto.getATeamCount();
+        this.bTeamCount = stadiumUpdateRequestDto.getBTeamCount();
+        this.description = stadiumUpdateRequestDto.getDescription();
+        this.price = stadiumUpdateRequestDto.getPrice();
     }
 }
 
