@@ -3,7 +3,7 @@ package com.sparta.sportify.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "cash_log")
+@Table(name = "cash_logs")
 public class CashLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

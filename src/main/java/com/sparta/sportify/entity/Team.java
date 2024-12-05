@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "team")
+@Table(name = "teams")
 public class Team {
     @jakarta.persistence.Id
     @Id

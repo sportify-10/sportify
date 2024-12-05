@@ -12,7 +12,7 @@ import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "stadium")
+@Table(name = "stadiums")
 public class Stadium {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
