@@ -40,6 +40,8 @@ dependencies {
 //    implementation 'org.springframework.cloud:spring-cloud-starter-zookeeper-discovery'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
@@ -48,6 +50,24 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'at.favre.lib:bcrypt:0.9.0'
+    // Jakarta Validation API
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    // Hibernate Validator (Jakarta Validation 구현체)
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
+    // Optional: Annotation Processor (Validation 메시지용)
+    annotationProcessor 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
+    // Spring Boot Starter Validation (Spring Boot 프로젝트에서 사용하는 경우)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
 }
 
 dependencyManagement {
