@@ -1,6 +1,7 @@
 package com.sparta.sportify.controller.stadium;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,5 +37,12 @@ public class StadiumController {
 		@RequestBody StadiumUpdateRequestDto stadiumUpdateRequestDto
 	) {
 		return ResponseEntity.ok(ApiResult.success(stadiumService.updateStadium(stadiumId, stadiumUpdateRequestDto)));
+	}
+
+	@DeleteMapping("/{stadiumId}")
+	public ResponseEntity<ApiResult<StadiumResponseDto>> deleteStadium(
+		@PathVariable Long stadiumId
+	) {
+		return ResponseEntity.ok(ApiResult.success(stadiumService.deleteStadium(stadiumId)));
 	}
 }

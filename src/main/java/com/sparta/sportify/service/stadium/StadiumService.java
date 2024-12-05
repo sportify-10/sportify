@@ -38,4 +38,13 @@ public class StadiumService {
 
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
+
+	public StadiumResponseDto deleteStadium(Long stadiumId) {
+		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
+
+		//구장 자기껀지 확인
+
+		stadium.deleteOf();
+		return new StadiumResponseDto(stadiumRepository.save(stadium));
+	}
 }

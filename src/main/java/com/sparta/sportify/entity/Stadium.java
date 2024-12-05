@@ -62,5 +62,9 @@ public class Stadium {
         this.description = stadiumUpdateRequestDto.getDescription();
         this.price = stadiumUpdateRequestDto.getPrice();
     }
+
+    public void deleteOf() {
+        this.deletedAt = true;
+    }
 }
 
