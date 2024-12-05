@@ -26,7 +26,7 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public User signup(UserRequestDto requestDto, boolean isAdmin) {
+    public SignupResponseDto signup(UserRequestDto requestDto, boolean isAdmin) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
@@ -51,7 +51,7 @@ public class UserService {
         // 저장
         userRepository.save(user);
 
-        return user;
+        return new SignupResponseDto(user);
     }
 
     // 로그인
