@@ -20,6 +20,5 @@ public class Match {
     @JoinColumn(name = "stadium_time_id", nullable = false)
     private StadiumTime stadiumTime;
 
-    // Getters and Setters
 }
 
