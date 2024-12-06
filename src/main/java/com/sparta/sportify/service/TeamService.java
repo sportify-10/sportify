@@ -20,9 +20,18 @@ public class TeamService {
 
     @Transactional
     public TeamResponseDto createTeam(TeamRequestDto requestDto) {
-        Team team = new Team(requestDto);
-        Team saveTeam = teamRepository.save(team);
-        return new TeamResponseDto(saveTeam);
+        Team team = Team.builder()
+                .teamName(requestDto.getTeamName())
+                .region(requestDto.getRegion())
+                .activityTime(requestDto.getActivityTime())
+                .skillLevel(requestDto.getSkillLevel())
+                .sportType(requestDto.getSportType())
+                .description(requestDto.getDescription())
+                .build();
+
+        Team savedTeam = teamRepository.save(team);
+
+        return new TeamResponseDto(savedTeam);
     }
 
     public TeamResponsePage getAllTeams(int page, int size, String criteria) {
@@ -40,7 +49,7 @@ public class TeamService {
     @Transactional
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + teamId));
-        team.updateData(requestDto);
+        team.updateData(requestDto.getTeamName(),requestDto.getRegion() , requestDto.getActivityTime(),requestDto.getSkillLevel() ,requestDto.getSportType(), requestDto.getDescription());
 
         return new TeamResponseDto(team);
     }
