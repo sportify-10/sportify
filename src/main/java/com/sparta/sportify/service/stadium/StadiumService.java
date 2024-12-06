@@ -31,11 +31,17 @@ public class StadiumService {
 			throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
 		}
 
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
-
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails
+		);
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
-
 
 	public List<StadiumResponseDto> getStadiums(UserDetailsImpl userDetails, int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size);
@@ -53,7 +59,14 @@ public class StadiumService {
 			throw new IllegalArgumentException("자신의 구장만 수정 가능합니다");
 		}
 
-		stadium.updateOf(stadiumUpdateRequestDto);
+		stadium.updateOf(
+			stadiumUpdateRequestDto.getStadiumName(),
+			stadiumUpdateRequestDto.getLocation(),
+			stadiumUpdateRequestDto.getATeamCount(),
+			stadiumUpdateRequestDto.getBTeamCount(),
+			stadiumUpdateRequestDto.getDescription(),
+			stadiumUpdateRequestDto.getPrice()
+		);
 
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}

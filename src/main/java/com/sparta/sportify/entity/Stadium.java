@@ -59,25 +59,17 @@ public class Stadium {
         this.user = userDetails.getUser();
     }
 
-    public static Stadium createOf(StadiumCreateRequestDto stadiumCreateRequestDto, UserDetailsImpl userDetails) {
-        return new Stadium(
-            stadiumCreateRequestDto.getStadiumName(),
-            stadiumCreateRequestDto.getLocation(),
-            stadiumCreateRequestDto.getATeamCount(),
-            stadiumCreateRequestDto.getBTeamCount(),
-            stadiumCreateRequestDto.getDescription(),
-            stadiumCreateRequestDto.getPrice(),
-            userDetails
-        );
+    public static Stadium createOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, int price, UserDetailsImpl userDetails) {
+        return new Stadium(stadiumName, location, aTeamCount, bTeamCount, description, price, userDetails);
     }
 
-    public void updateOf(StadiumUpdateRequestDto stadiumUpdateRequestDto) {
-        this.stadiumName = stadiumUpdateRequestDto.getStadiumName();
-        this.location = stadiumUpdateRequestDto.getLocation();
-        this.aTeamCount = stadiumUpdateRequestDto.getATeamCount();
-        this.bTeamCount = stadiumUpdateRequestDto.getBTeamCount();
-        this.description = stadiumUpdateRequestDto.getDescription();
-        this.price = stadiumUpdateRequestDto.getPrice();
+    public void updateOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, int price) {
+        this.stadiumName = stadiumName;
+        this.location = location;
+        this.aTeamCount = aTeamCount;
+        this.bTeamCount = bTeamCount;
+        this.description = description;
+        this.price = price;
     }
 
     public void deleteOf() {

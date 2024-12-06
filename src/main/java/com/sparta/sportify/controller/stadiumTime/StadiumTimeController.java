@@ -27,6 +27,6 @@ public class StadiumTimeController {
 		@PathVariable Long stadiumId,
 		@RequestBody StadiumTimeCreateRequestDto stadiumTimeCreateRequestDto
 	) {
-		return ResponseEntity.ok(ApiResult.success(stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeCreateRequestDto)));
+		return ResponseEntity.ok(ApiResult.success("구장 시간 생성 성공", stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeCreateRequestDto)));
 	}
 }
