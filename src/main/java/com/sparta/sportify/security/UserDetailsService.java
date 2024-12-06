@@ -17,22 +17,17 @@ public class UserDetailsService implements org.springframework.security.core.use
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // 이메일로 사용자 조회, 존재하지 않으면 예외 처리
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        // 삭제된 사용자 체크
-        if (user.getDeletedAt() != null) {
-            throw new RuntimeException("삭제된 유저입니다.");
-        }
+        User user = userRepository.findByEmailAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         // 사용자 역할 가져오기
         UserRole userRole = user.getRole();
 
-        // UserDetailsImpl로 변환하여 반환
         return new UserDetailsImpl(
                 user.getName(),
-                userRole, // UserRole을 String으로 변환하여 전달
+                userRole,
                 user
         );
     }
+
 }
