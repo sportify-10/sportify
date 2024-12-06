@@ -22,6 +22,7 @@ import com.sparta.sportify.entity.StadiumStatus;
 import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.stadium.StadiumService;
 import com.sparta.sportify.service.stadiumTimeService.StadiumTimeService;
 
@@ -44,6 +45,8 @@ class StadiumTimeServiceTest {
 
 	private StadiumTimeCreateRequestDto stadiumTimeCreateRequestDto;
 
+	private UserDetailsImpl userDetails;
+
 	private Long stadiumId;
 	private Long stadiumTimeId;
 	@BeforeEach
@@ -59,12 +62,15 @@ class StadiumTimeServiceTest {
 			Arrays.asList("10-12", "14-16", "16-18"),
 			Arrays.asList("mon", "tue", "wed")
 		);
+
+		userDetails = mock(UserDetailsImpl.class);
+		when(userDetails.getUsername()).thenReturn("testUser");
 	}
 
 	@Test
 	@DisplayName("구장 운영시간 생성")
 	void createStadiumTime() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
 		stadium.setId(stadiumId);
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
@@ -88,7 +94,7 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장이 승인되지 않아 에러")
 	void NotApprovedStadium() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
 		stadium.setId(stadiumId);
 		//stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
@@ -110,7 +116,7 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장 시간이 이미 존재하여 에러")
 	void existStadiumTime() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
 		stadium.setId(stadiumId);
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
