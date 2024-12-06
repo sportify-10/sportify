@@ -12,11 +12,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
-@Component
 public class CronUtil {
 
-    public boolean isCronDateAllowed(String cronExpression, LocalDate date, int hour) {
-        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
+    public static boolean isCronDateAllowed(String cronExpression, LocalDate date, int hour) {
+        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
         Cron cron = parser.parse(cronExpression);
 
         ExecutionTime executionTime = ExecutionTime.forCron(cron);

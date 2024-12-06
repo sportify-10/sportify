@@ -23,7 +23,6 @@ public class ReservationService {
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final StadiumTimeRepository stadiumTimeRepository;
-    private final CronUtil cronUtil;
 
 
     @Transactional
@@ -33,21 +32,33 @@ public class ReservationService {
                 ()->new RuntimeException("구장이 운영중이 아닙니다.")
         );
 
-        if(!cronUtil.isCronDateAllowed(stadiumTime.getCron(),requestDto.getReservationDate(),requestDto.getTime())){
+        if(!CronUtil.isCronDateAllowed(stadiumTime.getCron(),requestDto.getReservationDate(),requestDto.getTime())){
             throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
         }
 
-        Match match = matchRepository.findByDateAndTime(requestDto.getReservationDate(),requestDto.getTime()).orElse(
+        if(reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(),requestDto.getTime(),requestDto.getReservationDate())){
+            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
+        }
+
+
+        Match match = matchRepository.findByDateAndTime(requestDto.getReservationDate(),requestDto.getTime()).map(findMatch ->{
+                    switch (requestDto.getTeamColor()){
+                        case 'A' -> findMatch.discountATeamCount(1);
+                        case 'B' -> findMatch.discountBTeamCount(1);
+                        default -> throw new RuntimeException("잘못된 요청");
+                    }
+                    return matchRepository.save(findMatch);
+                }).orElse(
                 matchRepository.save(
                         Match.builder()
                             .date(requestDto.getReservationDate())
                             .time(requestDto.getTime())
                             .aTeamCount(stadiumTime.getStadium().getATeamCount())
                             .bTeamCount(stadiumTime.getStadium().getBTeamCount())
+                            .stadiumTime(stadiumTime)
                             .build()
                 )
         );
-
 
         Stadium stadium = stadiumTime.getStadium();
 

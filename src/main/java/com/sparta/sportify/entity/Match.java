@@ -1,18 +1,24 @@
 package com.sparta.sportify.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "matchs")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDate date;
-    private String time;
+    private Integer time;
     private Integer aTeamCount;
     private Integer bTeamCount;
 
@@ -20,6 +26,11 @@ public class Match {
     @JoinColumn(name = "stadium_time_id", nullable = false)
     private StadiumTime stadiumTime;
 
-    // Getters and Setters
+    public void discountATeamCount(int count) {
+        this.bTeamCount -= count;
+    }
+    public void discountBTeamCount(int count) {
+        this.bTeamCount -= count;
+    }
 }
 

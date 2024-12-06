@@ -1,10 +1,16 @@
 package com.sparta.sportify.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "stadiums")
 public class Stadium {
     @Id
