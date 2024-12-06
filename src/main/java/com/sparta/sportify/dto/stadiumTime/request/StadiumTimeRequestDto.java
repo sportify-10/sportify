@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class StadiumTimeCreateRequestDto {
+public class StadiumTimeRequestDto {
 	private List<String> hours;
 	private List<String> weeks;
 }

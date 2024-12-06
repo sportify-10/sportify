@@ -15,8 +15,8 @@ import java.util.Arrays;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
-import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeCreateRequestDto;
-import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeCreateResponseDto;
+import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
+import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeResponseDto;
 import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.entity.StadiumStatus;
 import com.sparta.sportify.entity.StadiumTime;
@@ -43,7 +43,7 @@ class StadiumTimeServiceTest {
 	private StadiumCreateRequestDto stadiumCreateRequestDto;
 	private StadiumUpdateRequestDto stadiumUpdateRequestDto;
 
-	private StadiumTimeCreateRequestDto stadiumTimeCreateRequestDto;
+	private StadiumTimeRequestDto stadiumTimeRequestDto;
 
 	private UserDetailsImpl userDetails;
 
@@ -58,7 +58,7 @@ class StadiumTimeServiceTest {
 		stadiumUpdateRequestDto = new StadiumUpdateRequestDto("B구장", "서울", 6, 6, "넓고 좋은 경기장", 100000);
 
 		stadiumTimeId = 1L;
-		stadiumTimeCreateRequestDto = new StadiumTimeCreateRequestDto(
+		stadiumTimeRequestDto = new StadiumTimeRequestDto(
 			Arrays.asList("10-12", "14-16", "16-18"),
 			Arrays.asList("mon", "tue", "wed")
 		);
@@ -82,12 +82,12 @@ class StadiumTimeServiceTest {
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeCreateRequestDto);
+		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
 
-		StadiumTimeCreateResponseDto response = stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeCreateRequestDto);
+		StadiumTimeResponseDto response = stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeRequestDto);
 
 		assertNotNull(response);
 		assertEquals(stadiumId, response.getStadiumId());
@@ -113,13 +113,13 @@ class StadiumTimeServiceTest {
 		//stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeCreateRequestDto);
+		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
 
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeCreateRequestDto);
+			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeRequestDto);
 		});
 
 		assertEquals("승인되지 않은 구장입니다", thrown.getMessage());
@@ -142,14 +142,14 @@ class StadiumTimeServiceTest {
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeCreateRequestDto);
+		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
 
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeCreateRequestDto);
+			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeRequestDto);
 		});
 
 		assertEquals("구장 시간이 이미 저장되었습니다", thrown.getMessage());

@@ -4,13 +4,15 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeCreateRequestDto;
-import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeCreateResponseDto;
+import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
+import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
+import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeResponseDto;
 import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.entity.StadiumStatus;
 import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +23,7 @@ public class StadiumTimeService {
 	private final StadiumTimeRepository stadiumTimeRepository;
 	private final StadiumRepository stadiumRepository;
 
-	public StadiumTimeCreateResponseDto createStadiumTime(Long stadiumId, StadiumTimeCreateRequestDto stadiumTimeCreateRequestDto) {
+	public StadiumTimeResponseDto createStadiumTime(Long stadiumId, StadiumTimeRequestDto stadiumTimeRequestDto) {
 		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
 
 		StadiumTime stadiumIdCheck = stadiumTimeRepository.findByStadiumId(stadiumId).orElse(null);
@@ -36,16 +38,16 @@ public class StadiumTimeService {
 			throw new IllegalArgumentException("승인되지 않은 구장입니다");
 		}
 
-		String cron = convertToCronExpression(stadiumTimeCreateRequestDto);
+		String cron = convertToCronExpression(stadiumTimeRequestDto);
 
 		StadiumTime stadiumTime =  StadiumTime.createOf(cron, stadium);
 
-		return new StadiumTimeCreateResponseDto(stadiumTimeRepository.save(stadiumTime), stadium);
+		return new StadiumTimeResponseDto(stadiumTimeRepository.save(stadiumTime), stadium);
 	}
 
-	public String convertToCronExpression(StadiumTimeCreateRequestDto stadiumTimeCreateRequestDto) {
-		List<String> weeks = stadiumTimeCreateRequestDto.getWeeks();
-		List<String> hours = stadiumTimeCreateRequestDto.getHours();
+	public String convertToCronExpression(StadiumTimeRequestDto stadiumTimeRequestDto) {
+		List<String> weeks = stadiumTimeRequestDto.getWeeks();
+		List<String> hours = stadiumTimeRequestDto.getHours();
 
 		StringBuilder cronBuilder = new StringBuilder();
 
@@ -72,5 +74,15 @@ public class StadiumTimeService {
 		}
 
 		return String.format("0 0 %s ? * %s", hourString, weekString);
+	}
+
+	public StadiumTimeResponseDto updateStadiumTime(Long stadiumTimeId, StadiumTimeRequestDto stadiumTimeRequestDto, UserDetailsImpl userDetails) {
+		StadiumTime stadiumTime = stadiumTimeRepository.findById(stadiumTimeId).orElseThrow(()->new IllegalArgumentException("저장된 구장 시간이 없습니다"));
+
+		String cron = convertToCronExpression(stadiumTimeRequestDto);
+
+		stadiumTime.updateOf(cron);
+
+		return new StadiumTimeResponseDto(stadiumTimeRepository.save(stadiumTime), stadiumTime.getStadium());
 	}
 }
