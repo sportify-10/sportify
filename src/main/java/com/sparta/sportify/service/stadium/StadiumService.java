@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
@@ -52,6 +53,7 @@ public class StadiumService {
 			.collect(Collectors.toList());
 	}
 
+	@Transactional
 	public StadiumResponseDto updateStadium(Long stadiumId, StadiumUpdateRequestDto stadiumUpdateRequestDto, UserDetailsImpl userDetails) {
 		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
 
@@ -71,6 +73,7 @@ public class StadiumService {
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
 
+	@Transactional
 	public StadiumResponseDto deleteStadium(Long stadiumId, UserDetailsImpl userDetails) {
 		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
 
