@@ -70,7 +70,14 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장 운영시간 생성")
 	void createStadiumTime() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 		stadium.setId(stadiumId);
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
@@ -94,7 +101,14 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장이 승인되지 않아 에러")
 	void NotApprovedStadium() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 		stadium.setId(stadiumId);
 		//stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
@@ -116,7 +130,14 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장 시간이 이미 존재하여 에러")
 	void existStadiumTime() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 		stadium.setId(stadiumId);
 		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));

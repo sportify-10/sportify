@@ -57,7 +57,14 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 생성 성공")
 	void createStadium() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 
 		when(stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName()))
 			.thenReturn(Optional.empty());
@@ -71,7 +78,14 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 이름 중복되어 에러")
 	void existStadiumName() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 
 		when(stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName()))
 			.thenReturn(Optional.of(new Stadium()));
@@ -88,7 +102,14 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 정보 수정")
 	void updateStadium() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 		when(stadiumRepository.save(any(Stadium.class))).thenReturn(stadium);
 
@@ -135,7 +156,14 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 삭제")
 	void deleteStadium() {
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
+		Stadium stadium = Stadium.createOf(
+			stadiumCreateRequestDto.getStadiumName(),
+			stadiumCreateRequestDto.getLocation(),
+			stadiumCreateRequestDto.getATeamCount(),
+			stadiumCreateRequestDto.getBTeamCount(),
+			stadiumCreateRequestDto.getDescription(),
+			stadiumCreateRequestDto.getPrice(),
+			userDetails);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 		when(stadiumRepository.save(any(Stadium.class))).thenReturn(stadium);
 
