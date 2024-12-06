@@ -43,10 +43,12 @@ public class StadiumService {
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
 
-	public StadiumResponseDto deleteStadium(Long stadiumId) {
+	public StadiumResponseDto deleteStadium(Long stadiumId, UserDetailsImpl userDetails) {
 		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
 
-		//구장 자기껀지 확인
+		if(!userDetails.getUser().getId().equals(stadium.getUser().getId())) {
+			throw new IllegalArgumentException("자신의 구장만 삭제 가능합니다");
+		}
 
 		stadium.deleteOf();
 		return new StadiumResponseDto(stadiumRepository.save(stadium));

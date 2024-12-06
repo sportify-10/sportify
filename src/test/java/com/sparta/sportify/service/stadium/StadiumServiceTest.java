@@ -139,8 +139,26 @@ class StadiumServiceTest {
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 		when(stadiumRepository.save(any(Stadium.class))).thenReturn(stadium);
 
-		stadiumService.deleteStadium(stadiumId);
+		stadiumService.deleteStadium(stadiumId, userDetails);
 
 		assertNotNull(stadium.getDeletedAt());
+	}
+
+	@Test
+	@DisplayName("구장 주인이 아닌 사람의 삭제 요청 시 에러")
+	void notOwnerDeleteStadium() {
+		UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+		User notOwner = new User();
+		notOwner.setId(999L);
+
+		// userDetails 모킹
+		when(userDetails.getUser()).thenReturn(notOwner);
+
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			stadiumService.deleteStadium(stadiumId, userDetails);
+		});
+
+		assertEquals("자신의 구장만 삭제 가능합니다", thrown.getMessage());
+		verify(stadiumRepository, times(0)).save(any(Stadium.class));
 	}
 }
