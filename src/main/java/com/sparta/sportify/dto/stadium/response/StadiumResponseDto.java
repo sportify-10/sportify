@@ -28,7 +28,7 @@ public class StadiumResponseDto {
 		this.bTeamCount = getBTeamCount();
 		this.description = getDescription();
 		this.price = getPrice();
-		this.status = stadium.getStatus();
+		this.status = getStatus();
 		this.deletedAt = stadium.getDeletedAt();
 	}
 }

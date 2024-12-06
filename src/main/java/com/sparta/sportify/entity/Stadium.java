@@ -1,17 +1,27 @@
 package com.sparta.sportify.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @NoArgsConstructor
 @Getter
+@Setter
 @Entity
 @Table(name = "stadiums")
 public class Stadium {
@@ -25,7 +35,11 @@ public class Stadium {
     private int bTeamCount;
     private String description;
     private int price;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StadiumStatus status;
+
     private LocalDateTime deletedAt;
 
     @ManyToOne
@@ -39,7 +53,7 @@ public class Stadium {
         this.bTeamCount = bTeamCount;
         this.description = description;
         this.price = price;
-        this.status = "pending";
+        this.status = StadiumStatus.PENDING;
         this.deletedAt = null;
     }
 
