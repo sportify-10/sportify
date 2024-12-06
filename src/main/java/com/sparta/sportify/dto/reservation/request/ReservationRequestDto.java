@@ -25,7 +25,7 @@ public class ReservationRequestDto {
     @NotBlank(message = "팀 선택은 필수 항목입니다. (A/B).")
     TeamColor teamColor;
 
-    List<Integer> teamMemberIdList;
+    List<Long> teamMemberIdList;
 
     @NotBlank(message = "시간 선택은 필수 사항입니다..")
     int time;

@@ -5,10 +5,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 public class ReservationResponseDto {
-    long reservationId;
+    List<Long> reservationId;
+
+    public ReservationResponseDto(Long id){
+        reservationId = new ArrayList<>();
+        reservationId.add(id);
+    }
 }
