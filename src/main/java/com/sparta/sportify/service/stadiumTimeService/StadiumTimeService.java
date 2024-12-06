@@ -78,6 +78,9 @@ public class StadiumTimeService {
 
 	public StadiumTimeResponseDto updateStadiumTime(Long stadiumTimeId, StadiumTimeRequestDto stadiumTimeRequestDto, UserDetailsImpl userDetails) {
 		StadiumTime stadiumTime = stadiumTimeRepository.findById(stadiumTimeId).orElseThrow(()->new IllegalArgumentException("저장된 구장 시간이 없습니다"));
+		if(!stadiumTime.getStadium().getUser().getId().equals(userDetails.getUser().getId())){
+			throw new IllegalArgumentException("자신의 구장만 수정 가능합니다");
+		}
 
 		String cron = convertToCronExpression(stadiumTimeRequestDto);
 
