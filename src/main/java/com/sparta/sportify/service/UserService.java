@@ -8,14 +8,12 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,10 +62,6 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-//        if (!user.isActive()) {
-//            throw new IllegalStateException("비활성화된 계정입니다.");
-//        }
-
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
         return "Bearer " + jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
@@ -94,4 +88,28 @@ public class UserService {
         userRepository.save(user);
     }
 
+
+    // 유저 정보 수정
+    public void updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
+        // 이메일 중복 검사
+        if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
+            throw new RuntimeException("이메일이 중복되었습니다.");
+        }
+
+        // 비밀번호 수정이 요청된 경우
+        if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
+            // 비밀번호를 암호화해서 저장
+            String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+            userDetails.getUser().setPassword(encodedPassword);
+        }
+
+        // 수정 가능한 필드만 업데이트
+        userDetails.getUser().setName(requestDto.getName());
+        userDetails.getUser().setRegion(requestDto.getRegion());
+        userDetails.getUser().setAge(requestDto.getAge());
+        userDetails.getUser().setGender(requestDto.getGender());
+
+        // 변경된 유저 정보 저장
+        userRepository.save(userDetails.getUser());
+    }
 }

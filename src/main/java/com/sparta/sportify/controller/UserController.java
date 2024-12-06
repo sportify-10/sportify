@@ -1,15 +1,20 @@
 package com.sparta.sportify.controller;
 
+import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.jwt.JwtUtil;
+import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +29,17 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class UserController {
 
+    @Autowired
     private final UserService userService;
+
+    @Autowired
+    private final UserRepository userRepository;
+
+    @Autowired
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // 유저 회원가입
     @PostMapping("/signup")
@@ -110,6 +125,22 @@ public class UserController {
 
         return new ResponseEntity<>(
                 ApiResult.success("사용자 계정이 비활성화되었습니다.", null),
+                HttpStatus.OK
+        );
+    }
+
+
+    // 유저 정보 수정
+    @PatchMapping("/profile")
+    public ResponseEntity<ApiResult<String>> updateUser(
+            @Valid @RequestBody UserRequestDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        // 유저 정보 수정 서비스 호출
+        userService.updateUser(requestDto, userDetails);
+
+        return new ResponseEntity<>(
+                ApiResult.success("유저 정보가 수정되었습니다.", null),
                 HttpStatus.OK
         );
     }
