@@ -48,17 +48,24 @@ public class ReservationService {
                         default -> throw new RuntimeException("잘못된 요청");
                     }
                     return matchRepository.save(findMatch);
-                }).orElse(
-                matchRepository.save(
+                }).orElseGet(() -> {
+                    int aTeamCount = stadiumTime.getStadium().getATeamCount();
+                    int bTeamCount = stadiumTime.getStadium().getBTeamCount();
+                    switch (requestDto.getTeamColor()){
+                        case A -> aTeamCount = aTeamCount-1;
+                        case B -> bTeamCount = bTeamCount-1;
+                        default -> throw new RuntimeException("잘못된 요청");
+                    }
+                    return matchRepository.save(
                         Match.builder()
                             .date(requestDto.getReservationDate())
                             .time(requestDto.getTime())
-                            .aTeamCount(stadiumTime.getStadium().getATeamCount())
-                            .bTeamCount(stadiumTime.getStadium().getBTeamCount())
+                            .aTeamCount(aTeamCount)
+                            .bTeamCount(bTeamCount)
                             .stadiumTime(stadiumTime)
                             .build()
-                )
-        );
+                    );
+                });
 
         Stadium stadium = stadiumTime.getStadium();
 
