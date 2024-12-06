@@ -27,7 +27,7 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public SignupResponseDto signup(UserRequestDto requestDto, boolean isAdmin) {
+    public SignupResponseDto signup(UserRequestDto requestDto, UserRole role) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
@@ -36,8 +36,6 @@ public class UserService {
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // UserRole 설정
-        UserRole role = isAdmin ? UserRole.ADMIN : UserRole.USER;
 
         // User 객체 생성
         User user = new User();
