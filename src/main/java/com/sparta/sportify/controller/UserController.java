@@ -1,15 +1,23 @@
 package com.sparta.sportify.controller;
 
+import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.jwt.JwtUtil;
+import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;  // UserDetailsImpl import
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.util.api.ApiResult;
+import jakarta.servlet.http.HttpServletRequest;
+import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +32,15 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class UserController {
 
+    @Autowired
     private final UserService userService;
+
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // 유저 회원가입
     @PostMapping("/signup")
@@ -110,6 +126,46 @@ public class UserController {
 
         return new ResponseEntity<>(
                 ApiResult.success("사용자 계정이 비활성화되었습니다.", null),
+                HttpStatus.OK
+        );
+    }
+
+
+    // 유저 정보 수정
+    @PatchMapping("/profile")
+    public ResponseEntity<ApiResult<SignupResponseDto>> updateUserProfile(
+            @Valid @RequestBody UserRequestDto requestDto, // 수정할 정보들
+            @AuthenticationPrincipal UserDetailsImpl userDetails) { // JWT 토큰으로 인증된 사용자 정보
+
+        // 이메일 중복 검사
+        if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
+            return new ResponseEntity<>(
+                    ApiResult.error(0,"이메일이 이미 존재합니다."),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // 비밀번호 수정이 요청된 경우
+        if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
+            // 비밀번호를 암호화해서 저장하는 로직 추가 (예시: bcrypt)
+            String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+            userDetails.getUser().setPassword(encodedPassword);
+        }
+
+        // 수정 가능한 필드만 업데이트
+        userDetails.getUser().setName(requestDto.getName());
+        userDetails.getUser().setRegion(requestDto.getRegion());
+        userDetails.getUser().setAge(requestDto.getAge());
+        userDetails.getUser().setGender(requestDto.getGender());
+
+        // 수정된 정보 저장
+        User updatedUser = userService.updateUserInfo(userDetails.getUser(), requestDto);
+
+        // 수정된 정보 반환
+        SignupResponseDto responseDto = new SignupResponseDto(updatedUser);
+
+        return new ResponseEntity<>(
+                ApiResult.success("정보 수정 성공", responseDto),
                 HttpStatus.OK
         );
     }

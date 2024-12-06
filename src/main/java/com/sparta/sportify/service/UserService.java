@@ -6,6 +6,7 @@ import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.exception.CustomValidationException;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -64,10 +65,6 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-//        if (!user.isActive()) {
-//            throw new IllegalStateException("비활성화된 계정입니다.");
-//        }
-
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
         return "Bearer " + jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
@@ -94,4 +91,27 @@ public class UserService {
         userRepository.save(user);
     }
 
+
+    public User updateUserInfo(User currentUser, UserRequestDto requestDto) {
+        // 이메일 수정 불가 (수정 요청된 이메일이 기존 이메일과 다를 경우 중복 검사)
+        if (!currentUser.getEmail().equals(requestDto.getEmail()) &&
+                userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new RuntimeException("이미 존재하는 이메일입니다.");
+        }
+
+        // 비밀번호가 요청되었을 경우 처리
+        if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
+            // 비밀번호 암호화 후 업데이트
+            currentUser.setPassword(passwordEncoder.encode(requestDto.getPassword()));
+        }
+
+        // 수정 가능한 필드만 업데이트
+        currentUser.setName(requestDto.getName());
+        currentUser.setRegion(requestDto.getRegion());
+        currentUser.setAge(requestDto.getAge());
+        currentUser.setGender(requestDto.getGender());
+
+        // 수정된 유저 정보 저장
+        return userRepository.save(currentUser);
+    }
 }
