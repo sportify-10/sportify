@@ -46,8 +46,9 @@ public class StadiumController {
 
 	@DeleteMapping("/{stadiumId}")
 	public ResponseEntity<ApiResult<StadiumResponseDto>> deleteStadium(
-		@PathVariable Long stadiumId
+		@PathVariable Long stadiumId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails
 	) {
-		return ResponseEntity.ok(ApiResult.success(stadiumService.deleteStadium(stadiumId)));
+		return ResponseEntity.ok(ApiResult.success(stadiumService.deleteStadium(stadiumId, userDetails)));
 	}
 }
