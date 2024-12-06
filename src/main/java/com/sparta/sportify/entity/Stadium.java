@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
+import com.sparta.sportify.security.UserDetailsImpl;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,7 +47,7 @@ public class Stadium {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private Stadium(String stadiumName, String location,int aTeamCount,int bTeamCount, String description, int price){
+    private Stadium(String stadiumName, String location,int aTeamCount,int bTeamCount, String description, int price, UserDetailsImpl userDetails) {
         this.stadiumName = stadiumName;
         this.location = location;
         this.aTeamCount = aTeamCount;
@@ -55,16 +56,18 @@ public class Stadium {
         this.price = price;
         this.status = StadiumStatus.PENDING;
         this.deletedAt = null;
+        this.user = userDetails.getUser();
     }
 
-    public static Stadium createOf(StadiumCreateRequestDto stadiumCreateRequestDto) {
+    public static Stadium createOf(StadiumCreateRequestDto stadiumCreateRequestDto, UserDetailsImpl userDetails) {
         return new Stadium(
             stadiumCreateRequestDto.getStadiumName(),
             stadiumCreateRequestDto.getLocation(),
             stadiumCreateRequestDto.getATeamCount(),
             stadiumCreateRequestDto.getBTeamCount(),
             stadiumCreateRequestDto.getDescription(),
-            stadiumCreateRequestDto.getPrice()
+            stadiumCreateRequestDto.getPrice(),
+            userDetails
         );
     }
 

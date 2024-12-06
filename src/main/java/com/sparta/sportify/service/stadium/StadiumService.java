@@ -8,7 +8,9 @@ import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
 import com.sparta.sportify.entity.Stadium;
+import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.StadiumRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,14 +19,14 @@ import lombok.RequiredArgsConstructor;
 public class StadiumService {
 	private final StadiumRepository stadiumRepository;
 
-	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto) {
+	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto, UserDetailsImpl userDetails) {
 		Optional<Stadium> stadiumName = stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName());
 
 		if(stadiumName.isPresent()) {
 			throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
 		}
 
-		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
+		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
 
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}

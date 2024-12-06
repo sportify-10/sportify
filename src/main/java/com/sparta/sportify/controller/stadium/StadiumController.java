@@ -1,6 +1,7 @@
 package com.sparta.sportify.controller.stadium;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
+import com.sparta.sportify.entity.User;
+import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.stadium.StadiumService;
 import com.sparta.sportify.util.api.ApiResult;
 
@@ -25,10 +28,11 @@ public class StadiumController {
 
 	@PostMapping
 	public ResponseEntity<ApiResult<StadiumResponseDto>> createStadium(
-		@RequestBody StadiumCreateRequestDto stadiumCreateRequestDto
+		@RequestBody StadiumCreateRequestDto stadiumCreateRequestDto,
+		@AuthenticationPrincipal UserDetailsImpl userDetails
 	) {
 
-		return ResponseEntity.ok(ApiResult.success(stadiumService.createStadium(stadiumCreateRequestDto)));
+		return ResponseEntity.ok(ApiResult.success(stadiumService.createStadium(stadiumCreateRequestDto, userDetails)));
 	}
 
 	@PatchMapping("/{stadiumId}")
