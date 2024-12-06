@@ -56,7 +56,7 @@ class StadiumServiceTest {
 
 
 	@Test
-	@DisplayName("구장 이름 중복")
+	@DisplayName("구장 이름 중복되어 에러")
 	void existStadiumName() {
 		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto);
 
@@ -90,7 +90,7 @@ class StadiumServiceTest {
 	}
 
 	@Test
-	@DisplayName("구장 정보 수정")
+	@DisplayName("구장 존재하지 않아 에러")
 	void notFoundStadium() {
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.empty());
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -110,6 +110,6 @@ class StadiumServiceTest {
 
 		stadiumService.deleteStadium(stadiumId);
 
-		assertTrue(stadium.isDeletedAt());
+		assertNotNull(stadium.getDeletedAt());
 	}
 }
