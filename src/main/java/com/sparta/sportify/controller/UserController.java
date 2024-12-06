@@ -138,10 +138,7 @@ public class UserController {
 
         // 이메일 중복 검사
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
-            return new ResponseEntity<>(
-                    ApiResult.error(0,"이메일이 이미 존재합니다."),
-                    HttpStatus.BAD_REQUEST
-            );
+            throw new RuntimeException("이메일이 중복되었습니다.");
         }
 
         // 비밀번호 수정이 요청된 경우
