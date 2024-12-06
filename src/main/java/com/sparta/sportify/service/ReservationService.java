@@ -43,8 +43,8 @@ public class ReservationService {
 
         Match match = matchRepository.findByDateAndTime(requestDto.getReservationDate(),requestDto.getTime()).map(findMatch ->{
                     switch (requestDto.getTeamColor()){
-                        case 'A' -> findMatch.discountATeamCount(1);
-                        case 'B' -> findMatch.discountBTeamCount(1);
+                        case A -> findMatch.discountATeamCount(1);
+                        case B -> findMatch.discountBTeamCount(1);
                         default -> throw new RuntimeException("잘못된 요청");
                     }
                     return matchRepository.save(findMatch);

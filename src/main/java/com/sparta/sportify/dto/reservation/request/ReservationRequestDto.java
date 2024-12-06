@@ -1,5 +1,6 @@
 package com.sparta.sportify.dto.reservation.request;
 
+import com.sparta.sportify.entity.TeamColor;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -22,7 +23,7 @@ public class ReservationRequestDto {
     LocalDate reservationDate;
 
     @NotBlank(message = "팀 선택은 필수 항목입니다. (A/B).")
-    char teamColor;
+    TeamColor teamColor;
 
     List<Integer> teamMemberIdList;
 

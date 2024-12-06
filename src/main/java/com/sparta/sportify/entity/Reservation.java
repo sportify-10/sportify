@@ -24,7 +24,9 @@ public class Reservation {
     private String status;
     private Integer totalAmount;
     private LocalDateTime deletedAt;
-    private Character teamColor;
+
+    @Enumerated(EnumType.STRING)
+    private TeamColor teamColor;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
