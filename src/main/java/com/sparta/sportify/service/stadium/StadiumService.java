@@ -1,7 +1,12 @@
 package com.sparta.sportify.service.stadium;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
@@ -29,6 +34,16 @@ public class StadiumService {
 		Stadium stadium = Stadium.createOf(stadiumCreateRequestDto, userDetails);
 
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
+	}
+
+
+	public List<StadiumResponseDto> getStadiums(UserDetailsImpl userDetails, int page, int size) {
+		Pageable pageable = PageRequest.of(page - 1, size);
+		Page<Stadium> stadiums = stadiumRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
+
+		return stadiums.getContent().stream()
+			.map(StadiumResponseDto::new)
+			.collect(Collectors.toList());
 	}
 
 	public StadiumResponseDto updateStadium(Long stadiumId, StadiumUpdateRequestDto stadiumUpdateRequestDto, UserDetailsImpl userDetails) {
