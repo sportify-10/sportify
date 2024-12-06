@@ -28,6 +28,7 @@ public class ReservationController {
     ) {
         return new ResponseEntity<>(
                 ApiResult.success(
+                        "개인예약 성공",
                         reservationService.reservationPersonal(requestDto,authUser)
                 ),
                 HttpStatus.CREATED
