@@ -40,4 +40,3 @@ public class Match {
 
     // Getters and Setters
 }
-

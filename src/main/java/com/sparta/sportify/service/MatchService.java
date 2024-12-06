@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 
 import com.sparta.sportify.dto.match.MatchResponseDto;
 import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.StadiumTimeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,8 +19,10 @@ public class MatchService {
 
 	@Autowired
 	private MatchRepository matchRepository;
+	private StadiumTimeRepository stadiumTimeRepository;
 
 	public MatchResponseDto getMatchById(Long id) {
+		Optional<StadiumTime> stadiumTime = stadiumTimeRepository.findById(id);
 		Optional<Match> matchOptional = matchRepository.findById(id);
 		if (matchOptional.isPresent()) {
 			Match match = matchOptional.get();
