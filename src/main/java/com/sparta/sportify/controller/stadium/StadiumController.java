@@ -38,9 +38,10 @@ public class StadiumController {
 	@PatchMapping("/{stadiumId}")
 	public ResponseEntity<ApiResult<StadiumResponseDto>> updateStadium(
 		@PathVariable Long stadiumId,
-		@RequestBody StadiumUpdateRequestDto stadiumUpdateRequestDto
+		@RequestBody StadiumUpdateRequestDto stadiumUpdateRequestDto,
+		@AuthenticationPrincipal UserDetailsImpl userDetails
 	) {
-		return ResponseEntity.ok(ApiResult.success(stadiumService.updateStadium(stadiumId, stadiumUpdateRequestDto)));
+		return ResponseEntity.ok(ApiResult.success(stadiumService.updateStadium(stadiumId, stadiumUpdateRequestDto, userDetails)));
 	}
 
 	@DeleteMapping("/{stadiumId}")
