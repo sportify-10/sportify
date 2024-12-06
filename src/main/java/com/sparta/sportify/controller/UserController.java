@@ -9,11 +9,8 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
-import com.sparta.sportify.security.UserDetailsImpl;  // UserDetailsImpl import
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
-import com.sparta.sportify.util.api.ApiResult;
-import jakarta.servlet.http.HttpServletRequest;
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +32,10 @@ public class UserController {
     @Autowired
     private final UserService userService;
 
+    @Autowired
     private final UserRepository userRepository;
 
+    @Autowired
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
