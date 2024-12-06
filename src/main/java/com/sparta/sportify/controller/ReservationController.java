@@ -26,13 +26,24 @@ public class ReservationController {
             @RequestBody ReservationRequestDto requestDto,
             @AuthenticationPrincipal UserDetailsImpl authUser
     ) {
-        return new ResponseEntity<>(
-                ApiResult.success(
-                        "개인예약 성공",
-                        reservationService.reservationPersonal(requestDto,authUser)
-                ),
-                HttpStatus.CREATED
-        );
+        if(requestDto.getTeamMemberIdList().isEmpty()){
+            return new ResponseEntity<>(
+                    ApiResult.success(
+                            "개인예약 성공",
+                            reservationService.reservationPersonal(requestDto,authUser)
+                    ),
+                    HttpStatus.CREATED
+            );
+        }else{
+            return new ResponseEntity<>(
+                    ApiResult.success(
+                            "개인예약 성공",
+                            reservationService.reservationGroup(requestDto,authUser)
+                    ),
+                    HttpStatus.CREATED
+            );
+        }
+
     }
 
 

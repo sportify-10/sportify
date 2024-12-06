@@ -26,56 +26,60 @@ public class ReservationService {
     public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
 
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                ()->new RuntimeException("구장이 운영중이 아닙니다.")
+                () -> new RuntimeException("구장이 운영중이 아닙니다.")
         );
 
-        if(!CronUtil.isCronDateAllowed(stadiumTime.getCron(),requestDto.getReservationDate(),requestDto.getTime())){
+        if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
             throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
         }
 
-        if(reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(),requestDto.getTime(),requestDto.getReservationDate())){
+        if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
             throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
         }
 
 
-        Match match = matchRepository.findByDateAndTime(requestDto.getReservationDate(),requestDto.getTime()).map(findMatch ->{
-                    switch (requestDto.getTeamColor()){
-                        case A -> findMatch.discountATeamCount(1);
-                        case B -> findMatch.discountBTeamCount(1);
-                        default -> throw new RuntimeException("잘못된 요청");
-                    }
-                    return matchRepository.save(findMatch);
-                }).orElseGet(() -> {
-                    int aTeamCount = stadiumTime.getStadium().getATeamCount();
-                    int bTeamCount = stadiumTime.getStadium().getBTeamCount();
-                    switch (requestDto.getTeamColor()){
-                        case A -> aTeamCount = aTeamCount-1;
-                        case B -> bTeamCount = bTeamCount-1;
-                        default -> throw new RuntimeException("잘못된 요청");
-                    }
-                    return matchRepository.save(
-                        Match.builder()
+        Match match = matchRepository.findByIdAndDateAndTime(
+                requestDto.getStadiumTimeId(),
+                requestDto.getReservationDate(),
+                requestDto.getTime()
+        ).map(findMatch -> {
+            switch (requestDto.getTeamColor()) {
+                case A -> findMatch.discountATeamCount(1);
+                case B -> findMatch.discountBTeamCount(1);
+                default -> throw new RuntimeException("잘못된 요청");
+            }
+            return matchRepository.save(findMatch);
+        }).orElseGet(() -> {
+            int aTeamCount = stadiumTime.getStadium().getATeamCount();
+            int bTeamCount = stadiumTime.getStadium().getBTeamCount();
+            switch (requestDto.getTeamColor()) {
+                case A -> aTeamCount = aTeamCount - 1;
+                case B -> bTeamCount = bTeamCount - 1;
+                default -> throw new RuntimeException("잘못된 요청");
+            }
+            return matchRepository.save(
+                    Match.builder()
                             .date(requestDto.getReservationDate())
                             .time(requestDto.getTime())
                             .aTeamCount(aTeamCount)
                             .bTeamCount(bTeamCount)
                             .stadiumTime(stadiumTime)
                             .build()
-                    );
-                });
+            );
+        });
 
         Stadium stadium = stadiumTime.getStadium();
 
         Reservation reservation = reservationRepository.save(
                 Reservation.builder()
-                    .reservationDate(requestDto.getReservationDate())
-                    .reservationDate(requestDto.getReservationDate())
-                    .totalAmount(stadium.getPrice())
-                    .status("예약중")
-                    .teamColor(requestDto.getTeamColor())
-                    .user(authUser.getUser())
-                    .match(match)
-                    .build());
+                        .reservationDate(requestDto.getReservationDate())
+                        .reservationDate(requestDto.getReservationDate())
+                        .totalAmount(stadium.getPrice())
+                        .status("예약중")
+                        .teamColor(requestDto.getTeamColor())
+                        .user(authUser.getUser())
+                        .match(match)
+                        .build());
 
         return new ReservationResponseDto(reservation.getId());
     }
@@ -84,32 +88,32 @@ public class ReservationService {
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
 
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                ()->new RuntimeException("구장이 운영중이 아닙니다.")
+                () -> new RuntimeException("구장이 운영중이 아닙니다.")
         );
 
-        if(!CronUtil.isCronDateAllowed(stadiumTime.getCron(),requestDto.getReservationDate(),requestDto.getTime())){
+        if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
             throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
         }
 
-        if(reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(),requestDto.getTime(),requestDto.getReservationDate())){
+        if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
             throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
         }
 
         List<User> users = userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList());
-        if(users.size() != requestDto.getTeamMemberIdList().size()){
+        if (users.size() != requestDto.getTeamMemberIdList().size()) {
             throw new RuntimeException("유저 정보가 잘못됨 ");
         }
 
-        Match match = matchRepository.findByDateAndTime(requestDto.getReservationDate(),requestDto.getTime()).map(findMatch ->{
-            switch (requestDto.getTeamColor()){
+        Match match = matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()).map(findMatch -> {
+            switch (requestDto.getTeamColor()) {
                 case A -> {
-                    if(findMatch.getATeamCount() < users.size()){
+                    if (findMatch.getATeamCount() < users.size()) {
                         throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
                     }
                     findMatch.discountATeamCount(users.size());
                 }
                 case B -> {
-                    if(findMatch.getBTeamCount() < users.size()){
+                    if (findMatch.getBTeamCount() < users.size()) {
                         throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
                     }
                     findMatch.discountBTeamCount(users.size());
@@ -120,18 +124,18 @@ public class ReservationService {
         }).orElseGet(() -> {
             int aTeamCount = stadiumTime.getStadium().getATeamCount();
             int bTeamCount = stadiumTime.getStadium().getBTeamCount();
-            switch (requestDto.getTeamColor()){
+            switch (requestDto.getTeamColor()) {
                 case A -> {
-                    if(aTeamCount < users.size()){
+                    if (aTeamCount < users.size()) {
                         throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
                     }
-                    aTeamCount = aTeamCount- users.size();
+                    aTeamCount = aTeamCount - users.size();
                 }
                 case B -> {
-                    if(bTeamCount < users.size()){
+                    if (bTeamCount < users.size()) {
                         throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
                     }
-                    bTeamCount = bTeamCount- users.size();
+                    bTeamCount = bTeamCount - users.size();
                 }
                 default -> throw new RuntimeException("잘못된 요청");
             }
