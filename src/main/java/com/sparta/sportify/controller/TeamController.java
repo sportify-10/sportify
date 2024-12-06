@@ -19,7 +19,7 @@ public class TeamController {
     @PostMapping("/register")
     public ResponseEntity<ApiResult<TeamResponseDto>> createMenu(@RequestBody TeamRequestDto requestDto) {
         return new ResponseEntity<>(
-                ApiResult.success(
+                ApiResult.success("팀 생성 완료",
                         teamService.createTeam(requestDto)),
                 HttpStatus.OK);
     }
@@ -29,7 +29,7 @@ public class TeamController {
                                                                    @RequestParam(required = false, defaultValue = "10") int size,
                                                                    @RequestParam(required = false, defaultValue = "modifiedAt") String criteria) {
         return new ResponseEntity<>(
-                ApiResult.success(
+                ApiResult.success("팀 전체 조회 완료",
                         teamService.getAllTeams(page, size, criteria)),
                 HttpStatus.OK);
     }
@@ -37,7 +37,7 @@ public class TeamController {
     @GetMapping("/{teamId}")
     public ResponseEntity<ApiResult<TeamResponseDto>> getOrderById(@PathVariable Long teamId) {
         return new ResponseEntity<>(
-                ApiResult.success(
+                ApiResult.success("팀 단건 조회 완료",
                         teamService.getTeamById(teamId)),
                 HttpStatus.OK);
     }
@@ -47,7 +47,7 @@ public class TeamController {
         teamService.updateTeam(teamid, requestDto);
 
         return new ResponseEntity<>(
-                ApiResult.success(
+                ApiResult.success("팀 수정 완료",
                         teamService.updateTeam(teamid, requestDto)),
                 HttpStatus.OK);
 
@@ -57,7 +57,7 @@ public class TeamController {
     public ResponseEntity<ApiResult<TeamResponseDto>> deleteMenu(@PathVariable Long teamId) {
         teamService.deleteTeam(teamId);
         return new ResponseEntity<>(
-                ApiResult.success(
+                ApiResult.success("팀 삭제 완료",
                         teamService.deleteTeam(teamId)),
                 HttpStatus.OK);
 
