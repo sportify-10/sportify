@@ -3,6 +3,7 @@ package com.sparta.sportify.entity;
 import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeCreateRequestDto;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Table(name = "stadium_times")
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
 public class StadiumTime {
     @Id

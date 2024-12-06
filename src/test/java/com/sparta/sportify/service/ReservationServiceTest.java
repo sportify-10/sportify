@@ -63,10 +63,9 @@ public class ReservationServiceTest {
                 "Seoul, Korea",
                 6,
                 6,
-                "12:00~20:00",
                 "A large stadium for concerts.",
                 500000,
-                "Available",
+                StadiumStatus.APPROVED,
                 null,
                 user
         );
