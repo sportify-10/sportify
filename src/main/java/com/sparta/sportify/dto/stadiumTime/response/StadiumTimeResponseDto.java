@@ -6,11 +6,11 @@ import com.sparta.sportify.entity.StadiumTime;
 import lombok.Getter;
 
 @Getter
-public class StadiumTimeCreateResponseDto {
+public class StadiumTimeResponseDto {
 	private String cronExpression;
 	private Long stadiumId;
 
-	public StadiumTimeCreateResponseDto(StadiumTime stadiumTime, Stadium stadium) {
+	public StadiumTimeResponseDto(StadiumTime stadiumTime, Stadium stadium) {
 		this.cronExpression = stadiumTime.getCron();
 		this.stadiumId = stadium.getId();
 	}
