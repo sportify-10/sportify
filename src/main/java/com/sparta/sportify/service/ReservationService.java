@@ -1,12 +1,15 @@
 package com.sparta.sportify.service;
 
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
+import com.sparta.sportify.dto.reservation.response.ReservationFindResponseDto;
 import com.sparta.sportify.dto.reservation.response.ReservationResponseDto;
 import com.sparta.sportify.entity.*;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.util.cron.CronUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -176,4 +179,28 @@ public class ReservationService {
 
         return new ReservationResponseDto(reservations.stream().map(Reservation::getId).toList());
     }
+
+
+    @Transactional
+    public ReservationFindResponseDto findReservation(Long reservationId,UserDetailsImpl authUser){
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
+                ()->new RuntimeException("찾을 수 없는 예약 ID입니다.")
+        );
+
+        if(reservation.getUser().getId() != authUser.getUser().getId()){
+            throw new RuntimeException("해당 유저 정보가 다릅니다");
+        }
+
+        return new ReservationFindResponseDto(reservation);
+    }
+
+
+    @Transactional
+    public Slice<ReservationFindResponseDto> findReservationsForInfiniteScroll(
+            UserDetailsImpl authUser, Pageable pageable) {
+        Slice<Reservation> reservations = reservationRepository.findByUserIdOrderByIdDesc(authUser.getUser().getId(), pageable);
+
+        return reservations.map(ReservationFindResponseDto::new);
+    }
+
 }
