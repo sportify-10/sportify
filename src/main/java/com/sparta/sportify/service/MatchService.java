@@ -32,6 +32,7 @@ public class MatchService {
 		matchResult.setTeamAScore(requestDto.getTeamAScore());
 		matchResult.setTeamBScore(requestDto.getTeamBScore());
 		matchResult.setMatch(match);
+		matchResult.setMatchStatus(requestDto.getMatchStatus());
 		matchResult.setMatchDate(LocalDate.now());
 
 		MatchResult savedResult = matchResultRepository.save(matchResult);
