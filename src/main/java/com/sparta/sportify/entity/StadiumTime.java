@@ -1,12 +1,9 @@
 package com.sparta.sportify.entity;
 
-import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeCreateRequestDto;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Entity
 @Table(name = "stadium_times")
@@ -31,6 +28,10 @@ public class StadiumTime {
 
     public static StadiumTime createOf(String cron, Stadium stadium) {
         return new StadiumTime(cron, stadium);
+    }
+
+    public void updateOf(String cron) {
+        this.cron = cron;
     }
 }
 

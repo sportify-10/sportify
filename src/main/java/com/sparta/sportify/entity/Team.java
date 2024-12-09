@@ -31,6 +31,12 @@ public class Team {
     private Float winRate;
     private LocalDateTime deletedAt;
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeamMember> teamMembers;
+//
+//    @OneToMany(mappedBy = "teams", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Reservation> reservations;
+
     public Team(TeamRequestDto requestDto) {
         this.teamName = requestDto.getTeamName();
         this.region = requestDto.getRegion();
