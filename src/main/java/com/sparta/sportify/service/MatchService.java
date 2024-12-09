@@ -7,29 +7,57 @@ import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.sparta.sportify.dto.match.MatchResultRequestDto;
+import com.sparta.sportify.dto.match.MatchResultResponseDto;
+import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.MatchResult;
+import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.MatchResultRepository;
 import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class MatchService {
 
+	private final MatchResultRepository matchResultRepository;
 	private final StadiumTimeRepository stadiumTimeRepository;
+	private final MatchRepository matchRepository;
+
+	@Transactional
+	public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
+		Match match = matchRepository.findById(requestDto.getMatchId())
+			.orElseThrow(() -> new EntityNotFoundException("경기를 찾을 수 없습니다."));
+
+		MatchResult matchResult = new MatchResult();
+		matchResult.setTeamAScore(requestDto.getTeamAScore());
+		matchResult.setTeamBScore(requestDto.getTeamBScore());
+		matchResult.setMatch(match);
+		matchResult.setMatchStatus(requestDto.getMatchStatus());
+		matchResult.setMatchDate(LocalDate.now());
+
+
+		MatchResult savedResult = matchResultRepository.save(matchResult);
+		return new MatchResultResponseDto(
+			savedResult.getId(),
+			savedResult.getTeamAScore(),
+			savedResult.getTeamBScore(),
+			savedResult.getMatchStatus(),
+			savedResult.getMatchDate()
+		);
+	}
 
 	public MatchesByDateResponseDto getMatchesByDate(/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
 		//Pageable pageable = PageRequest.of(page, size);
 		List<StadiumTime> stadiumTimes = stadiumTimeRepository.findAll();
-
-		//저장된 스타디움 타임이 없으면
-		if (stadiumTimes.isEmpty()) {
-			return new MatchesByDateResponseDto(List.of());
-		}
 
 		//하나의 값? 저장할 리스트
 		List<MatchByStadiumResponseDto> matches = new ArrayList<>();
@@ -41,6 +69,11 @@ public class MatchService {
 		"startTime": "08:00",
 		"endTime": "10:00"
 		*/
+
+		//저장된 스타디움 타임이 없으면
+		if (stadiumTimes.isEmpty()) {
+			return new MatchesByDateResponseDto(List.of());
+		}
 
 		for (int i = 0; i < stadiumTimes.size(); i++) {
 			String cron = stadiumTimes.get(i).getCron();//스타디움 타임에 저장된 크론식 조회

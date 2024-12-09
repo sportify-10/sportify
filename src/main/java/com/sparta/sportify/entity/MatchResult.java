@@ -1,9 +1,13 @@
 package com.sparta.sportify.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "match_results")
 public class MatchResult {
