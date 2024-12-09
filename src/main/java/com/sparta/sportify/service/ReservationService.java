@@ -95,14 +95,15 @@ public class ReservationService {
             throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
         }
 
-        if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
-            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
-        }
-
         List<User> users = userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList());
         if (users.size() != requestDto.getTeamMemberIdList().size()) {
             throw new RuntimeException("유저 정보가 잘못됨 ");
         }
+
+        if (reservationRepository.existsByUsersAndMatchTimeAndReservationDate(users, requestDto.getTime(), requestDto.getReservationDate())) {
+            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
+        }
+
 
         Team team = teamRepository.findById(requestDto.getTeamId()).orElseThrow(
                 ()-> new RuntimeException("팀을 찾을 수 없습니다")
@@ -167,6 +168,7 @@ public class ReservationService {
                         .status("예약중")
                         .teamColor(requestDto.getTeamColor())
                         .user(user)
+                        .team(team)
                         .match(match)
                         .build())
                 .map(reservationRepository::save)
