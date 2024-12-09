@@ -1,6 +1,7 @@
 package com.sparta.sportify.service.reservation;
 
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
+import com.sparta.sportify.dto.reservation.response.ReservationFindResponseDto;
 import com.sparta.sportify.dto.reservation.response.ReservationResponseDto;
 import com.sparta.sportify.entity.*;
 import com.sparta.sportify.repository.*;
@@ -14,6 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -80,7 +85,7 @@ public class ReservationServiceTest {
 
         authUser = mock(UserDetailsImpl.class);
         when(authUser.getUser()).thenReturn(user);
-        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
+
     }
 
     @Test
@@ -91,6 +96,7 @@ public class ReservationServiceTest {
                 .thenReturn(false);
         when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation = Reservation.builder()
                 .id(1L)
@@ -114,7 +120,7 @@ public class ReservationServiceTest {
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(false);
-
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 reservationService.reservationPersonal(requestDto, authUser)
@@ -131,6 +137,7 @@ public class ReservationServiceTest {
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(true);
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 reservationService.reservationPersonal(requestDto, authUser)
@@ -148,6 +155,7 @@ public class ReservationServiceTest {
                 .thenReturn(false);
         when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation = Reservation.builder()
                 .id(1L)
@@ -188,6 +196,7 @@ public class ReservationServiceTest {
 
         when(matchRepository.save(any()))
                 .thenReturn(existingMatch);
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation = Reservation.builder()
                 .id(1L)
@@ -234,6 +243,7 @@ public class ReservationServiceTest {
                 .thenReturn(false);
         when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation1 = Reservation.builder()
                 .id(1L)
@@ -271,6 +281,129 @@ public class ReservationServiceTest {
         assertNotNull(response);
         assertEquals(users.size(), response.getReservationId().size());
         verify(reservationRepository, times(3)).save(any(Reservation.class));
+    }
+    @Test
+    @DisplayName("단건 예약 조회 성공")
+    public void testFindReservation_Success() {
+        Match match = Match.builder()
+                .id(1L)
+                .date(LocalDate.of(2024,12,3))
+                .time(10)
+                .stadiumTime(stadiumTime)
+                .aTeamCount(6)
+                .bTeamCount(6)
+                .build();
+
+        Reservation reservation = Reservation.builder()
+                .id(1L)
+                .reservationDate(LocalDate.of(2024,12,3))
+                .team(team)
+                .user(authUser.getUser())
+                .teamColor(TeamColor.A)
+                .match(match)
+                .status("예약중")
+                .build();
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+
+
+        ReservationFindResponseDto responseDto = reservationService.findReservation(reservation.getId(), authUser);
+
+        assertNotNull(responseDto);
+        assertEquals(reservation.getId(), responseDto.getReservationId());
+        assertEquals(reservation.getUser().getId(), authUser.getUser().getId());
+    }
+
+    @Test
+    @DisplayName("단건 예약 조회 실패 - 다른 유저")
+    public void testFindReservation_Fail_UnauthorizedUser() {
+        User user2 = new User();
+        user2.setId(2L);
+
+        Match match = Match.builder()
+                .id(1L)
+                .date(LocalDate.of(2024,12,3))
+                .time(10)
+                .stadiumTime(stadiumTime)
+                .aTeamCount(6)
+                .bTeamCount(6)
+                .build();
+
+        Reservation reservation = Reservation.builder()
+                .id(1L)
+                .reservationDate(LocalDate.of(2024,12,3))
+                .team(team)
+                .user(user2)
+                .teamColor(TeamColor.A)
+                .match(match)
+                .status("예약중")
+                .build();
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+
+        // When & Then
+        assertThrows(RuntimeException.class, () -> {
+            reservationService.findReservation(reservation.getId(), authUser);
+        });
+    }
+
+    @Test
+    @DisplayName("무한 스크롤 예약 조회 성공")
+    public void testFindReservationsForInfiniteScroll_Success() {
+        // Given
+
+        Match match1 = Match.builder()
+                .id(1L)
+                .date(LocalDate.of(2024,12,3))
+                .time(10)
+                .stadiumTime(stadiumTime)
+                .aTeamCount(6)
+                .bTeamCount(6)
+                .build();
+
+        Reservation reservation1 = Reservation.builder()
+                .id(1L)
+                .reservationDate(LocalDate.of(2024,12,3))
+                .team(team)
+                .user(authUser.getUser())
+                .teamColor(TeamColor.A)
+                .match(match1)
+                .status("예약중")
+                .build();
+
+        Match match2 = Match.builder()
+                .id(2L)
+                .date(LocalDate.of(2024,12,4))
+                .time(10)
+                .stadiumTime(stadiumTime)
+                .aTeamCount(6)
+                .bTeamCount(6)
+                .build();
+
+        Reservation reservation2 = Reservation.builder()
+                .id(2L)
+                .reservationDate(LocalDate.of(2024,12,4))
+                .team(team)
+                .user(authUser.getUser())
+                .teamColor(TeamColor.A)
+                .match(match2)
+                .status("예약중")
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        List<Reservation> mockReservations = List.of(reservation1, reservation2);
+        Slice<Reservation> mockSlice = new SliceImpl<>(mockReservations, pageable, true);
+
+        when(reservationRepository.findByUserIdOrderByIdDesc(authUser.getUser().getId(), pageable))
+                .thenReturn(mockSlice);
+        // When
+        Slice<ReservationFindResponseDto> responseDtos = reservationService.findReservationsForInfiniteScroll(authUser, pageable);
+
+        // Then
+        assertNotNull(responseDtos);
+        assertEquals(2, responseDtos.getContent().size());
+        assertTrue(responseDtos.hasNext());
     }
 
 }
