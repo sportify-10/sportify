@@ -215,6 +215,20 @@ public class ReservationService {
         reservation.changeDeleteStatus();
         reservationRepository.save(reservation);
 
+        Match match = matchRepository.findById(reservation.getMatch().getId()).orElseThrow(
+                () -> new RuntimeException("해당 유저 정보가 다릅니다.")
+        );
+
+        switch (reservation.getTeamColor()) {
+            case A -> {
+                match.addATeamCount(1);
+            }
+            case B -> {
+                match.addBTeamCount(1);
+            }
+        }
+        matchRepository.save(match);
+
         return new ReservationResponseDto(reservation.getId());
     }
 
