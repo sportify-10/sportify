@@ -2,24 +2,22 @@ package com.sparta.sportify.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
-import com.sparta.sportify.entity.Match;
-import com.sparta.sportify.entity.MatchResult;
-import com.sparta.sportify.repository.MatchRepository;
-import com.sparta.sportify.repository.MatchResultRepository;
 import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
+import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.MatchResult;
 import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.MatchResultRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +96,8 @@ public class MatchService {
 				matches.add(matchResponse);
 			}
 		}
+		matches.sort(Comparator.comparing(MatchByStadiumResponseDto::getStartTime));
+
 		return new MatchesByDateResponseDto(matches);
 	}
 
