@@ -42,13 +42,13 @@ public class TeamService {
 
     public TeamResponseDto getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("team not found"));
+                .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
         return new TeamResponseDto(team);
     }
 
     @Transactional
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto) {
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + teamId));
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
         team.updateData(requestDto.getTeamName(),requestDto.getRegion() , requestDto.getActivityTime(),requestDto.getSkillLevel() ,requestDto.getSportType(), requestDto.getDescription());
 
         return new TeamResponseDto(team);
@@ -56,7 +56,7 @@ public class TeamService {
 
     @Transactional
     public TeamResponseDto deleteTeam(Long teamId) {
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Team not found with id: " + teamId));
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
         team.softDelete();
 
         return new TeamResponseDto(team);

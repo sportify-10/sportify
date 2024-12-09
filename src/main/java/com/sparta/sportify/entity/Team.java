@@ -1,12 +1,14 @@
 package com.sparta.sportify.entity;
 
 import com.sparta.sportify.dto.teamDto.TeamRequestDto;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -31,8 +33,6 @@ public class Team {
     private Float winRate;
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TeamMember> teamMembers;
 //
 //    @OneToMany(mappedBy = "teams", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<Reservation> reservations;
