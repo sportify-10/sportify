@@ -2,8 +2,10 @@ package com.sparta.sportify.controller;
 
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
+import com.sparta.sportify.dto.user.req.OAuthLoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
+import com.sparta.sportify.dto.user.res.OAuthResponseDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
@@ -11,6 +13,8 @@ import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
+import com.sparta.sportify.service.oauth.KakaoOAuthService;
+import com.sparta.sportify.service.oauth.NaverOAuthService;
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -145,5 +149,20 @@ public class UserController {
         );
     }
 
+    private final NaverOAuthService naverOAuthService;
+    private final KakaoOAuthService kakaoOAuthService;
+
+    @PostMapping("/{provider}/login")
+    public ResponseEntity<OAuthResponseDto> login(
+            @PathVariable String provider,
+            @RequestHeader("Authorization") String accessToken) {
+        if ("naver".equalsIgnoreCase(provider)) {
+            return ResponseEntity.ok(naverOAuthService.login(accessToken));
+        } else if ("kakao".equalsIgnoreCase(provider)) {
+            return ResponseEntity.ok(kakaoOAuthService.login(accessToken));
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 OAuth 제공자: " + provider);
+        }
+    }
 }
 
