@@ -21,7 +21,7 @@ public class Reservation {
     private Long id;
 
     private LocalDate reservationDate;
-    private String status;
+    private ReservationStatus status;
     private Integer totalAmount;
     private LocalDateTime deletedAt;
 
