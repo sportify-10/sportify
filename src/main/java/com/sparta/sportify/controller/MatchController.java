@@ -25,6 +25,6 @@ public class MatchController {
 	public ResponseEntity<ApiResult<MatchResultResponseDto>> createMatchResult(
 		@Validated @RequestBody MatchResultRequestDto requestDto) {
 		MatchResultResponseDto responseDto = matchService.createMatchResult(requestDto);
-		return ResponseEntity.ok(ApiResult.success(responseDto));
+		return ResponseEntity.ok(ApiResult.success("경기 결과 기록",responseDto));
 	}
 }
