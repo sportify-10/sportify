@@ -203,4 +203,19 @@ public class ReservationService {
         return reservations.map(ReservationFindResponseDto::new);
     }
 
+    @Transactional
+    public ReservationResponseDto deleteReservation(Long reservationId, UserDetailsImpl authUser) {
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
+                ()-> new RuntimeException("예약ID를 찾을 수 없습니다.")
+        );
+        if(reservation.getUser().getId() != authUser.getUser().getId()){
+            throw new RuntimeException("해당 유저 정보가 다릅니다.");
+        }
+
+        reservation.changeDeleteStatus();
+        reservationRepository.save(reservation);
+
+        return new ReservationResponseDto(reservation.getId());
+    }
+
 }

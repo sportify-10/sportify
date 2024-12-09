@@ -40,4 +40,9 @@ public class Reservation {
     @JoinColumn(name = "match_id", nullable = false)
     private Match match;
 
+
+    public void changeDeleteStatus(){
+        this.status = ReservationStatus.CANCELED;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
