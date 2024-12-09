@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum StadiumStatus {
-	PENDING("대기"),APPROVED("승인"),REJECTED("거절");
+	PENDING("대기"),APPROVED("승인"),REJECTED("거절"),AVAILABLE("누락");
 
 	private final String value;
 }
