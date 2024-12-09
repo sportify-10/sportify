@@ -104,6 +104,11 @@ public class ReservationService {
             throw new RuntimeException("유저 정보가 잘못됨 ");
         }
 
+        Team team = teamRepository.findById(requestDto.getTeamId()).orElseThrow(
+                ()-> new RuntimeException("팀을 찾을 수 없습니다")
+        );
+
+
         Match match = matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()).map(findMatch -> {
             switch (requestDto.getTeamColor()) {
                 case A -> {
@@ -151,6 +156,9 @@ public class ReservationService {
         });
 
         Stadium stadium = stadiumTime.getStadium();
+
+
+
 
         List<Reservation> reservations = users.stream()
                 .map(user -> Reservation.builder()

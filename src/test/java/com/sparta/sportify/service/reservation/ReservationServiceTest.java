@@ -1,13 +1,11 @@
-package com.sparta.sportify.service;
+package com.sparta.sportify.service.reservation;
 
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
 import com.sparta.sportify.dto.reservation.response.ReservationResponseDto;
 import com.sparta.sportify.entity.*;
-import com.sparta.sportify.repository.MatchRepository;
-import com.sparta.sportify.repository.ReservationRepository;
-import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.repository.TeamRepository;
+import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.service.ReservationService;
 import com.sparta.sportify.util.cron.CronUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
@@ -36,6 +35,9 @@ public class ReservationServiceTest {
     private TeamRepository teamRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private StadiumTimeRepository stadiumTimeRepository;
 
     @InjectMocks
@@ -45,6 +47,7 @@ public class ReservationServiceTest {
     private StadiumTime stadiumTime;
     private Stadium stadium;
     private UserDetailsImpl authUser;
+    private Team team;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +59,9 @@ public class ReservationServiceTest {
 
         User user = new User();
         user.setId(1L);
+
+        team = Team.builder().id(1L).build();
+
 
         stadium = new Stadium(
                 1L,
@@ -202,5 +208,69 @@ public class ReservationServiceTest {
         verify(reservationRepository, times(1)).save(any(Reservation.class)); // 예약 저장 호출 검증
     }
 
+
+
+
+    @Test
+    @DisplayName("단체 예약에 대한 성공 케이스")
+    void reservationGroup_validReservation() {
+        // Additional setup
+        requestDto.setTeamId(1);
+        requestDto.setTeamMemberIdList(List.of(1L,2L,3L));
+
+        User user1 = new User();
+        user1.setId(1L);
+        User user2 = new User();
+        user1.setId(2L);
+        User user3 = new User();
+        user1.setId(3L);
+
+        List<User> users = List.of(user1,user2,user3);
+
+        when(teamRepository.findById(any())).thenReturn(Optional.of(team));
+        when(userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList())).thenReturn(users);
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
+        when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
+                .thenReturn(false);
+        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
+                .thenReturn(java.util.Optional.empty());
+
+        Reservation mockReservation1 = Reservation.builder()
+                .id(1L)
+                .reservationDate(requestDto.getReservationDate())
+                .team(team)
+                .user(user1)
+                .teamColor(requestDto.getTeamColor())
+                .status("예약중")
+                .build();
+        Reservation mockReservation2 = Reservation.builder()
+                .id(2L)
+                .reservationDate(requestDto.getReservationDate())
+                .team(team)
+                .user(user1)
+                .teamColor(requestDto.getTeamColor())
+                .status("예약중")
+                .build();
+        Reservation mockReservation3 = Reservation.builder()
+                .id(3L)
+                .reservationDate(requestDto.getReservationDate())
+                .team(team)
+                .user(user1)
+                .teamColor(requestDto.getTeamColor())
+                .status("예약중")
+                .build();
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenReturn(mockReservation1)
+                .thenReturn(mockReservation2)
+                .thenReturn(mockReservation3);
+
+        ReservationResponseDto response = reservationService.reservationGroup(requestDto, authUser);
+
+
+        assertNotNull(response);
+        assertEquals(users.size(), response.getReservationId().size());
+        verify(reservationRepository, times(3)).save(any(Reservation.class));
+    }
 
 }
