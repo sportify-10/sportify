@@ -10,6 +10,7 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,9 @@ public class TeamMemberService {
     private final UserRepository userRepository;
 
     @Transactional
-    public TeamMemberResponseDto applyToTeam(Long teamId, Long userId) {
+    public TeamMemberResponseDto applyToTeam(Long teamId, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
+        User user = authUser.getUser();
         // 승인된 상태(가입) 확인
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(user, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
@@ -38,12 +38,11 @@ public class TeamMemberService {
     }
 
     @Transactional
-    public ApproveResponseDto approveOrRejectApplication(Long teamId, Long approveId, ApproveRequestDto requestDto) {
+    public ApproveResponseDto approveOrRejectApplication(Long teamId, UserDetailsImpl authUser, ApproveRequestDto requestDto) {
         // 팀과 사용자 객체 조회
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다"));
-        User approveUser = userRepository.findById(approveId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+        User approveUser = authUser.getUser();
         User applyUser = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("신청자를 찾을 수 없습니다"));
 

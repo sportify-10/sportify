@@ -23,10 +23,9 @@ public class TeamMemberController {
     public ResponseEntity<ApiResult<TeamMemberResponseDto>> applyToTeam(
             @PathVariable Long teamId,
             @AuthenticationPrincipal UserDetailsImpl authUser) {
-        Long userId = authUser.getUser().getId();
         return new ResponseEntity<>(
                 ApiResult.success("팀 신청 완료",
-                        teamMemberService.applyToTeam(teamId, userId)),
+                        teamMemberService.applyToTeam(teamId, authUser)),
                 HttpStatus.OK);
     }
 
@@ -35,11 +34,12 @@ public class TeamMemberController {
             @PathVariable Long teamId,
             @AuthenticationPrincipal UserDetailsImpl authUser,
             @RequestBody ApproveRequestDto requestDto) {
-        Long approveId = authUser.getUser().getId();
         return new ResponseEntity<>(
                 ApiResult.success("처리가 완료되었습니다.",
-                        teamMemberService.approveOrRejectApplication(teamId, approveId, requestDto)),
+                        teamMemberService.approveOrRejectApplication(teamId, authUser, requestDto)),
                 HttpStatus.OK
         );
     }
+
+
 }
