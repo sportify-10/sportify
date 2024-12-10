@@ -1,15 +1,15 @@
 package com.sparta.sportify.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "team_members")
 public class TeamMember {
@@ -20,8 +20,14 @@ public class TeamMember {
     @Enumerated(EnumType.STRING)
     private TeamMemberRole teamMemberRole;
 
-    private String status;
     private LocalDateTime deletedAt;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    public enum Status{
+        PENDING, APPROVED, REJECTED
+    }
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,5 +37,10 @@ public class TeamMember {
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
 
+    public TeamMember(User user, Team team) {
+        this.user = user;
+        this.team = team;
+        this.status = Status.PENDING; // 기본 상태를 대기 상태로 설정
+    }
     // Getters and Setters
 }
