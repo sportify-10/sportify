@@ -78,4 +78,17 @@ public class ReservationController {
         );
     }
 
+    @DeleteMapping("/reservations/{reservationId}")
+    public ResponseEntity<ApiResult<ReservationResponseDto>> deleteReservation(
+            @PathVariable Long reservationId,
+            @AuthenticationPrincipal UserDetailsImpl authUser
+    ) {
+        return new ResponseEntity<>(
+                ApiResult.success(
+                        "예약 취소 성공",
+                        reservationService.deleteReservation(reservationId, authUser)
+                ),
+                HttpStatus.OK
+        );
+    }
 }

@@ -78,7 +78,7 @@ public class ReservationService {
                         .reservationDate(requestDto.getReservationDate())
                         .reservationDate(requestDto.getReservationDate())
                         .totalAmount(stadium.getPrice())
-                        .status("예약중")
+                        .status(ReservationStatus.CONFIRMED)
                         .teamColor(requestDto.getTeamColor())
                         .user(authUser.getUser())
                         .match(match)
@@ -168,7 +168,7 @@ public class ReservationService {
                 .map(user -> Reservation.builder()
                         .reservationDate(requestDto.getReservationDate())
                         .totalAmount(stadium.getPrice())
-                        .status("예약중")
+                        .status(ReservationStatus.CONFIRMED)
                         .teamColor(requestDto.getTeamColor())
                         .user(user)
                         .team(team)
@@ -201,6 +201,35 @@ public class ReservationService {
         Slice<Reservation> reservations = reservationRepository.findByUserIdOrderByIdDesc(authUser.getUser().getId(), pageable);
 
         return reservations.map(ReservationFindResponseDto::new);
+    }
+
+    @Transactional
+    public ReservationResponseDto deleteReservation(Long reservationId, UserDetailsImpl authUser) {
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
+                ()-> new RuntimeException("예약ID를 찾을 수 없습니다.")
+        );
+        if(reservation.getUser().getId() != authUser.getUser().getId()){
+            throw new RuntimeException("해당 유저 정보가 다릅니다.");
+        }
+
+        reservation.markAsDeleted();
+        reservationRepository.save(reservation);
+
+        Match match = matchRepository.findById(reservation.getMatch().getId()).orElseThrow(
+                () -> new RuntimeException("해당 유저 정보가 다릅니다.")
+        );
+
+        switch (reservation.getTeamColor()) {
+            case A -> {
+                match.addATeamCount(1);
+            }
+            case B -> {
+                match.addBTeamCount(1);
+            }
+        }
+        matchRepository.save(match);
+
+        return new ReservationResponseDto(reservation.getId());
     }
 
 }

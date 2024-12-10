@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -102,7 +103,7 @@ public class ReservationServiceTest {
                 .id(1L)
                 .reservationDate(requestDto.getReservationDate())
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         when(reservationRepository.save(any(Reservation.class))).thenReturn(mockReservation);
@@ -161,7 +162,7 @@ public class ReservationServiceTest {
                 .id(1L)
                 .reservationDate(requestDto.getReservationDate())
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         when(reservationRepository.save(any(Reservation.class))).thenReturn(mockReservation);
@@ -202,7 +203,7 @@ public class ReservationServiceTest {
                 .id(1L)
                 .reservationDate(requestDto.getReservationDate())
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
 
@@ -251,7 +252,7 @@ public class ReservationServiceTest {
                 .team(team)
                 .user(user1)
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
         Reservation mockReservation2 = Reservation.builder()
                 .id(2L)
@@ -259,7 +260,7 @@ public class ReservationServiceTest {
                 .team(team)
                 .user(user1)
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
         Reservation mockReservation3 = Reservation.builder()
                 .id(3L)
@@ -267,7 +268,7 @@ public class ReservationServiceTest {
                 .team(team)
                 .user(user1)
                 .teamColor(requestDto.getTeamColor())
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         when(reservationRepository.save(any(Reservation.class)))
@@ -301,7 +302,7 @@ public class ReservationServiceTest {
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
                 .match(match)
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
@@ -336,7 +337,7 @@ public class ReservationServiceTest {
                 .user(user2)
                 .teamColor(TeamColor.A)
                 .match(match)
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
@@ -368,7 +369,7 @@ public class ReservationServiceTest {
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
                 .match(match1)
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         Match match2 = Match.builder()
@@ -387,7 +388,7 @@ public class ReservationServiceTest {
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
                 .match(match2)
-                .status("예약중")
+                .status(ReservationStatus.CONFIRMED)
                 .build();
 
         Pageable pageable = PageRequest.of(0, 10);
@@ -404,6 +405,53 @@ public class ReservationServiceTest {
         assertNotNull(responseDtos);
         assertEquals(2, responseDtos.getContent().size());
         assertTrue(responseDtos.hasNext());
+    }
+
+    @Test
+    @DisplayName("예약 취소 성공")
+    void deleteReservation_Success() {
+        Long reservationId = 1L;
+        Match match = Match.builder()
+                .id(1L)
+                .date(LocalDate.of(2024,12,3))
+                .time(10)
+                .stadiumTime(stadiumTime)
+                .aTeamCount(5)
+                .bTeamCount(6)
+                .build();
+
+        Reservation reservation = Reservation.builder()
+                .id(1L)
+                .reservationDate(LocalDate.of(2024,12,3))
+                .team(team)
+                .user(authUser.getUser())
+                .teamColor(TeamColor.A)
+                .match(match)
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
+        ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+
+        ReservationResponseDto responseDto = reservationService.deleteReservation(reservation.getId(), authUser);
+
+        assertEquals(List.of(reservationId), responseDto.getReservationId());
+
+        verify(matchRepository, times(1)).save(matchCaptor.capture());
+        verify(reservationRepository, times(1)).save(reservationCaptor.capture());
+
+        Match savedMatch = matchCaptor.getValue();
+        Reservation savedReservation = reservationCaptor.getValue();
+
+        assertEquals(ReservationStatus.CANCELED, savedReservation.getStatus());
+        assertEquals(6, savedMatch.getATeamCount());
+        assertEquals(6, savedMatch.getBTeamCount());
+
+
+
     }
 
 }

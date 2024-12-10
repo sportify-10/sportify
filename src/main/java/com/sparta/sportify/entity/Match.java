@@ -34,5 +34,12 @@ public class Match {
     public void discountBTeamCount(int count) {
         this.bTeamCount -= count;
     }
+
+    public void addATeamCount(int count) {
+        this.aTeamCount += count;
+    }
+    public void addBTeamCount(int count) {
+        this.bTeamCount += count;
+    }
 }
 
