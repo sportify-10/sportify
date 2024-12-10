@@ -1,7 +1,7 @@
 package com.sparta.sportify.exception;
 
-import com.sparta.sportify.util.api.ApiError;
 import com.sparta.sportify.util.api.ApiResult;
+import com.sparta.sportify.util.api.ApiError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
