@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -46,6 +47,7 @@ class MatchServiceTest {
 	}
 
 	@Test
+	@DisplayName("createMatchResult 메소드의 정상 동작을 확인합니다.")
 	public void createMatchResult_ShouldReturnMatchResultResponseDto() {
 		// Given
 		MatchResultRequestDto requestDto = new MatchResultRequestDto();
@@ -79,6 +81,7 @@ class MatchServiceTest {
 	}
 
 	@Test
+	@DisplayName("ID가 존재하지 않을 때 예외를 발생시키는지 확인합니다.")
 	public void createMatchResult_MatchNotFound_ShouldThrowException() {
 		// Given
 		MatchResultRequestDto requestDto = new MatchResultRequestDto();
@@ -93,6 +96,7 @@ class MatchServiceTest {
 	}
 
 	@Test
+	@DisplayName("getMatchResult메소드의 정상 동작을 확인합니다.")
 	public void getMatchResult_ShouldReturnMatchResultResponseDto() {
 		// Given
 		Long matchId = 1L;
@@ -118,6 +122,7 @@ class MatchServiceTest {
 	}
 
 	@Test
+	@DisplayName("ID가 존재하지 않을 때 예외를 발생시키는지 확인합니다.")
 	public void getMatchResult_MatchResultNotFound_ShouldThrowException() {
 		// Given
 		Long matchId = 1L;
