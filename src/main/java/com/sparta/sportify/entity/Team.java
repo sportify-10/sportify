@@ -1,16 +1,19 @@
 package com.sparta.sportify.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Table;
-import lombok.Getter;
+import com.sparta.sportify.dto.teamDto.TeamRequestDto;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
+@Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "teams")
 public class Team {
     @jakarta.persistence.Id
@@ -28,7 +31,33 @@ public class Team {
     private Float winRate;
     private LocalDateTime deletedAt;
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeamMember> teamMembers;
+//
+//    @OneToMany(mappedBy = "teams", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Reservation> reservations;
 
+    public Team(TeamRequestDto requestDto) {
+        this.teamName = requestDto.getTeamName();
+        this.region = requestDto.getRegion();
+        this.activityTime = requestDto.getActivityTime();
+        this.skillLevel = requestDto.getSkillLevel();
+        this.sportType = requestDto.getSportType();
+        this.description = requestDto.getDescription();
+    }
+
+    public void updateData(String teamName, String region, String activityTime, String skillLevel, String sportType, String description) {
+        this.setTeamName(teamName);
+        this.setRegion(region);
+        this.setActivityTime(activityTime);
+        this.setSkillLevel(skillLevel);
+        this.setSportType(sportType);
+        this.setDescription(description);
+    }
+
+    public void softDelete() {
+        this.setDeletedAt(LocalDateTime.now());
+    }
 
     // Getters and Setters
 }

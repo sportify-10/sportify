@@ -8,13 +8,12 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public User signup(UserRequestDto requestDto, boolean isAdmin) {
+    public SignupResponseDto signup(UserRequestDto requestDto, UserRole role) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
@@ -35,8 +34,6 @@ public class UserService {
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        // UserRole 설정
-        UserRole role = isAdmin ? UserRole.ADMIN : UserRole.USER;
 
         // User 객체 생성
         User user = new User();
@@ -51,7 +48,7 @@ public class UserService {
         // 저장
         userRepository.save(user);
 
-        return user;
+        return new SignupResponseDto(user);
     }
 
     // 로그인
@@ -77,5 +74,42 @@ public class UserService {
 
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user);  // 수정된 부분: SignupResponseDto 생성자로 변환
+    }
+
+    @Transactional
+    public void deactivateUser(Long userId) {
+        // 요청한 사용자 ID가 존재하는지 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 사용자 비활성화
+        user.setActive(false);
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+
+    // 유저 정보 수정
+    public void updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
+        // 이메일 중복 검사
+        if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
+            throw new RuntimeException("이메일이 중복되었습니다.");
+        }
+
+        // 비밀번호 수정이 요청된 경우
+        if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
+            // 비밀번호를 암호화해서 저장
+            String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+            userDetails.getUser().setPassword(encodedPassword);
+        }
+
+        // 수정 가능한 필드만 업데이트
+        userDetails.getUser().setName(requestDto.getName());
+        userDetails.getUser().setRegion(requestDto.getRegion());
+        userDetails.getUser().setAge(requestDto.getAge());
+        userDetails.getUser().setGender(requestDto.getGender());
+
+        // 변경된 유저 정보 저장
+        userRepository.save(userDetails.getUser());
     }
 }
