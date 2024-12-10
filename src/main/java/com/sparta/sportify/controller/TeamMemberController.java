@@ -1,5 +1,7 @@
 package com.sparta.sportify.controller;
 
+import com.sparta.sportify.dto.teamDto.ApproveRequestDto;
+import com.sparta.sportify.dto.teamDto.ApproveResponseDto;
 import com.sparta.sportify.dto.teamDto.TeamMemberResponseDto;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.TeamMemberService;
@@ -8,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,5 +28,18 @@ public class TeamMemberController {
                 ApiResult.success("팀 신청 완료",
                         teamMemberService.applyToTeam(teamId, userId)),
                 HttpStatus.OK);
+    }
+
+    @PostMapping("/approve/{teamId}")
+    public ResponseEntity<ApiResult<ApproveResponseDto>> approveApplication(
+            @PathVariable Long teamId,
+            @AuthenticationPrincipal UserDetailsImpl authUser,
+            @RequestBody ApproveRequestDto requestDto) {
+        Long approveId = authUser.getUser().getId();
+        return new ResponseEntity<>(
+                ApiResult.success("처리가 완료되었습니다.",
+                        teamMemberService.approveOrRejectApplication(teamId, approveId, requestDto)),
+                HttpStatus.OK
+        );
     }
 }

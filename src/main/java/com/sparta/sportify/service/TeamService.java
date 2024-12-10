@@ -4,7 +4,12 @@ import com.sparta.sportify.dto.teamDto.TeamRequestDto;
 import com.sparta.sportify.dto.teamDto.TeamResponseDto;
 import com.sparta.sportify.dto.teamDto.TeamResponsePage;
 import com.sparta.sportify.entity.Team;
+import com.sparta.sportify.entity.TeamMember;
+import com.sparta.sportify.entity.TeamMemberRole;
+import com.sparta.sportify.entity.User;
+import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
+import com.sparta.sportify.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,9 +22,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TeamService {
     private final TeamRepository teamRepository;
+    private final UserRepository userRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     @Transactional
-    public TeamResponseDto createTeam(TeamRequestDto requestDto) {
+    public TeamResponseDto createTeam(TeamRequestDto requestDto, Long creatorId) {
         Team team = Team.builder()
                 .teamName(requestDto.getTeamName())
                 .region(requestDto.getRegion())
@@ -30,6 +37,12 @@ public class TeamService {
                 .build();
 
         Team savedTeam = teamRepository.save(team);
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을수 없습니다"));
+        TeamMember teamMember = new TeamMember(creator, savedTeam);
+        teamMember.setTeamMemberRole(TeamMemberRole.TEAM_OWNER); // 팀장 역할
+        teamMember.setStatus(TeamMember.Status.APPROVED); // 자동 승인
+        teamMemberRepository.save(teamMember);
 
         return new TeamResponseDto(savedTeam);
     }

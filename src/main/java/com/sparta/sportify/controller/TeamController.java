@@ -3,11 +3,13 @@ package com.sparta.sportify.controller;
 import com.sparta.sportify.dto.teamDto.TeamRequestDto;
 import com.sparta.sportify.dto.teamDto.TeamResponseDto;
 import com.sparta.sportify.dto.teamDto.TeamResponsePage;
+import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.TeamService;
 import com.sparta.sportify.util.api.ApiResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,10 +19,11 @@ public class TeamController {
     private final TeamService teamService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResult<TeamResponseDto>> createMenu(@RequestBody TeamRequestDto requestDto) {
+    public ResponseEntity<ApiResult<TeamResponseDto>> createMenu(@RequestBody TeamRequestDto requestDto, @AuthenticationPrincipal UserDetailsImpl authUser) {
+        Long creatorId = authUser.getUser().getId();
         return new ResponseEntity<>(
                 ApiResult.success("팀 생성 완료",
-                        teamService.createTeam(requestDto)),
+                        teamService.createTeam(requestDto, creatorId)),
                 HttpStatus.OK);
     }
 
