@@ -36,7 +36,7 @@ public class Match {
     }
 
     public void addATeamCount(int count) {
-        this.bTeamCount += count;
+        this.aTeamCount += count;
     }
     public void addBTeamCount(int count) {
         this.bTeamCount += count;
