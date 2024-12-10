@@ -85,7 +85,7 @@ public class ReservationController {
     ) {
         return new ResponseEntity<>(
                 ApiResult.success(
-                        "개인예약 성공",
+                        "예약 취소 성공",
                         reservationService.deleteReservation(reservationId, authUser)
                 ),
                 HttpStatus.OK
