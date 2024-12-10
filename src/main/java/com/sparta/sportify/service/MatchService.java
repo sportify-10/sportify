@@ -57,6 +57,20 @@ public class MatchService {
 			savedResult.getMatchDate()
 		);
 	}
+  
+	@Transactional(readOnly = true)
+	public MatchResultResponseDto getMatchResult(Long matchId) {
+		MatchResult matchResult = matchResultRepository.findByMatchId(matchId)
+			.orElseThrow(() -> new EntityNotFoundException("경기 결과를 찾을 수 없습니다."));
+
+		return new MatchResultResponseDto(
+			matchResult.getId(),
+			matchResult.getTeamAScore(),
+			matchResult.getTeamBScore(),
+			matchResult.getMatchStatus(),
+			matchResult.getMatchDate()
+		);
+  }
 
 	public MatchesByDateResponseDto getMatchesByDate(LocalDate date/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
 		//Pageable pageable = PageRequest.of(page, size);
