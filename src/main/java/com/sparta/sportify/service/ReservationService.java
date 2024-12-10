@@ -212,7 +212,7 @@ public class ReservationService {
             throw new RuntimeException("해당 유저 정보가 다릅니다.");
         }
 
-        reservation.changeDeleteStatus();
+        reservation.markAsDeleted();
         reservationRepository.save(reservation);
 
         Match match = matchRepository.findById(reservation.getMatch().getId()).orElseThrow(

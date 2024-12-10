@@ -41,7 +41,7 @@ public class Reservation {
     private Match match;
 
 
-    public void changeDeleteStatus(){
+    public void markAsDeleted(){
         this.status = ReservationStatus.CANCELED;
         this.deletedAt = LocalDateTime.now();
     }
