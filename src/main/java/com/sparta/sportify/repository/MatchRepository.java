@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface MatchRepository extends JpaRepository<Match, Long> {
     Optional<Match> findByIdAndDateAndTime(Long id, LocalDate date, Integer time);
+    Optional<Match> findByStadiumTimeIdAndDateAndTime(Long id, LocalDate date, Integer time);
 }

@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,25 +101,35 @@ public class MatchService {
 				String startTimeFormatted = String.format("%02d:00", startTime);
 				String endTimeFormatted = String.format("%02d:00", endTime);
 
-				LocalDateTime currentDateTime = LocalDateTime.now();
-
 				LocalTime startTimeLocalTimeType = LocalTime.parse(startTimeFormatted); //LocalTime 형식으로 변환
 				LocalDateTime startDateTime = date.atTime(startTimeLocalTimeType);//입력한 날짜 시간
-				Duration duration = Duration.between(currentDateTime, startDateTime);//시간 비교
+				Duration duration = Duration.between(LocalDateTime.now(), startDateTime);//시간 비교
+
+				int startTimeInt = startTimeLocalTimeType.getHour() * 100;//Integer형식과 비교하기 위해 변환
+				//매치 테이블에서 예약 인원 수 조회하기 위헤
+				Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt);
 
 				String status = ""; //마감, 모집중, 마감 임박
 
-				//시간이 지난 경우
-				if(duration.isNegative() /*모집 인원 100% 채워진 경우 나중에 추가*/) {
-					status = "마감";
+				double totalMatchCount = 0;//매치에 예약된 인원 수
+				double totalStadiumCapacity = 0;//구장애서 정한 최대 인원 수
+				double reservationPercentage = 0;
+				if (match.isPresent()) {
+					//예약 인원 %
+					totalMatchCount = match.get().getATeamCount() + match.get().getBTeamCount();
+					totalStadiumCapacity = stadiumTimes.get(i).getStadium().getATeamCount() + stadiumTimes.get(i).getStadium().getBTeamCount();
+					reservationPercentage = (totalMatchCount / totalStadiumCapacity) * 100;
 				}
 
-				//현재 시작시간 까지 4시간 이내로 남은 경우
-				else if(duration.toHours() <= 4 /*모집 인원 80% 이상? 나중에 추가*/) {
+				//시간이 지난 경우 || 인원이 다 찬 경우
+				if(duration.isNegative() || reservationPercentage == 100) {
+					status = "마감";
+				}
+				//현재 시작시간 까지 4시간 이내로 남은 경우 || 인원 80% 이상인 경우
+				else if(duration.toHours() <= 4 || reservationPercentage > 80) {
 					status = "마감 임박";
 				}
 
-				//보통의 경우 모집중
 				else {
 					status = "모집중";
 				}
