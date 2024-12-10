@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -415,7 +416,7 @@ public class ReservationServiceTest {
                 .date(LocalDate.of(2024,12,3))
                 .time(10)
                 .stadiumTime(stadiumTime)
-                .aTeamCount(6)
+                .aTeamCount(5)
                 .bTeamCount(6)
                 .build();
 
@@ -429,14 +430,28 @@ public class ReservationServiceTest {
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
+        ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
+
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
         when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
 
         ReservationResponseDto responseDto = reservationService.deleteReservation(reservation.getId(), authUser);
 
         assertEquals(List.of(reservationId), responseDto.getReservationId());
-        verify(matchRepository, times(1)).save(any(Match.class));
-        verify(reservationRepository, times(1)).save(any(Reservation.class));
+
+        verify(matchRepository, times(1)).save(matchCaptor.capture());
+        verify(reservationRepository, times(1)).save(reservationCaptor.capture());
+
+        Match savedMatch = matchCaptor.getValue();
+        Reservation savedReservation = reservationCaptor.getValue();
+
+        assertEquals(ReservationStatus.CANCELED, savedReservation.getStatus());
+        assertEquals(6, savedMatch.getATeamCount());
+        assertEquals(6, savedMatch.getBTeamCount());
+
+
+
     }
 
 }
