@@ -21,7 +21,7 @@ public class Reservation {
     private Long id;
 
     private LocalDate reservationDate;
-    private String status;
+    private ReservationStatus status;
     private Integer totalAmount;
     private LocalDateTime deletedAt;
 
@@ -40,4 +40,9 @@ public class Reservation {
     @JoinColumn(name = "match_id", nullable = false)
     private Match match;
 
+
+    public void markAsDeleted(){
+        this.status = ReservationStatus.CANCELED;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
