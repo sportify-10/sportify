@@ -1,8 +1,6 @@
 package com.sparta.sportify.service;
 
-import com.sparta.sportify.dto.teamDto.ApproveRequestDto;
-import com.sparta.sportify.dto.teamDto.ApproveResponseDto;
-import com.sparta.sportify.dto.teamDto.TeamMemberResponseDto;
+import com.sparta.sportify.dto.teamDto.*;
 import com.sparta.sportify.entity.Team;
 import com.sparta.sportify.entity.TeamMember;
 import com.sparta.sportify.entity.TeamMemberRole;
@@ -76,5 +74,28 @@ public class TeamMemberService {
         teamMemberRepository.save(teamMember);
 
         return new ApproveResponseDto(requestDto.getUserId(), requestDto.isApprove());
+    }
+
+    @Transactional
+    public RoleResponseDto grantRole(Long teamId, RoleRequestDto requestDto, UserDetailsImpl authUser) {
+        // 요청자의 권한 확인
+        TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(authUser.getUser().getId(), teamId)
+                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다"));
+        if (requester.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
+            throw new IllegalStateException("팀장이 아니므로 역할을 부여할 수 없습니다.");
+        }
+        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(requestDto.getUserId(), teamId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 팀 멤버가 아닙니다."));
+        TeamMemberRole role;
+        try {
+            role = TeamMemberRole.valueOf(requestDto.getRole());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 역할입니다.");
+        }
+
+        teamMember.setTeamMemberRole(role);
+        teamMemberRepository.save(teamMember);
+
+        return new RoleResponseDto(requestDto.getUserId(), requestDto.getRole());
     }
 }

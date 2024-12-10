@@ -1,8 +1,6 @@
 package com.sparta.sportify.controller;
 
-import com.sparta.sportify.dto.teamDto.ApproveRequestDto;
-import com.sparta.sportify.dto.teamDto.ApproveResponseDto;
-import com.sparta.sportify.dto.teamDto.TeamMemberResponseDto;
+import com.sparta.sportify.dto.teamDto.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.TeamMemberService;
 import com.sparta.sportify.util.api.ApiResult;
@@ -41,5 +39,15 @@ public class TeamMemberController {
         );
     }
 
-
+    @PatchMapping("/grant/{teamId}")
+    public ResponseEntity<ApiResult<RoleResponseDto>> grantRole(
+            @PathVariable Long teamId, // 팀 ID
+            @RequestBody RoleRequestDto requestDto, // 사용자 ID와 역할 정보
+            @AuthenticationPrincipal UserDetailsImpl authUser) { // 인증된 사용자// 요청자의 ID
+        return new ResponseEntity<>(
+                ApiResult.success("팀 멤버 역할이 성공적으로 부여되었습니다.",
+                        teamMemberService.grantRole(teamId, requestDto, authUser)),
+                HttpStatus.OK
+        );
+    }
 }
