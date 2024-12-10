@@ -60,7 +60,6 @@ public class MatchService {
 
 	public MatchesByDateResponseDto getMatchesByDate(LocalDate date/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
 		//Pageable pageable = PageRequest.of(page, size);
-		List<StadiumTime> stadiumTimes = stadiumTimeRepository.findAll();
 
 		//하나의 값? 저장할 리스트
 		List<MatchByStadiumResponseDto> matches = new ArrayList<>();
@@ -73,15 +72,16 @@ public class MatchService {
 		"endTime": "10:00"
 		*/
 
+		//요일 구하고 MON, TUE 대문자 형태로 변환
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase();
+
+		//FULLTEXT 검색
+		List<StadiumTime> stadiumTimes = stadiumTimeRepository.findByCronDay(cronDay);
 		//저장된 스타디움 타임이 없으면
 		if (stadiumTimes.isEmpty()) {
 			return new MatchesByDateResponseDto(List.of());
 		}
-
-		//요일 구하고 mon, tue 3글자 소문자 형태로 변환
-		DayOfWeek dayOfWeek = date.getDayOfWeek();
-		String cronDay = dayOfWeek.toString().substring(0, 3).toLowerCase();
-
 		for (int i = 0; i < stadiumTimes.size(); i++) {
 			String cron = stadiumTimes.get(i).getCron();//스타디움 타임에 저장된 크론식 조회
 
