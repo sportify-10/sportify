@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public SignupResponseDto signup(UserRequestDto requestDto, UserRole role) {
+    public User signup(UserRequestDto requestDto, UserRole role) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
@@ -48,7 +49,7 @@ public class UserService {
         // 저장
         userRepository.save(user);
 
-        return new SignupResponseDto(user);
+        return user;
     }
 
     // 로그인
@@ -73,7 +74,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         // 유저 정보 DTO로 변환 후 응답 반환
-        return new SignupResponseDto(user);  // 수정된 부분: SignupResponseDto 생성자로 변환
+        return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
 
     @Transactional
@@ -111,5 +112,29 @@ public class UserService {
 
         // 변경된 유저 정보 저장
         userRepository.save(userDetails.getUser());
+    }
+
+    // 카카오 로그인 혹은 회원가입 처리
+    public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {
+        // 이메일 기반으로 사용자 조회
+        String email = (String) userInfo.get("email");
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            // 카카오에서 받은 정보로 회원가입 처리
+            UserRequestDto userRequestDto = new UserRequestDto();
+            userRequestDto.setEmail(email);
+            userRequestDto.setName((String) userInfo.get("name"));
+            userRequestDto.setRegion((String) userInfo.get("region"));
+            userRequestDto.setGender((String) userInfo.get("gender"));
+            userRequestDto.setAge((Long) userInfo.get("age"));
+            user = signup(userRequestDto, UserRole.USER);
+        }
+
+        // JWT 토큰 생성
+        String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
+        // 회원가입 응답 DTO 생성
+        return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
     }
 }

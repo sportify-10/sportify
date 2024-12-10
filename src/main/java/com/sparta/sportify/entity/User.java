@@ -54,4 +54,7 @@ public class User {
     private boolean active = true;
 
 
+    public String getAccessToken() {
+        return null;
+    }
 }

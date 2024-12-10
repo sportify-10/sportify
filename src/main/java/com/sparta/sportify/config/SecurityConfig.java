@@ -28,9 +28,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll() // 회원가입/로그인은 인증 불필요
+                        .requestMatchers("/api/users/signup", "/api/users/login", "/api/users/oauth2/code/kakao","/login", "/oauth2/**").permitAll() // 회원가입/로그인은 인증 불필요
                         .anyRequest().authenticated() // 나머지는 인증 필요
 
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/loginSuccess")
+                        .failureUrl("/loginFailure")
                 );
         // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 추가
         // JWT 필터 등록

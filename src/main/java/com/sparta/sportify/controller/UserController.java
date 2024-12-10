@@ -13,24 +13,29 @@ import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
+import com.sparta.sportify.service.oauth.KakaoLoginService;
 import com.sparta.sportify.service.oauth.KakaoOAuthService;
+//import com.sparta.sportify.service.oauth.NaverOAuthService;
 import com.sparta.sportify.service.oauth.NaverOAuthService;
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserController {
 
     @Autowired
@@ -47,7 +52,7 @@ public class UserController {
 
     // 유저 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<SignupResponseDto>> signUp(
+    public ResponseEntity<ApiResult<User>> signUp(
             @Valid @RequestBody UserRequestDto requestDto
     ) {
         // 역할이 없는 경우 기본값 USER 설정
@@ -149,20 +154,43 @@ public class UserController {
         );
     }
 
-    private final NaverOAuthService naverOAuthService;
-    private final KakaoOAuthService kakaoOAuthService;
-
-    @PostMapping("/{provider}/login")
-    public ResponseEntity<OAuthResponseDto> login(
-            @PathVariable String provider,
-            @RequestHeader("Authorization") String accessToken) {
-        if ("naver".equalsIgnoreCase(provider)) {
-            return ResponseEntity.ok(naverOAuthService.login(accessToken));
-        } else if ("kakao".equalsIgnoreCase(provider)) {
-            return ResponseEntity.ok(kakaoOAuthService.login(accessToken));
-        } else {
-            throw new IllegalArgumentException("지원하지 않는 OAuth 제공자: " + provider);
-        }
-    }
+//    private final KakaoLoginService kakaoLoginService;
+//
+//    @GetMapping("/oauth2/code/kakao")
+//    public String login(Model model){
+//        model.addAttribute("kakaoUrl", kakaoLoginService.getKakaoLogin());
+//
+//        return "model";
+//    }
+//    private final NaverOAuthService naverOAuthService;
+//    private final KakaoOAuthService kakaoOAuthService;
+//
+//    public UserController(UserService userService, UserRepository userRepository, PasswordEncoder passwordEncoder, KakaoOAuthService kakaoOAuthService, NaverOAuthService naverOAuthService) {
+//        this.userService = userService;
+//        this.userRepository = userRepository;
+//        this.passwordEncoder = passwordEncoder;
+//        this.kakaoOAuthService = kakaoOAuthService;
+//        this.naverOAuthService = naverOAuthService;
+//    }
+//
+//    @PostMapping("/kakao/login")
+//    public ApiResult<?> kakaoLogin(@RequestParam String code) {
+//        try {
+//            // Access Token 발급
+//            String accessToken = kakaoOAuthService.getAccessToken(code);
+//
+//            // 사용자 정보 가져오기
+//            Map<String, Object> userInfo = kakaoOAuthService.getUserInfo(accessToken);
+//
+//            // 사용자 정보를 기반으로 회원가입 처리
+//            User user = userService.saveOrLogin(userInfo);
+//
+//            // 성공 응답
+//            return ApiResult.success(user);
+//        } catch (Exception e) {
+//            // 예외 발생 시 에러 응답
+//            return ApiResult.error("로그인 또는 회원가입 실패", e.getMessage());
+//        }
+//    }
 }
 
