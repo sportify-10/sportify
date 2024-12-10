@@ -12,4 +12,5 @@ public class MatchByStadiumResponseDto {
 	private final String stadiumLocation;
 	private final String startTime;
 	private final String endTime;
+	private final String status;
 }
