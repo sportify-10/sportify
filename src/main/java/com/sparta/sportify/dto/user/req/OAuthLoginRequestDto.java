@@ -1,5 +1,6 @@
 package com.sparta.sportify.dto.user.req;
 
+import com.sparta.sportify.dto.user.req.OAuthAttributes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

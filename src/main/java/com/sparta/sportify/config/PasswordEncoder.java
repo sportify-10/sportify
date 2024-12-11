@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 @Component("customPasswordEncoder")
 public class PasswordEncoder {
-    public String encode(String rawPassword) {
+    public static String encode(String rawPassword) {
         return BCrypt.withDefaults().hashToString(BCrypt.MIN_COST, rawPassword.toCharArray());
     }
 

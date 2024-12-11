@@ -1,7 +1,9 @@
 package com.sparta.sportify.entity;
 
+import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
+import com.sparta.sportify.config.PasswordEncoder;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -56,5 +58,11 @@ public class User {
 
     public String getAccessToken() {
         return null;
+    }
+
+    public User(UserRequestDto requestDto) {
+        this.email = requestDto.getEmail();
+        this.password = PasswordEncoder.encode(requestDto.getPassword());
+        this.role = requestDto.getRole() != null ? requestDto.getRole() : UserRole.USER;
     }
 }
