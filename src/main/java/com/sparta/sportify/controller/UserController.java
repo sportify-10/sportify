@@ -162,28 +162,8 @@ public class UserController {
 
     @GetMapping("/kakao/login")
     public String kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User, Model model) {
-        if (oAuth2User == null) {
-            throw new IllegalStateException("로그인 정보가 없습니다. OAuth2 인증 후 시도해주세요.");
-        }
-
-        // 사용자 정보에서 이메일 추출
-        String email = null;
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-
-        // "kakao_account" 키에서 이메일 정보 확인
-        if (attributes.containsKey("kakao_account")) {
-            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-            email = (String) kakaoAccount.get("email");
-        }
-
-        if (email == null) {
-            throw new IllegalStateException("이메일 정보를 가져올 수 없습니다.");
-        }
-
-        // 모델에 사용자 이메일 추가
-        model.addAttribute("email", email);
-
-        // 성공 페이지로 리턴 (뷰 이름: kakaoSuccess.html)
+    // OAuth2User를 사용하여 사용자 정보를 로드하고, 이메일을 추출한 후 모델에 추가
+        model.addAttribute("email", customOAuth2UserService.extractUserAttributes(oAuth2User));
         return "kakaoSuccess";
     }
 
