@@ -21,6 +21,7 @@ public class Reservation {
     private Long id;
 
     private LocalDate reservationDate;
+    @Enumerated(EnumType.STRING)
     private ReservationStatus status;
     private Integer totalAmount;
     private LocalDateTime deletedAt;

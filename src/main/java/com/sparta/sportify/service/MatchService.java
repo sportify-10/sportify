@@ -57,7 +57,7 @@ public class MatchService {
 			savedResult.getMatchDate()
 		);
 	}
-  
+
 	@Transactional(readOnly = true)
 	public MatchResultResponseDto getMatchResult(Long matchId) {
 		MatchResult matchResult = matchResultRepository.findByMatchId(matchId)
@@ -70,7 +70,7 @@ public class MatchService {
 			matchResult.getMatchStatus(),
 			matchResult.getMatchDate()
 		);
-  }
+	}
 
 	public MatchesByDateResponseDto getMatchesByDate(LocalDate date/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
 		//Pageable pageable = PageRequest.of(page, size);
