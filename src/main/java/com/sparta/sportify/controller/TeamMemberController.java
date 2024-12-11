@@ -52,7 +52,7 @@ public class TeamMemberController {
     }
 
     @GetMapping("/{teamId}/members")
-    public ResponseEntity<ApiResult<TeamMemberResponsePage>> getAllMenus(@RequestParam(required = false, defaultValue = "0") int page,
+    public ResponseEntity<ApiResult<TeamMemberResponsePage>> getAllTeamMembers(@RequestParam(required = false, defaultValue = "0") int page,
                                                                          @RequestParam(required = false, defaultValue = "10") int size,
                                                                          @PathVariable Long teamId) {
         return new ResponseEntity<>(

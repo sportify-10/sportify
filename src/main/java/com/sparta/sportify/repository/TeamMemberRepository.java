@@ -19,4 +19,5 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
     Optional<TeamMember> findByUserIdAndTeamId(Long userid, Long teamId);
 
     Page<TeamMember> findByTeamIdAndDeletedAtIsNull(Long teamId, Pageable pageable);
+
 }

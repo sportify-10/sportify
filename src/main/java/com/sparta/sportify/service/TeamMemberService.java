@@ -121,11 +121,13 @@ public class TeamMemberService {
         }
 
         // 퇴출 대상 팀원 조회
-        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, teamId)
+        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, requester.getTeam().getId())
                 .orElseThrow(() -> new IllegalArgumentException("퇴출 대상 팀원을 찾을 수 없습니다."));
+
 
         // 소프트 삭제 처리
         teamMember.softDelete();
+        teamMemberRepository.save(teamMember);
 
         return new TeamMemberResponseDto(teamMember);
     }

@@ -44,7 +44,7 @@ public class TeamMember {
     }
 
     public void softDelete() {
-        this.setDeletedAt(LocalDateTime.now());
+        this.deletedAt = LocalDateTime.now();
     }
     // Getters and Setters
 }
