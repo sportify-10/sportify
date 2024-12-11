@@ -190,40 +190,41 @@ public class MatchService {
 
 	// 매치 단건 조회
 	@Transactional(readOnly = true)
-	public MatchDetailResponseDto getMatchByDateAndTime(LocalDate date, Integer time) {
+	public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time) {
 		// 매치 조회
-		Match match = matchRepository.findByDateAndTime(date, time)
+		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다."));
+		Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time);
 
 		// 매치 상태 결정
 		String status = determineMatchStatus(match);
 
 		return new MatchDetailResponseDto(
-			match.getId(),
-			match.getDate(),
-			match.getTime(),
-			match.getATeamCount(),
-			match.getBTeamCount(),
-			match.getStadiumTime().getStadium().getStadiumName(),
+			match.get().getId(),
+			match.get().getDate(),
+			match.get().getTime(),
+			match.get().getATeamCount(),
+			match.get().getBTeamCount(),
+			match.get().getStadiumTime().getStadium().getStadiumName(),
 			status
 		);
 	}
 	// 매치 상태 결정
-	private String determineMatchStatus(Match match) {
+	private String determineMatchStatus(Optional<Match> match) {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime matchStartTime;
 		try {
-			String timeString = String.valueOf(match.getTime());
+			String timeString = String.format("%02d:00", match.get().getTime());
 			LocalTime time = LocalTime.parse(timeString); // "HH:mm" 형식이어야 함
-			matchStartTime = LocalDateTime.of(match.getDate(), time);
+			matchStartTime = LocalDateTime.of(match.get().getDate(), time);
 		} catch (DateTimeParseException e) {
-			throw new IllegalArgumentException("Invalid time format: " + match.getTime(), e);
+			throw new IllegalArgumentException("Invalid time format: " + match.get().getTime(), e);
 		}
 		LocalDateTime matchEndTime = matchStartTime.plusHours(2); // 종료 시간은 시작 시간 + 2시간
 
 		// 예약 인원 수 계산
-		double totalMatchCount = match.getATeamCount() + match.getBTeamCount();
-		double totalStadiumCapacity = match.getStadiumTime().getStadium().getATeamCount() + match.getStadiumTime().getStadium().getBTeamCount();
+		double totalMatchCount = match.get().getATeamCount() + match.get().getBTeamCount();
+		double totalStadiumCapacity = match.get().getStadiumTime().getStadium().getATeamCount() + match.get().getStadiumTime().getStadium().getBTeamCount();
 		double reservationPercentage = (totalMatchCount / totalStadiumCapacity) * 100;
 
 		// 상태 결정 로직

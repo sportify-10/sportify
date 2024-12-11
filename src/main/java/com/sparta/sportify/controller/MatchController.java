@@ -39,12 +39,13 @@ public class MatchController {
 			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date/*page, size, date,  userDetails*/)));
 	}
 
-	@GetMapping("/{date}/{time}")
+	@GetMapping("/{stadiumId}/{date}/{time}")
 	public ResponseEntity<ApiResult<MatchDetailResponseDto>> getMatchByDateAndTime(
+		@PathVariable Long stadiumId,
 		@PathVariable LocalDate date,
 		@PathVariable Integer time) {
 
-		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(date, time);
+		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(stadiumId, date, time);
 
 		return ResponseEntity.ok(
 			ApiResult.success("매치 조회 성공", matchDetail)
