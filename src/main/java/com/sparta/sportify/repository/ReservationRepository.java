@@ -23,6 +23,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("reservationDate") LocalDate reservationDate
     );
 
-
     Slice<Reservation> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
+
+    @Query("SELECT SUM(r.totalAmount) FROM Reservation r WHERE r.match.id = :matchId")
+    Integer findTotalAmountByMatchId(@Param("matchId") Long matchId);
 }
