@@ -1,4 +1,4 @@
-package com.sparta.sportify.service.stadium;
+package com.sparta.sportify.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +15,8 @@ import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
 import com.sparta.sportify.entity.Match;
-import com.sparta.sportify.entity.Reservation;
 import com.sparta.sportify.entity.ReservationStatus;
 import com.sparta.sportify.entity.Stadium;
-import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumRepository;

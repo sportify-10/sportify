@@ -23,8 +23,8 @@ import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-import com.sparta.sportify.service.stadium.StadiumService;
-import com.sparta.sportify.service.stadiumTimeService.StadiumTimeService;
+import com.sparta.sportify.service.StadiumService;
+import com.sparta.sportify.service.StadiumTimeService;
 
 class StadiumTimeServiceTest {
 

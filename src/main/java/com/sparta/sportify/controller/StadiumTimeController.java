@@ -1,4 +1,4 @@
-package com.sparta.sportify.controller.stadiumTime;
+package com.sparta.sportify.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,12 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
 import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeResponseDto;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-import com.sparta.sportify.service.stadiumTimeService.StadiumTimeService;
+import com.sparta.sportify.service.StadiumTimeService;
 import com.sparta.sportify.util.api.ApiResult;
 
 import lombok.RequiredArgsConstructor;
