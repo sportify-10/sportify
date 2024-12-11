@@ -205,7 +205,7 @@ public class MatchService {
 		return new MatchDetailResponseDto(
 			match.getId(),
 			match.getDate(),
-			match.getTime(),
+			String.format("%02d:%02d", match.getTime(), 0),
 			match.getATeamCount(),
 			match.getBTeamCount(),
 			match.getStadiumTime().getStadium().getStadiumName(),
