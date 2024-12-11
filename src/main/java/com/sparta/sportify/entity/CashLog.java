@@ -28,7 +28,6 @@ public class CashLog {
     private LocalDateTime createAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 10)
     private CashType type;
 
     @ManyToOne
