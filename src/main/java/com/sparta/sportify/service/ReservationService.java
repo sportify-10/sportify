@@ -23,6 +23,8 @@ public class ReservationService {
     private final TeamRepository teamRepository;
     private final StadiumTimeRepository stadiumTimeRepository;
     private final UserRepository userRepository;
+    private final CashLogReservationMappingRepository cashLogReservationMappingRepository;
+    private final CashLogRepository cashLogRepository;
 
 
     @Transactional
@@ -84,6 +86,25 @@ public class ReservationService {
                         .match(match)
                         .build());
 
+        CashLog cashLog = cashLogRepository.save(
+                CashLog.builder()
+                        .price(stadium.getPrice())
+                        .type(CashType.PAYMENT)
+                        .user(authUser.getUser())
+                        .build()
+        );
+
+        cashLogReservationMappingRepository.save(
+                CashLogReservationMapping.builder()
+                        .cashLog(cashLog)
+                        .reservation(reservation)
+                        .type(CashLogReservationMappingType.MINUS)
+                        .build()
+        );
+
+        authUser.getUser().setCash(authUser.getUser().getCash()-stadium.getPrice());
+        userRepository.save(authUser.getUser());
+
         return new ReservationResponseDto(reservation.getId());
     }
 
@@ -109,7 +130,7 @@ public class ReservationService {
 
 
         Team team = teamRepository.findById(requestDto.getTeamId()).orElseThrow(
-                ()-> new RuntimeException("팀을 찾을 수 없습니다")
+                () -> new RuntimeException("팀을 찾을 수 없습니다")
         );
 
 
@@ -162,8 +183,6 @@ public class ReservationService {
         Stadium stadium = stadiumTime.getStadium();
 
 
-
-
         List<Reservation> reservations = users.stream()
                 .map(user -> Reservation.builder()
                         .reservationDate(requestDto.getReservationDate())
@@ -182,12 +201,12 @@ public class ReservationService {
 
 
     @Transactional
-    public ReservationFindResponseDto findReservation(Long reservationId,UserDetailsImpl authUser){
+    public ReservationFindResponseDto findReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                ()->new RuntimeException("찾을 수 없는 예약 ID입니다.")
+                () -> new RuntimeException("찾을 수 없는 예약 ID입니다.")
         );
 
-        if(reservation.getUser().getId() != authUser.getUser().getId()){
+        if (reservation.getUser().getId() != authUser.getUser().getId()) {
             throw new RuntimeException("해당 유저 정보가 다릅니다");
         }
 
@@ -206,9 +225,9 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto deleteReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                ()-> new RuntimeException("예약ID를 찾을 수 없습니다.")
+                () -> new RuntimeException("예약ID를 찾을 수 없습니다.")
         );
-        if(reservation.getUser().getId() != authUser.getUser().getId()){
+        if (reservation.getUser().getId() != authUser.getUser().getId()) {
             throw new RuntimeException("해당 유저 정보가 다릅니다.");
         }
 
