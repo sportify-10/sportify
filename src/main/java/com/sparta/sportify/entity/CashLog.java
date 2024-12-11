@@ -11,7 +11,6 @@ public class CashLog {
 
     private Integer price;
     private String datetime;
-    private Long reservationCode;
 
     @Enumerated(EnumType.STRING)
     private CashType type;
