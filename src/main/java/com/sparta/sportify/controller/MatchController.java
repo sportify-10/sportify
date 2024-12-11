@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
@@ -37,6 +38,18 @@ public class MatchController {
 	) {
 		return ResponseEntity.ok(
 			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date/*page, size, date,  userDetails*/)));
+	}
+
+	@GetMapping("/{date}/{time}")
+	public ResponseEntity<ApiResult<MatchDetailResponseDto>> getMatchByDateAndTime(
+		@PathVariable LocalDate date,
+		@PathVariable String time) {
+
+		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(date, time);
+
+		return ResponseEntity.ok(
+			ApiResult.success("매치 조회 성공", matchDetail)
+		);
 	}
 
 	@PostMapping("/result/{matchId}")
