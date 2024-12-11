@@ -1,11 +1,10 @@
-package com.sparta.sportify.service.stadiumTimeService;
+package com.sparta.sportify.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
 import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeResponseDto;
 import com.sparta.sportify.entity.Stadium;

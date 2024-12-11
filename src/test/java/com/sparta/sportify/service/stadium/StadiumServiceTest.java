@@ -18,6 +18,7 @@ import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.service.StadiumService;
 
 class StadiumServiceTest {
 
