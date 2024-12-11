@@ -6,6 +6,8 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
@@ -21,12 +23,9 @@ import java.util.UUID;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
 
-    private String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
-    }
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
@@ -36,37 +35,77 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 클라이언트 registrationId 확인 (예: kakao, naver 등)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-        // 플랫폼별 사용자 정보 파싱
+        // 플랫폼별 사용자 정보 가져오기
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        String email = extractUserAttributes(oAuth2User);
 
-        // 사용자 정보를 기반으로 회원가입 처리
-        return processUserRegistration(oAuth2User);
+        String email = extractEmail(attributes, registrationId);
+        String oauthId = extractOauthId(attributes);
+
+        logger.info("Extracted Email: {}", email);
+        logger.info("Extracted OAuth ID: {}", oauthId);
+
+        // 사용자 등록 또는 로그인 처리
+        return processUserRegistration(email, oauthId, attributes, oAuth2User);
+    }
+
+    private String extractEmail(Map<String, Object> attributes, String registrationId) {
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
+                return (String) kakaoAccount.get("email");
+            }
+        }
+        return (String) attributes.getOrDefault("email", null); // 다른 플랫폼은 기본 이메일 필드 확인
+    }
+
+
+    private String extractOauthId(Map<String, Object> attributes) {
+        return String.valueOf(attributes.get("id"));
+    }
+
+    private OAuth2User processUserRegistration(String email, String oauthId, Map<String, Object> attributes, OAuth2User oAuth2User) {
+        Optional<User> existingUser;
+
+        if (email == null || email.isEmpty()) {
+            existingUser = userRepository.findByOauthId(oauthId);
+            if (existingUser.isEmpty()) {
+                // 이메일 없이 사용자를 생성
+                logger.warn("Email is null or empty for OAuth ID: {}", oauthId);
+                email = "anonymous-" + oauthId + "@example.com"; // 대체 이메일 생성
+            }
+        } else {
+            existingUser = userRepository.findByEmail(email);
+        }
+
+        // 사용자 등록
+        if (existingUser.isEmpty()) {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setOauthId(oauthId);
+            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            newUser.setRole(UserRole.USER);
+
+            userRepository.save(newUser);
+        }
+
+        return new DefaultOAuth2User(
+                oAuth2User.getAuthorities(),
+                attributes,
+                email != null ? "email" : "oauthId" // Principal key 설정
+        );
     }
 
     public String extractUserAttributes(OAuth2User oAuth2User) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        return (String) kakaoAccount.get("email");
-    }
+        logger.info("OAuth2User attributes: {}", attributes);
 
-    private OAuth2User processUserRegistration(OAuth2User oAuth2User) {
-        String email = extractUserAttributes(oAuth2User);
-        String randomPassword = UUID.randomUUID().toString(); // 임의 비밀번호 생성
-        String encodedPassword = passwordEncoder.encode(randomPassword); // 암호화
-        // 이미 존재하는 사용자 확인
-        Optional<User> existingUser = userRepository.findByEmail(email);
-        if (existingUser.isEmpty()) {
-            // 새로운 사용자 등록
-            UserRequestDto requestDto = new UserRequestDto();
-            requestDto.setEmail(email);
-            requestDto.setPassword(encodedPassword);
-            requestDto.setRole(UserRole.USER); // 기본 ROLE_USER로 설정
-            User newUser = userRepository.save(new User(requestDto));
-            return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "email");
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        if (kakaoAccount == null || !kakaoAccount.containsKey("email")) {
+            logger.warn("Email not found in Kakao account attributes");
+            return null; // 이메일 없음
         }
 
-        // 이미 존재하는 사용자라면, 그 사용자 반환
-        return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "email");
+        return kakaoAccount.get("email").toString(); // 이메일 반환
     }
+
 }

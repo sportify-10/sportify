@@ -1,6 +1,7 @@
 package com.sparta.sportify.config;
 
 import com.sparta.sportify.jwt.JwtAuthenticationFilter;
+import com.sparta.sportify.security.OAuth2LoginSuccessHandler;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,12 +22,14 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
+    private final OAuth2LoginSuccessHandler successHandler;
 
 
-    public SecurityConfig(@Qualifier("customPasswordEncoder") PasswordEncoder passwordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService) {
+    public SecurityConfig(@Qualifier("customPasswordEncoder") PasswordEncoder passwordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2LoginSuccessHandler successHandler) {
         this.customPasswordEncoder = passwordEncoder;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.successHandler = successHandler;
     }
 
     @Bean
@@ -43,7 +46,9 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/api/users/kakao/login")
                         .loginProcessingUrl("/api/users/kakao/login")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(successHandler) // 성공 핸들러 등록
                 );
+
 //                .exceptionHandling(exception -> exception
 //                        .authenticationEntryPoint((request, response, authException) -> {
 //                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);

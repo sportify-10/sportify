@@ -16,6 +16,9 @@ import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @AllArgsConstructor
@@ -38,6 +41,7 @@ public class UserController {
     @Autowired
     private final UserService userService;
 
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -162,10 +166,22 @@ public class UserController {
 
     @GetMapping("/kakao/login")
     public String kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User, Model model) {
-    // OAuth2User를 사용하여 사용자 정보를 로드하고, 이메일을 추출한 후 모델에 추가
-        model.addAttribute("email", customOAuth2UserService.extractUserAttributes(oAuth2User));
+        if (oAuth2User == null) {
+            throw new IllegalArgumentException("OAuth2User is null");
+        }
+// attributes 디버깅
+        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
+        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+
+        if (email == null) {
+            model.addAttribute("email", "Email not available"); // 디폴트 값 설정
+        } else {
+            model.addAttribute("email", email);
+        }
+
         return "kakaoSuccess";
     }
+
 
 
 }
