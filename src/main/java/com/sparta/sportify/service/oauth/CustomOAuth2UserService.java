@@ -30,33 +30,68 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // 플랫폼별 사용자 정보 파싱
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        String email = extractUserAttributes(oAuth2User);
+        String email = extractEmail(registrationId, attributes);
+        String nickname = extractNickname(registrationId, attributes);
+        String oauthId = extractOauthId(registrationId, attributes);
 
         // 사용자 정보를 기반으로 회원가입 처리
-        return processUserRegistration(oAuth2User);
+        return processUserRegistration(email, nickname, oauthId, registrationId, oAuth2User);
     }
 
-    public String extractUserAttributes(OAuth2User oAuth2User) {
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        return (String) kakaoAccount.get("email");
+    private String extractEmail(String registrationId, Map<String, Object> attributes) {
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            return (String) kakaoAccount.get("email");
+        }
+        // 다른 플랫폼의 이메일 추출 로직 추가 가능
+        throw new IllegalArgumentException("Unsupported platform: " + registrationId);
     }
 
-    private OAuth2User processUserRegistration(OAuth2User oAuth2User) {
-        String email = extractUserAttributes(oAuth2User);
+    private String extractNickname(String registrationId, Map<String, Object> attributes) {
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            return (String) profile.get("nickname");
+        }
+        // 다른 플랫폼의 닉네임 추출 로직 추가 가능
+        throw new IllegalArgumentException("Unsupported platform: " + registrationId);
+    }
 
+    private String extractOauthId(String registrationId, Map<String, Object> attributes) {
+        if ("kakao".equals(registrationId)) {
+            return String.valueOf(attributes.get("id"));
+        }
+        // 다른 플랫폼의 OAuth ID 추출 로직 추가 가능
+        throw new IllegalArgumentException("Unsupported platform: " + registrationId);
+    }
+
+    private OAuth2User processUserRegistration(String email, String nickname, String oauthId, String registrationId, OAuth2User oAuth2User) {
         // 이미 존재하는 사용자 확인
         Optional<User> existingUser = userRepository.findByEmail(email);
-        if (existingUser.isEmpty()) {
-            // 새로운 사용자 등록
-            UserRequestDto requestDto = new UserRequestDto();
-            requestDto.setEmail(email);
-            requestDto.setRole(UserRole.USER); // 기본 ROLE_USER로 설정
-            User newUser = userRepository.save(new User(requestDto));
-            return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "email");
+        if (existingUser.isPresent()) {
+            return new DefaultOAuth2User(
+                    oAuth2User.getAuthorities(),
+                    oAuth2User.getAttributes(),
+                    "email"
+            );
         }
 
-        // 이미 존재하는 사용자라면, 그 사용자 반환
-        return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "email");
+        // 새로운 사용자 등록
+        User newUser = User.builder()
+                .email(email)
+                .name(nickname)
+                .oauthId(oauthId)
+                .oauthProvider(registrationId)
+                .role(UserRole.USER) // 기본 ROLE_USER로 설정
+                .active(true) // 활성화 여부
+                .build();
+
+        userRepository.save(newUser);
+
+        return new DefaultOAuth2User(
+                oAuth2User.getAuthorities(),
+                oAuth2User.getAttributes(),
+                "email"
+        );
     }
 }
