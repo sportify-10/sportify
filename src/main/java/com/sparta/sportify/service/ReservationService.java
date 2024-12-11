@@ -94,15 +94,20 @@ public class ReservationService {
                         .build()
         );
 
+        CashLogReservationMappingId embeddedId = new CashLogReservationMappingId();
+        embeddedId.setCashTransactionId(cashLog.getId());
+        embeddedId.setReservationId(reservation.getId());
+
         cashLogReservationMappingRepository.save(
                 CashLogReservationMapping.builder()
+                        .id(embeddedId)
                         .cashLog(cashLog)
                         .reservation(reservation)
                         .type(CashLogReservationMappingType.MINUS)
                         .build()
         );
 
-        authUser.getUser().setCash(authUser.getUser().getCash()-stadium.getPrice());
+        authUser.getUser().setCash(authUser.getUser().getCash() - stadium.getPrice());
         userRepository.save(authUser.getUser());
 
         return new ReservationResponseDto(reservation.getId());
@@ -195,6 +200,33 @@ public class ReservationService {
                         .build())
                 .map(reservationRepository::save)
                 .toList();
+
+        CashLog cashLog = cashLogRepository.save(
+                CashLog.builder()
+                        .price(stadium.getPrice() * users.size())
+                        .type(CashType.PAYMENT)
+                        .user(authUser.getUser())
+                        .build()
+        );
+
+        reservations.forEach(reservation -> {
+                    CashLogReservationMappingId embeddedId = new CashLogReservationMappingId();
+                    embeddedId.setCashTransactionId(cashLog.getId());
+                    embeddedId.setReservationId(reservation.getId());
+
+                    cashLogReservationMappingRepository.save(
+                            CashLogReservationMapping.builder()
+                                    .id(embeddedId)
+                                    .cashLog(cashLog)
+                                    .reservation(reservation)
+                                    .type(CashLogReservationMappingType.MINUS)
+                                    .build()
+                    );
+                }
+        );
+
+        authUser.getUser().setCash(authUser.getUser().getCash() - (stadium.getPrice() * users.size()));
+        userRepository.save(authUser.getUser());
 
         return new ReservationResponseDto(reservations.stream().map(Reservation::getId).toList());
     }
