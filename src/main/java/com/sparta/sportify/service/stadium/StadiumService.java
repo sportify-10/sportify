@@ -16,6 +16,7 @@ import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
 import com.sparta.sportify.entity.Match;
 import com.sparta.sportify.entity.Reservation;
+import com.sparta.sportify.entity.ReservationStatus;
 import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.MatchRepository;
@@ -101,7 +102,7 @@ public class StadiumService {
 		return matches.stream().map(match -> {
 			//매치별 totalAmount 계산
 			//reservation에서 matchId를 가진 totalAmount 총합
-			Integer totalAmount = reservationRepository.findTotalAmountByMatchId(match.getId());
+			Integer totalAmount = reservationRepository.findTotalAmountByMatchId(match.getId(), ReservationStatus.CONFIRMED);
 
 			return new StadiumMatchResponseDto(
 				match.getStadiumTime().getStadium().getId(),

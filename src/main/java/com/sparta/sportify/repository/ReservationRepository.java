@@ -1,6 +1,7 @@
 package com.sparta.sportify.repository;
 
 import com.sparta.sportify.entity.Reservation;
+import com.sparta.sportify.entity.ReservationStatus;
 import com.sparta.sportify.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -25,6 +26,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Slice<Reservation> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
 
-    @Query("SELECT SUM(r.totalAmount) FROM Reservation r WHERE r.match.id = :matchId")
-    Integer findTotalAmountByMatchId(@Param("matchId") Long matchId);
+    //조인 및 필터링 추가
+    @Query("SELECT SUM(r.totalAmount) AS totalAmount FROM Match m " +
+        "LEFT JOIN Reservation r ON r.match.id = m.id AND r.status = :status " +
+        "WHERE m.id = :matchId")
+    Integer findTotalAmountByMatchId(@Param("matchId") Long matchId, ReservationStatus status);
 }
