@@ -50,4 +50,26 @@ public class TeamMemberController {
                 HttpStatus.OK
         );
     }
+
+    @GetMapping("/{teamId}/members")
+    public ResponseEntity<ApiResult<TeamMemberResponsePage>> getAllMenus(@RequestParam(required = false, defaultValue = "0") int page,
+                                                                         @RequestParam(required = false, defaultValue = "10") int size,
+                                                                         @PathVariable Long teamId) {
+        return new ResponseEntity<>(
+                ApiResult.success("팀 전체 조회 완료",
+                        teamMemberService.getAllTeamMembers(page, size, teamId)),
+                HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{teamId}/reject/{userId}")
+    public ResponseEntity<ApiResult<TeamMemberResponseDto>> rejectTeamMember(
+            @PathVariable Long teamId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl authUser) {
+        return new ResponseEntity<>(
+                ApiResult.success("팀원 퇴출 완료",
+                        teamMemberService.rejectTeamMember(teamId, userId, authUser)),
+                HttpStatus.OK
+        );
+    }
 }

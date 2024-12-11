@@ -42,5 +42,9 @@ public class TeamMember {
         this.team = team;
         this.status = Status.PENDING; // 기본 상태를 대기 상태로 설정
     }
+
+    public void softDelete() {
+        this.setDeletedAt(LocalDateTime.now());
+    }
     // Getters and Setters
 }

@@ -11,6 +11,9 @@ import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -56,7 +59,7 @@ public class TeamMemberService {
         TeamMember teamMember = teamMemberRepository.findByUserAndTeam(applyUser, team)
                 .orElseThrow(() -> new IllegalArgumentException("신청 내역이 없습니다."));
 
-        boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(approveUser, team, TeamMember.Status.APPROVED);
+        boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(applyUser, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
             throw new IllegalStateException("이미 해당 팀에 가입되어 있습니다");
         }
@@ -97,5 +100,33 @@ public class TeamMemberService {
         teamMemberRepository.save(teamMember);
 
         return new RoleResponseDto(requestDto.getUserId(), requestDto.getRole());
+    }
+
+    public TeamMemberResponsePage getAllTeamMembers(int page, int size, Long teamId) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TeamMember> teamMembers = teamMemberRepository.findByTeamIdAndDeletedAtIsNull(teamId, pageable);
+        return new TeamMemberResponsePage(teamMembers);
+    }
+
+    @Transactional
+    public TeamMemberResponseDto rejectTeamMember(Long teamId, Long userId, UserDetailsImpl authUser) {
+        // 요청자의 팀원 정보 확인
+        Long requesterId = authUser.getUser().getId();
+        TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(requesterId, teamId)
+                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다"));
+
+        // 요청자가 팀장인지 확인
+        if (requester.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
+            throw new IllegalStateException("팀장이 아니므로 팀원을 퇴출할 수 없습니다.");
+        }
+
+        // 퇴출 대상 팀원 조회
+        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, teamId)
+                .orElseThrow(() -> new IllegalArgumentException("퇴출 대상 팀원을 찾을 수 없습니다."));
+
+        // 소프트 삭제 처리
+        teamMember.softDelete();
+
+        return new TeamMemberResponseDto(teamMember);
     }
 }
