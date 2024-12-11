@@ -12,9 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
+import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
+import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.Reservation;
+import com.sparta.sportify.entity.ReservationStatus;
 import com.sparta.sportify.entity.Stadium;
 import com.sparta.sportify.entity.User;
+import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 
@@ -24,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StadiumService {
 	private final StadiumRepository stadiumRepository;
+	private final MatchRepository matchRepository;
+	private final ReservationRepository reservationRepository;
 
 	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto, UserDetailsImpl userDetails) {
 		Optional<Stadium> stadiumName = stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName());
@@ -83,5 +91,28 @@ public class StadiumService {
 
 		stadium.deleteOf();
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
+	}
+
+	public List<StadiumMatchResponseDto> findMatchesByStadium(Long stadiumId) {
+		stadiumRepository.findById(stadiumId).orElseThrow(()->new IllegalArgumentException("구장이 존재하지 않습니다"));
+
+		////스타디움 아이디로 스타디움 타임을 가진 매치 조회
+		List<Match> matches = matchRepository.findByStadiumTime_Stadium_Id(stadiumId);
+
+		return matches.stream().map(match -> {
+			//매치별 totalAmount 계산
+			//reservation에서 matchId를 가진 totalAmount 총합
+			Integer totalAmount = reservationRepository.findTotalAmountByMatchId(match.getId(), ReservationStatus.CONFIRMED);
+
+			return new StadiumMatchResponseDto(
+				match.getStadiumTime().getStadium().getId(),
+				match.getStadiumTime().getStadium().getStadiumName(),
+				match.getDate(),
+				String.format("%02d:%02d", match.getTime() / 100, match.getTime() % 100), //시간 HH:MM 형식으로
+				totalAmount, //매치별 예약금
+				match.getATeamCount(),
+				match.getBTeamCount()
+			);
+		}).collect(Collectors.toList());
 	}
 }

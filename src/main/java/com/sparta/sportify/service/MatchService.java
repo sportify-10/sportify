@@ -71,7 +71,7 @@ public class MatchService {
 			matchResult.getMatchStatus(),
 			matchResult.getMatchDate()
 		);
-  }
+	}
 
 	public MatchesByDateResponseDto getMatchesByDate(LocalDate date/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
 		//Pageable pageable = PageRequest.of(page, size);
