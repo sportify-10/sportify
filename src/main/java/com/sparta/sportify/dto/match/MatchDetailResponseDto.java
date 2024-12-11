@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class MatchDetailResponseDto {
 	private final Long matchId;
 	private final LocalDate date;
-	private final String time;
+	private final Integer time;
 	private final Integer aTeamCount;
 	private final Integer bTeamCount;
 	private final String stadiumName;

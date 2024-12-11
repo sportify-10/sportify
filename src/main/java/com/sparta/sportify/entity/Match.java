@@ -30,7 +30,7 @@ public class Match {
     private Long id;
 
     private LocalDate date;
-    private String time;
+    private Integer time;
     private Integer aTeamCount;
     private Integer bTeamCount;
 

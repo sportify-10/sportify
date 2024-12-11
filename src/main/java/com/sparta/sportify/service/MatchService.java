@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -189,7 +190,7 @@ public class MatchService {
 
 	// 매치 단건 조회
 	@Transactional(readOnly = true)
-	public MatchDetailResponseDto getMatchByDateAndTime(LocalDate date, String time) {
+	public MatchDetailResponseDto getMatchByDateAndTime(LocalDate date, Integer time) {
 		// 매치 조회
 		Match match = matchRepository.findByDateAndTime(date, time)
 			.orElseThrow(() -> new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다."));
@@ -210,7 +211,14 @@ public class MatchService {
 	// 매치 상태 결정
 	private String determineMatchStatus(Match match) {
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime matchStartTime = LocalDateTime.of(match.getDate(), LocalTime.parse(match.getTime()));
+		LocalDateTime matchStartTime;
+		try {
+			String timeString = String.valueOf(match.getTime());
+			LocalTime time = LocalTime.parse(timeString); // "HH:mm" 형식이어야 함
+			matchStartTime = LocalDateTime.of(match.getDate(), time);
+		} catch (DateTimeParseException e) {
+			throw new IllegalArgumentException("Invalid time format: " + match.getTime(), e);
+		}
 		LocalDateTime matchEndTime = matchStartTime.plusHours(2); // 종료 시간은 시작 시간 + 2시간
 
 		// 예약 인원 수 계산
