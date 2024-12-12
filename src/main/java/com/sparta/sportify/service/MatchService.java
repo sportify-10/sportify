@@ -123,16 +123,16 @@ public class MatchService {
 
 				int startTimeInt = startTimeLocalTimeType.getHour() * 100;//Integer형식과 비교하기 위해 변환
 				//매치 테이블에서 예약 인원 수 조회하기 위헤
-				Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt);
+				Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt);
 
 				String status = ""; //마감, 모집중, 마감 임박
 
 				double totalMatchCount = 0;//매치에 예약된 인원 수
 				double totalStadiumCapacity = 0;//구장애서 정한 최대 인원 수
 				double reservationPercentage = 0;
-				if (match != null) {
+				if (match.isPresent()) {
 					//예약 인원 %
-					totalMatchCount = match.getATeamCount() + match.getBTeamCount();
+					totalMatchCount = match.get().getATeamCount() + match.get().getBTeamCount();
 					totalStadiumCapacity = stadiumTimes.get(i).getStadium().getATeamCount() + stadiumTimes.get(i).getStadium().getBTeamCount();
 					reservationPercentage = (totalMatchCount / totalStadiumCapacity) * 100;
 				}
@@ -194,10 +194,10 @@ public class MatchService {
 		// 매치 조회
 		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 경기장에 대한 경기 시간 정보를 찾을 수 없습니다."));
-		Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time);
-			if(match == null) {
-				throw new IllegalArgumentException("매치를 찾을 수 없습니다.");
-			}
+		Optional<Match> optionalMatch = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time);
+		Match match = optionalMatch.orElseThrow(() ->
+			new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다.")
+		);
 
 		// 매치 상태 결정
 		String status = determineMatchStatus(match);
