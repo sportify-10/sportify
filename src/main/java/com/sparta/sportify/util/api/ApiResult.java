@@ -2,8 +2,6 @@ package com.sparta.sportify.util.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sparta.sportify.dto.user.res.OAuthResponseDto;
-import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
