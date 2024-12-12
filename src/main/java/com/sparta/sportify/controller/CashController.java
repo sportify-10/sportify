@@ -2,6 +2,7 @@ package com.sparta.sportify.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +36,7 @@ public class CashController {
 	}
 
 	@GetMapping
-	public ResponseEntity<ApiResult<List<CashLogsResponseDto>>> getCashLogs(
+	public ResponseEntity<ApiResult<Page<CashLogsResponseDto>>> getCashLogs(
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "5") int size

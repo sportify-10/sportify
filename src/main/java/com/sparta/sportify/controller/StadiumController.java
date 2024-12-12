@@ -2,6 +2,7 @@ package com.sparta.sportify.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,7 @@ public class StadiumController {
 	}
 
 	@GetMapping
-	public ResponseEntity<ApiResult<List<StadiumResponseDto>>> getStadiums(
+	public ResponseEntity<ApiResult<Page<StadiumResponseDto>>> getStadiums(
 		@AuthenticationPrincipal UserDetailsImpl userDetails,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "5") int size
@@ -65,9 +66,11 @@ public class StadiumController {
 	}
 
 	@GetMapping("/{stadiumId}/reservation")
-	public ResponseEntity<ApiResult<List<StadiumMatchResponseDto>>> findMatchesByStadium(
-		@PathVariable Long stadiumId
+	public ResponseEntity<ApiResult<Page<StadiumMatchResponseDto>>> findMatchesByStadium(
+		@PathVariable Long stadiumId,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "5") int size
 	){
-		return ResponseEntity.ok(ApiResult.success("구장에 예약된 매치 조회 성공", stadiumService.findMatchesByStadium(stadiumId)));
+		return ResponseEntity.ok(ApiResult.success("구장에 예약된 매치 조회 성공", stadiumService.findMatchesByStadium(stadiumId, page, size)));
 	}
 }
