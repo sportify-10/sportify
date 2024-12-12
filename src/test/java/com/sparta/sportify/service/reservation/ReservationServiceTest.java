@@ -82,7 +82,7 @@ public class ReservationServiceTest {
                 6,
                 6,
                 "A large stadium for concerts.",
-                50000,
+                50000L,
                 StadiumStatus.APPROVED,
                 null,
                 user
