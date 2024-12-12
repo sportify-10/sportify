@@ -1,6 +1,7 @@
 package com.sparta.sportify.service.oauth;
 
 import com.sparta.sportify.config.PasswordEncoder;
+import com.sparta.sportify.dto.user.req.OAuthAttributes;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
@@ -44,8 +45,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         logger.info("Extracted Email: {}", email);
         logger.info("Extracted OAuth ID: {}", oauthId);
 
+        String userNameAttributeName = userRequest.getClientRegistration()
+                .getProviderDetails()
+                .getUserInfoEndpoint()
+                .getUserNameAttributeName();
+
+        OAuthAttributes oAuthAttributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
+
+
+
         // 사용자 등록 또는 로그인 처리
-        return processUserRegistration(email, oauthId, attributes, oAuth2User);
+        return processUserRegistration(email, oauthId, attributes, oAuth2User, oAuthAttributes);
     }
 
     private String extractEmail(Map<String, Object> attributes, String registrationId) {
@@ -63,7 +73,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return String.valueOf(attributes.get("id"));
     }
 
-    private OAuth2User processUserRegistration(String email, String oauthId, Map<String, Object> attributes, OAuth2User oAuth2User) {
+    private OAuth2User processUserRegistration(String email, String oauthId, Map<String, Object> attributes, OAuth2User oAuth2User, OAuthAttributes oAuthAttributes) {
         Optional<User> existingUser;
 
         if (email == null || email.isEmpty()) {
@@ -91,7 +101,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return new DefaultOAuth2User(
                 oAuth2User.getAuthorities(),
                 attributes,
-                email != null ? "email" : "oauthId" // Principal key 설정
+                oAuthAttributes.getNameAttributeKey() // Principal key 설정
         );
     }
 
