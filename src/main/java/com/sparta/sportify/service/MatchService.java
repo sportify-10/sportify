@@ -215,20 +215,11 @@ public class MatchService {
 	// 매치 상태 결정
 	private String determineMatchStatus(Match match) {
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime matchStartTime;
-		try {
-			String timeString = String.format("%02d:00", match.getTime());
-			LocalTime time = LocalTime.parse(timeString); // "HH:mm" 형식이어야 함
-			matchStartTime = LocalDateTime.of(match.getDate(), time);
-		} catch (DateTimeParseException e) {
-			throw new IllegalArgumentException("Invalid time format: " + match.getTime(), e);
-		}
-		LocalDateTime matchEndTime = matchStartTime.plusHours(2); // 종료 시간은 시작 시간 + 2시간
+		LocalDateTime matchStartTime = match.getStartTime();
+		LocalDateTime matchEndTime = match.getEndTime();
 
 		// 예약 인원 수 계산
-		double totalMatchCount = match.getATeamCount() + match.getBTeamCount();
-		double totalStadiumCapacity = match.getStadiumTime().getStadium().getATeamCount() + match.getStadiumTime().getStadium().getBTeamCount();
-		double reservationPercentage = (totalMatchCount / totalStadiumCapacity) * 100;
+		double reservationPercentage = match.getReservationPercentage();
 
 		// 상태 결정 로직
 		if (now.isAfter(matchEndTime)) {
