@@ -31,12 +31,10 @@ public class MatchController {
 
 	@GetMapping
 	public ResponseEntity<ApiResult<MatchesByDateResponseDto>> getMatchesByDate(
-		@RequestParam LocalDate date,
-		@RequestParam(defaultValue = "1") int page,
-		@RequestParam(defaultValue = "5") int size
+		@RequestParam LocalDate date
 	) {
 		return ResponseEntity.ok(
-			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date, page, size)));
+			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date)));
 	}
 
 	@GetMapping("/{stadiumId}/{date}/{time}")

@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MatchesByDateResponseDto {
 	private final List<MatchByStadiumResponseDto> data;
-	//private final Page<MatchByStadiumResponseDto> data;
 }

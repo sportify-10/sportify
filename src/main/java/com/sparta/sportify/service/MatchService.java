@@ -1,7 +1,6 @@
 package com.sparta.sportify.service;
 
 import java.time.DayOfWeek;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -10,10 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +23,6 @@ import com.sparta.sportify.entity.StadiumTime;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +46,6 @@ public class MatchService {
 		matchResult.setMatch(match);
 		matchResult.setMatchStatus(requestDto.getMatchStatus());
 		matchResult.setMatchDate(LocalDate.now());
-
 
 		MatchResult savedResult = matchResultRepository.save(matchResult);
 		return new MatchResultResponseDto(
@@ -78,13 +71,9 @@ public class MatchService {
 		);
 	}
 
-	public MatchesByDateResponseDto getMatchesByDate(LocalDate date, int page, int size) {
-		Pageable pageable = PageRequest.of(page-1, size);
-
+	public MatchesByDateResponseDto getMatchesByDate(LocalDate date) {
 		//하나의 값? 저장할 리스트
 		List<MatchByStadiumResponseDto> matches = new ArrayList<>();
-		//// 페이지네이션 적용하여 PageImpl로 감싸기
-		//Page<MatchByStadiumResponseDto> matchesPageable = new PageImpl<>(matches, pageable, matches.size());
 		/* 하나의 값? 예시
 		"stadiumId": 2,
 		"stadiumName": "A구장",
@@ -103,7 +92,6 @@ public class MatchService {
 		//저장된 스타디움 타임이 없으면
 		if (stadiumTimes.isEmpty()) {
 			return new MatchesByDateResponseDto(matches);
-			//return new MatchesByDateResponseDto(matchesPageable);
 		}
 		for (int i = 0; i < stadiumTimes.size(); i++) {
 			String cron = stadiumTimes.get(i).getCron();//스타디움 타임에 저장된 크론식 조회
@@ -129,7 +117,6 @@ public class MatchService {
 				int startTimeInt = startTimeLocalTimeType.getHour();//Integer형식과 비교하기 위해 변환
 				//매치 테이블에서 예약 인원 수 조회하기 위헤
 				Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt);
-				//Page<Match> match = matchRepository.findAllByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt, pageable);
 
 				if(match.isEmpty()){
 					continue;
@@ -137,12 +124,6 @@ public class MatchService {
 
 				//마감, 모집중, 마감 임박
 				String status = determineMatchStatus(match, LocalDateTime.now());
-
-				// String status = determineMatchStatus(
-				// 	match.getContent().get(i).getStartTime(),
-				// 	match.getContent().get(i).getStartTime(),
-				// 	match.getContent().get(i).getReservationPercentage(),
-				// 	LocalDateTime.now());
 
 				MatchByStadiumResponseDto matchResponse = new MatchByStadiumResponseDto(
 					stadiumTimes.get(i).getStadium().getId(),
@@ -161,7 +142,6 @@ public class MatchService {
 		matches.sort(Comparator.comparing(MatchByStadiumResponseDto::getStartTime));
 
 		return new MatchesByDateResponseDto(matches);
-		//return new MatchesByDateResponseDto(matchesPageable);
 	}
 
 	//시작 시간 추출 메서드
@@ -225,15 +205,4 @@ public class MatchService {
 			return "모집중"; // 그 외의 경우
 		}
 	}
-
-	// private String determineMatchStatus(LocalDateTime matchStartTime, LocalDateTime matchEndTime, double reservationPercentage, LocalDateTime now) {
-	// 	// 상태 결정 로직
-	// 	if (now.isAfter(matchEndTime)) {
-	// 		return "마감"; // 종료 시간이 지난 경우
-	// 	} else if (now.isAfter(matchStartTime.minusHours(4)) || reservationPercentage > 80) {
-	// 		return "마감 임박"; // 시작 4시간 이내이거나 예약 비율이 80% 이상인 경우
-	// 	} else {
-	// 		return "모집중"; // 그 외의 경우
-	// 	}
-	// }
 }
