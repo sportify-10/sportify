@@ -49,6 +49,9 @@ class StadiumTimeServiceTest {
 
 	private Long stadiumId;
 	private Long stadiumTimeId;
+
+	private Stadium stadium;
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
@@ -65,21 +68,25 @@ class StadiumTimeServiceTest {
 
 		userDetails = mock(UserDetailsImpl.class);
 		when(userDetails.getUsername()).thenReturn("testUser");
+
+		stadium = Stadium.builder()
+			.id(1L) // ID는 일반적으로 자동 생성되므로 필요 시 설정
+			.stadiumName("Dream Stadium") // 구장 이름
+			.location("Seoul, South Korea") // 위치
+			.aTeamCount(5) // A팀 인원
+			.bTeamCount(5) // B팀 인원
+			.description("A fantastic stadium for sports events.") // 설명
+			.price(100000) // 가격
+			.status(StadiumStatus.APPROVED) // 상태 (Enum)
+			.deletedAt(null) // 삭제 시간 (없음)
+			.user(userDetails.getUser()) // 유저 객체 (User 객체를 미리 생성하여 전달)
+			.build();
 	}
 
 	@Test
 	@DisplayName("구장 운영시간 생성")
 	void createStadiumTime() {
-		Stadium stadium = Stadium.createOf(
-			stadiumCreateRequestDto.getStadiumName(),
-			stadiumCreateRequestDto.getLocation(),
-			stadiumCreateRequestDto.getATeamCount(),
-			stadiumCreateRequestDto.getBTeamCount(),
-			stadiumCreateRequestDto.getDescription(),
-			stadiumCreateRequestDto.getPrice(),
-			userDetails);
-		stadium.setId(stadiumId);
-		stadium.setStatus(StadiumStatus.APPROVED);
+
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
 		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
@@ -101,15 +108,6 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장이 승인되지 않아 에러")
 	void NotApprovedStadium() {
-		Stadium stadium = Stadium.createOf(
-			stadiumCreateRequestDto.getStadiumName(),
-			stadiumCreateRequestDto.getLocation(),
-			stadiumCreateRequestDto.getATeamCount(),
-			stadiumCreateRequestDto.getBTeamCount(),
-			stadiumCreateRequestDto.getDescription(),
-			stadiumCreateRequestDto.getPrice(),
-			userDetails);
-		stadium.setId(stadiumId);
 		//stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
@@ -130,16 +128,6 @@ class StadiumTimeServiceTest {
 	@Test
 	@DisplayName("구장 시간이 이미 존재하여 에러")
 	void existStadiumTime() {
-		Stadium stadium = Stadium.createOf(
-			stadiumCreateRequestDto.getStadiumName(),
-			stadiumCreateRequestDto.getLocation(),
-			stadiumCreateRequestDto.getATeamCount(),
-			stadiumCreateRequestDto.getBTeamCount(),
-			stadiumCreateRequestDto.getDescription(),
-			stadiumCreateRequestDto.getPrice(),
-			userDetails);
-		stadium.setId(stadiumId);
-		stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
 		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
