@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
 import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
@@ -184,5 +185,46 @@ public class MatchService {
 		}
 
 		return startTimes;
+	}
+
+	// 매치 단건 조회
+	@Transactional(readOnly = true)
+	public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time) {
+		// 매치 조회
+		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId)
+			.orElseThrow(() -> new EntityNotFoundException("해당 경기장에 대한 경기 시간 정보를 찾을 수 없습니다."));
+		Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time)
+			.orElseThrow(() ->new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다."));
+
+		// 매치 상태 결정
+		String status = determineMatchStatus(Optional.ofNullable(match));
+
+		return new MatchDetailResponseDto(
+			match.getId(),
+			match.getDate(),
+			String.format("%02d:%02d", match.getTime(), 0),
+			match.getATeamCount(),
+			match.getBTeamCount(),
+			match.getStadiumTime().getStadium().getStadiumName(),
+			status
+		);
+	}
+	// 매치 상태 결정
+	private String determineMatchStatus(Optional<Match> match) {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime matchStartTime = match.get().getStartTime();
+		LocalDateTime matchEndTime = match.get().getEndTime();
+
+		// 예약 인원 수 계산
+		double reservationPercentage = match.get().getReservationPercentage();
+
+		// 상태 결정 로직
+		if (now.isAfter(matchEndTime)) {
+			return "마감"; // 종료 시간이 지난 경우
+		} else if (now.isAfter(matchStartTime.minusHours(4)) || reservationPercentage > 80) {
+			return "마감 임박"; // 시작 4시간 이내이거나 예약 비율이 80% 이상인 경우
+		} else {
+			return "모집중"; // 그 외의 경우
+		}
 	}
 }

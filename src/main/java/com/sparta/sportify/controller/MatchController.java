@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
+import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
+import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.service.MatchService;
 import com.sparta.sportify.util.api.ApiResult;
 
@@ -37,6 +37,19 @@ public class MatchController {
 	) {
 		return ResponseEntity.ok(
 			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date/*page, size, date,  userDetails*/)));
+	}
+
+	@GetMapping("/{stadiumId}/{date}/{time}")
+	public ResponseEntity<ApiResult<MatchDetailResponseDto>> getMatchByDateAndTime(
+		@PathVariable Long stadiumId,
+		@PathVariable LocalDate date,
+		@PathVariable Integer time) {
+
+		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(stadiumId, date, time);
+
+		return ResponseEntity.ok(
+			ApiResult.success("매치 조회 성공", matchDetail)
+		);
 	}
 
 	@PostMapping("/result/{matchId}")
