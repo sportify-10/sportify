@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -194,13 +193,11 @@ public class MatchService {
 		// 매치 조회
 		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 경기장에 대한 경기 시간 정보를 찾을 수 없습니다."));
-		Optional<Match> optionalMatch = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time);
-		Match match = optionalMatch.orElseThrow(() ->
-			new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다.")
-		);
+		Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time)
+			.orElseThrow(() ->new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다."));
 
 		// 매치 상태 결정
-		String status = determineMatchStatus(match);
+		String status = determineMatchStatus(Optional.ofNullable(match));
 
 		return new MatchDetailResponseDto(
 			match.getId(),
@@ -213,13 +210,13 @@ public class MatchService {
 		);
 	}
 	// 매치 상태 결정
-	private String determineMatchStatus(Match match) {
+	private String determineMatchStatus(Optional<Match> match) {
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime matchStartTime = match.getStartTime();
-		LocalDateTime matchEndTime = match.getEndTime();
+		LocalDateTime matchStartTime = match.get().getStartTime();
+		LocalDateTime matchEndTime = match.get().getEndTime();
 
 		// 예약 인원 수 계산
-		double reservationPercentage = match.getReservationPercentage();
+		double reservationPercentage = match.get().getReservationPercentage();
 
 		// 상태 결정 로직
 		if (now.isAfter(matchEndTime)) {
