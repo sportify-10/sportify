@@ -71,6 +71,7 @@ public class TeamService {
     public TeamResponseDto deleteTeam(Long teamId) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
         team.softDelete();
+        teamRepository.save(team);
 
         return new TeamResponseDto(team);
     }
