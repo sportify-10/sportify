@@ -76,8 +76,8 @@ class StadiumServiceTest {
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
 
-		stadiumCreateRequestDto = new StadiumCreateRequestDto("A구장", "서울", 6, 6, "넓고 좋은 경기장", 100000);
-		stadiumUpdateRequestDto = new StadiumUpdateRequestDto("B구장", "서울", 6, 6, "넓고 좋은 경기장", 100000);
+		stadiumCreateRequestDto = new StadiumCreateRequestDto("A구장", "서울", 6, 6, "넓고 좋은 경기장", 100000L);
+		stadiumUpdateRequestDto = new StadiumUpdateRequestDto("B구장", "서울", 6, 6, "넓고 좋은 경기장", 100000L);
 
 		user = User.builder()
 			.id(1L)
@@ -113,7 +113,7 @@ class StadiumServiceTest {
 			.aTeamCount(5) // A팀 인원
 			.bTeamCount(5) // B팀 인원
 			.description("A fantastic stadium for sports events.") // 설명
-			.price(100000) // 가격
+			.price(100000L) // 가격
 			.status(StadiumStatus.APPROVED) // 상태 (Enum)
 			.deletedAt(null) // 삭제 시간 (없음)
 			.user(userDetails.getUser()) // 유저 객체 (User 객체를 미리 생성하여 전달)
