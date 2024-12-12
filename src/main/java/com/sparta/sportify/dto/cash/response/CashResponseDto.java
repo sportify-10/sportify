@@ -13,7 +13,7 @@ public class CashResponseDto {
 	private Long balance;
 	private LocalDateTime createAt;
 	private CashType type;
-	private Integer ChargeAmount;
+	private Long ChargeAmount;
 
 	public CashResponseDto(CashLog cashLog) {
 		this.userId = cashLog.getUser().getId();
