@@ -2,7 +2,6 @@ package com.sparta.sportify.service.oauth;
 
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.OAuthAttributes;
-import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtTokenProvider;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +22,7 @@ import java.util.UUID;
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider; // JWT 생성기 주입
+    private final UserRepository userRepository;// JWT 생성기 주입
 
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
@@ -43,21 +39,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = extractEmail(attributes, registrationId);
         String oauthId = extractOauthId(attributes);
+        String nickname = extractNickname(attributes, registrationId); // 닉네임 추출
 
         logger.info("Extracted Email: {}", email);
         logger.info("Extracted OAuth ID: {}", oauthId);
-
-        String userNameAttributeName = userRequest.getClientRegistration()
-                .getProviderDetails()
-                .getUserInfoEndpoint()
-                .getUserNameAttributeName();
-
-        OAuthAttributes oAuthAttributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
-
-
+        logger.info("Extracted Nickname: {}", nickname);
 
         // 사용자 등록 또는 업데이트 처리
-        User user = processUserRegistration(email, oauthId);
+        User user = processUserRegistration(email, oauthId, registrationId, nickname);
 
         // 사용자와 속성을 포함하는 OAuth2User 반환
         return oAuth2User;
@@ -73,13 +62,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return (String) attributes.getOrDefault("email", null); // 다른 플랫폼은 기본 이메일 필드 확인
     }
 
-
     private String extractOauthId(Map<String, Object> attributes) {
         return String.valueOf(attributes.get("id"));
     }
 
+    private String extractNickname(Map<String, Object> attributes, String registrationId) {
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> properties = (Map<String, Object>) attributes.get("properties");
+            if (properties != null && properties.containsKey("nickname")) {
+                return (String) properties.get("nickname");
+            }
+        }
+        return "anonymous"; // 닉네임 기본값
+    }
 
-    private User processUserRegistration(String email, String oauthId) {
+    private User processUserRegistration(String email, String oauthId, String registrationId, String nickname) {
         Optional<User> existingUser;
 
         if (email == null || email.isEmpty()) {
@@ -97,12 +94,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             User user = new User();
             user.setEmail(email);
             user.setOauthId(oauthId);
+            user.setOauthProvider(registrationId.toLowerCase()); // OAuth 제공자 저장
+            user.setName(nickname); // 닉네임 저장
             user.setPassword(UUID.randomUUID().toString()); // 임시 비밀번호
             user.setRole(UserRole.USER);
 
             return userRepository.save(user);
         } else {
-            return existingUser.get();
+            // 기존 사용자 업데이트 (필요 시 닉네임 변경 가능)
+            User user = existingUser.get();
+            user.setName(nickname); // 닉네임 업데이트
+            return userRepository.save(user);
         }
     }
     public String extractUserAttributes(OAuth2User oAuth2User) {
