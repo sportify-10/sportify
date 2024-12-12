@@ -106,7 +106,7 @@ public class StadiumService {
 				match.getStadiumTime().getStadium().getId(),
 				match.getStadiumTime().getStadium().getStadiumName(),
 				match.getDate(),
-				String.format("%02d:%02d", match.getTime() / 100, match.getTime() % 100), //시간 HH:MM 형식으로
+				String.format("%02d:%02d", match.getTime(), 0), //시간 HH:MM 형식으로
 				totalAmount, //매치별 예약금
 				match.getATeamCount(),
 				match.getBTeamCount()
