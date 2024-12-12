@@ -97,7 +97,7 @@ public class StadiumService {
 		stadiumRepository.findById(stadiumId).orElseThrow(()->new IllegalArgumentException("구장이 존재하지 않습니다"));
 
 		////스타디움 아이디로 스타디움 타임을 가진 매치 조회
-		Page<Match> matches = matchRepository.findByStadiumTime_Stadium_Id(stadiumId, pageable);
+		Page<Match> matches = matchRepository.findByStadiumTimeStadiumId(stadiumId, pageable);
 
 		return matches.map(match -> {
 			//매치별 totalAmount 계산
