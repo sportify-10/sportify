@@ -2,20 +2,31 @@ package com.sparta.sportify.jwt;
 
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static javax.crypto.Cipher.SECRET_KEY;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${jwt.secret.key}") // application.yml에서 값을 가져옴
+
+    @Value("${JWT_SECRET_KEY:default-secret}") // 환경 변수 사용, 기본값 설정
     private String secretKey; // JWT 비밀 키
+
+    private final UserRepository userRepository;
+
+    public JwtTokenProvider(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
 
     // JWT 토큰 검증 및 유저 정보 반환
     public UserDetailsImpl validateToken(String token) {
@@ -25,35 +36,28 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody();
 
-            // JWT 토큰에서 유저 정보 추출 (예: username, role)
-            String name = claims.getSubject();
+            // JWT 토큰에서 이메일과 역할 정보 추출
+            String email = claims.getSubject();
             String roleString = claims.get("role", String.class);
-            UserRole role = UserRole.valueOf(roleString); // role을 UserRole enum으로 변환
+            UserRole role = UserRole.valueOf(roleString);
 
-            // User 객체를 토큰에서 직접 추출하는 것보다, UserRepository를 통해 DB에서 가져오는 것이 일반적
-            User user = new User();  // 예시로 비어있는 User 객체 생성 (여기선 데이터베이스에서 조회해야 함)
+            // 데이터베이스에서 사용자 조회
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
             // UserDetailsImpl로 유저 정보 반환
-            return new UserDetailsImpl(name, role, user);
+            return new UserDetailsImpl(user.getEmail(), role, user);
 
+        } catch (ExpiredJwtException e) {
+            throw new IllegalArgumentException("Token has expired", e);
+        } catch (UnsupportedJwtException e) {
+            throw new IllegalArgumentException("Unsupported JWT token", e);
+        } catch (MalformedJwtException e) {
+            throw new IllegalArgumentException("Invalid JWT structure", e);
         } catch (SignatureException e) {
-            // 토큰 서명 오류
-            throw new IllegalArgumentException("Invalid token");
+            throw new IllegalArgumentException("Invalid token signature", e);
         } catch (Exception e) {
-            // 기타 오류
-            throw new IllegalArgumentException("Token parsing error");
+            throw new IllegalArgumentException("Token parsing error", e);
         }
     }
-
-    public String generateToken(User user) {
-        return Jwts.builder()
-                .setSubject(user.getName())
-                .claim("role", user.getRole().name())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1일 유효
-                .signWith(SignatureAlgorithm.HS256, secretKey)
-                .compact();
-    }
-
-
 }

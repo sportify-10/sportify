@@ -5,6 +5,7 @@ import com.sparta.sportify.dto.user.req.OAuthAttributes;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.jwt.JwtTokenProvider;
 import com.sparta.sportify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider; // JWT 생성기 주입
 
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
@@ -54,8 +56,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
 
-        // 사용자 등록 또는 로그인 처리
-        return processUserRegistration(email, oauthId, attributes, oAuth2User, oAuthAttributes);
+        // 사용자 등록 또는 업데이트 처리
+        User user = processUserRegistration(email, oauthId);
+
+        // 사용자와 속성을 포함하는 OAuth2User 반환
+        return oAuth2User;
     }
 
     private String extractEmail(Map<String, Object> attributes, String registrationId) {
@@ -73,38 +78,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return String.valueOf(attributes.get("id"));
     }
 
-    private OAuth2User processUserRegistration(String email, String oauthId, Map<String, Object> attributes, OAuth2User oAuth2User, OAuthAttributes oAuthAttributes) {
+
+    private User processUserRegistration(String email, String oauthId) {
         Optional<User> existingUser;
 
         if (email == null || email.isEmpty()) {
             existingUser = userRepository.findByOauthId(oauthId);
             if (existingUser.isEmpty()) {
-                // 이메일 없이 사용자를 생성
                 logger.warn("Email is null or empty for OAuth ID: {}", oauthId);
-                email = "anonymous-" + oauthId + "@example.com"; // 대체 이메일 생성
+                email = "anonymous-" + oauthId + "@example.com";
             }
         } else {
             existingUser = userRepository.findByEmail(email);
         }
 
-        // 사용자 등록
         if (existingUser.isEmpty()) {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setOauthId(oauthId);
-            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            newUser.setRole(UserRole.USER);
+            // 새로운 사용자 등록
+            User user = new User();
+            user.setEmail(email);
+            user.setOauthId(oauthId);
+            user.setPassword(UUID.randomUUID().toString()); // 임시 비밀번호
+            user.setRole(UserRole.USER);
 
-            userRepository.save(newUser);
+            return userRepository.save(user);
+        } else {
+            return existingUser.get();
         }
-
-        return new DefaultOAuth2User(
-                oAuth2User.getAuthorities(),
-                attributes,
-                oAuthAttributes.getNameAttributeKey() // Principal key 설정
-        );
     }
-
     public String extractUserAttributes(OAuth2User oAuth2User) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         logger.info("OAuth2User attributes: {}", attributes);
