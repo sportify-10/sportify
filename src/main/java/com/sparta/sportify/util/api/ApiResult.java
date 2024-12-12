@@ -2,7 +2,6 @@ package com.sparta.sportify.util.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -26,6 +25,9 @@ public class ApiResult<T> {
         this.data = data;
     }
 
+    public static <T> ApiResult<T> success(T data) {
+        return new ApiResult<>(true, null, data, null);
+    }
     public static <T> ApiResult<T> success(String message,T data) {
         return new ApiResult<>(true,message, data, null);
     }
@@ -41,4 +43,5 @@ public class ApiResult<T> {
     public static <T> ApiResult<T> failure(String message, T data) {
         return new ApiResult<>(false, message,data, new ApiError(message, HttpStatus.FORBIDDEN.value()));
     }
+
 }

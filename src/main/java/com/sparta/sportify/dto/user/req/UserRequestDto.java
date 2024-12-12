@@ -17,7 +17,7 @@ public class UserRequestDto {
     @NotBlank(message = "이메일은 필수 항목입니다.")
     @Email(message = "올바른 이메일 형식이어야 합니다.")
     private String email;
-
+    private String oauthId; // OAuth2 사용자 고유 ID
     @NotBlank(message = "이름은 필수 항목입니다.")
     @Size(min = 2, max = 100, message = "이름은 2자 이상 100자 이하여야 합니다.")
     private String name;
@@ -41,4 +41,10 @@ public class UserRequestDto {
     private Long age;
 
     private UserRole role;
+
+    public UserRequestDto(String username, String password, String mail, UserRole userRole) {
+    }
+
+    public UserRequestDto(String mail, String validPassword) {
+    }
 }

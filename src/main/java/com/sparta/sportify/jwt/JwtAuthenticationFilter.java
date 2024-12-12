@@ -1,25 +1,21 @@
 package com.sparta.sportify.jwt;
 
-import com.sparta.sportify.exception.CustomValidationException;
 import com.sparta.sportify.security.UserDetailsImpl;
-import io.jsonwebtoken.Jwt;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.rmi.RemoteException;
-
-import com.sparta.sportify.jwt.JwtUtil;
 
 @Slf4j
 @Component
@@ -28,9 +24,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
+
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+
     }
 
     @Override
@@ -62,12 +60,62 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // 요청에서 토큰을 가져오는 메서드
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);  // "Bearer " 제거하고 토큰 반환
-        }
-        return null;
+//    private OAuthUserInfo getUserInfoFromKakao(String token) {
+//        // 카카오 API 호출 및 사용자 정보 추출 로직
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set("Authorization", "Bearer " + token);
+//
+//        HttpEntity<String> entity = new HttpEntity<>(headers);
+//        ResponseEntity<KakaoUserResponse> response = restTemplate.exchange(
+//                "https://kapi.kakao.com/v2/user/me", HttpMethod.GET, entity, KakaoUserResponse.class);
+//
+//        if (response.getStatusCode() != HttpStatus.OK) {
+//            throw new IllegalArgumentException("카카오 OAuth 인증 실패: 잘못된 Access Token");
+//        }
+//
+//        KakaoUserResponse userResponse = response.getBody();
+//        if (userResponse == null || userResponse.getKakaoAccount() == null || userResponse.getProperties() == null) {
+//            throw new IllegalArgumentException("카카오 사용자 정보를 가져오지 못했습니다.");
+//        }
+//
+//        // 사용자 정보 매핑
+//        KakaoUserResponse.KakaoAccount kakaoAccount = userResponse.getKakaoAccount();
+//        KakaoUserResponse.Properties properties = userResponse.getProperties();
+//
+//        String email = kakaoAccount.getEmail();
+//        if (email == null || email.isBlank()) {
+//            throw new RuntimeException("사용자의 이메일 정보가 없습니다.");
+//        }
+//
+//        String nickname = properties.getNickname();
+//        if (nickname == null || nickname.isBlank()) {
+//            nickname = "사용자"; // 닉네임이 없을 경우 기본값 설정
+//        }
+//
+//        String gender = kakaoAccount.getGender();
+//        String ageRange = kakaoAccount.getAgeRange();
+//
+//        // 안전한 age 변환
+//        Long age = null;
+//        try {
+//            if (ageRange != null && ageRange.contains("~")) {
+//                age = Long.valueOf(ageRange.split("~")[0].trim());
+//            }
+//        } catch (NumberFormatException e) {
+//            log.warn("AgeRange 변환 중 오류 발생: {}", ageRange);
+//        }
+//
+//        OAuthUserInfo userInfo = new OAuthUserInfo(email, nickname);
+//        userInfo.setEmail(email);
+//        userInfo.setName(nickname);
+//
+//
+//        return userInfo;
+//    }
+
+
+    private boolean isKakaoToken(String token) {
+        // 카카오 토큰인지 검사하는 로직
+        return token != null && token.startsWith("Kakao ");
     }
 }

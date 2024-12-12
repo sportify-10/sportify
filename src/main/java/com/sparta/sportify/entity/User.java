@@ -1,11 +1,11 @@
 package com.sparta.sportify.entity;
 
+import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
+import com.sparta.sportify.config.PasswordEncoder;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -57,6 +57,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean active = true;
 
     public void addCash(CashRequestDto cashRequestDto) {
@@ -66,4 +67,13 @@ public class User {
         this.cash += cashRequestDto.getAmount();
     }
 
+    public String getAccessToken() {
+        return null;
+    }
+
+    public User(UserRequestDto requestDto) {
+        this.email = requestDto.getEmail();
+        this.password = PasswordEncoder.encode(requestDto.getPassword());
+        this.role = requestDto.getRole() != null ? requestDto.getRole() : UserRole.USER;
+    }
 }
