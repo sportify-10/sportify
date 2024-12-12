@@ -38,7 +38,7 @@ public class Stadium {
     private int aTeamCount;
     private int bTeamCount;
     private String description;
-    private int price;
+    private Long price;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -50,7 +50,7 @@ public class Stadium {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private Stadium(String stadiumName, String location,int aTeamCount,int bTeamCount, String description, int price, UserDetailsImpl userDetails) {
+    private Stadium(String stadiumName, String location,int aTeamCount,int bTeamCount, String description, Long price, UserDetailsImpl userDetails) {
         this.stadiumName = stadiumName;
         this.location = location;
         this.aTeamCount = aTeamCount;
@@ -62,11 +62,11 @@ public class Stadium {
         this.user = userDetails.getUser();
     }
 
-    public static Stadium createOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, int price, UserDetailsImpl userDetails) {
+    public static Stadium createOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, Long price, UserDetailsImpl userDetails) {
         return new Stadium(stadiumName, location, aTeamCount, bTeamCount, description, price, userDetails);
     }
 
-    public void updateOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, int price) {
+    public void updateOf(String stadiumName, String location, int aTeamCount, int bTeamCount, String description, Long price) {
         this.stadiumName = stadiumName;
         this.location = location;
         this.aTeamCount = aTeamCount;
