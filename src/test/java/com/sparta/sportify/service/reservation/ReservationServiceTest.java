@@ -7,7 +7,6 @@ import com.sparta.sportify.entity.*;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.ReservationService;
-import com.sparta.sportify.util.cron.CronUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,14 +24,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ReservationServiceTest {
 
     @Mock
     private ReservationRepository reservationRepository;
+
+    @Mock
+    private CashLogRepository cashLogRepository;
+
+    @Mock
+    private CashLogReservationMappingRepository cashLogReservationMappingRepository;
 
     @Mock
     private MatchRepository matchRepository;
@@ -59,12 +64,13 @@ public class ReservationServiceTest {
     void setUp() {
         requestDto = new ReservationRequestDto();
         requestDto.setStadiumTimeId(1L);
-        requestDto.setReservationDate(LocalDate.of(2024,12,3));
+        requestDto.setReservationDate(LocalDate.of(2024, 12, 3));
         requestDto.setTime(10);
         requestDto.setTeamColor(TeamColor.A);
 
         User user = new User();
         user.setId(1L);
+        user.setCash(200000L);
 
         team = Team.builder().id(1L).build();
 
@@ -76,7 +82,7 @@ public class ReservationServiceTest {
                 6,
                 6,
                 "A large stadium for concerts.",
-                500000,
+                50000,
                 StadiumStatus.APPROVED,
                 null,
                 user
@@ -85,6 +91,7 @@ public class ReservationServiceTest {
         stadiumTime = new StadiumTime(1L, "0 0 9-11,12-14 ? * MON,TUE,WED,THU,FRI,SAT,SUN", stadium);
 
         authUser = mock(UserDetailsImpl.class);
+
         when(authUser.getUser()).thenReturn(user);
 
     }
@@ -95,9 +102,8 @@ public class ReservationServiceTest {
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(false);
-        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
+        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
-        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation = Reservation.builder()
                 .id(1L)
@@ -106,22 +112,38 @@ public class ReservationServiceTest {
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
+        CashLog cashLog = CashLog.builder()
+                .id(1L)
+                .price(stadium.getPrice())
+                .type(CashType.PAYMENT)
+                .user(authUser.getUser())
+                .build();
+
+        when(cashLogRepository.save(any())).thenReturn(cashLog);
+
         when(reservationRepository.save(any(Reservation.class))).thenReturn(mockReservation);
 
         ReservationResponseDto response = reservationService.reservationPersonal(requestDto, authUser);
 
+
         assertNotNull(response);
-        assertEquals(1L, response.getReservationId()); // Ensure reservationId is correctly returned
-        verify(reservationRepository, times(1)).save(any(Reservation.class)); // Verify save method is called once
+        assertEquals(List.of(1L), response.getReservationId());
+        assertEquals(150000L, authUser.getUser().getCash());
+
+        verify(reservationRepository, times(1)).save(any(Reservation.class));
+        verify(cashLogRepository, times(1)).save(any(CashLog.class));
+        verify(cashLogReservationMappingRepository, times(1)).save(any(CashLogReservationMapping.class));
+
     }
 
     @Test
     @DisplayName("개인 예약에 대한 예약할 수 없는 시간에 예약한 경우")
     void reservationPersonal_invalidCron() {
-        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
-        when(CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime()))
-                .thenReturn(false);
-        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
+        StadiumTime teststadiumTime = new StadiumTime(1L, "0 0 9-11,12-14 ? * MON", stadium);
+        authUser.getUser();
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(teststadiumTime));
+
+        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(teststadiumTime));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 reservationService.reservationPersonal(requestDto, authUser)
@@ -134,7 +156,7 @@ public class ReservationServiceTest {
     @Test
     @DisplayName("이미 예약이 존재하는 경우")
     void reservationPersonal_alreadyReserved() {
-
+        authUser.getUser();
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(true);
@@ -154,7 +176,7 @@ public class ReservationServiceTest {
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(false);
-        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
+        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
@@ -165,12 +187,20 @@ public class ReservationServiceTest {
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
+        CashLog cashLog = CashLog.builder()
+                .id(1L)
+                .price(stadium.getPrice())
+                .type(CashType.PAYMENT)
+                .user(authUser.getUser())
+                .build();
+
+        when(cashLogRepository.save(any())).thenReturn(cashLog);
         when(reservationRepository.save(any(Reservation.class))).thenReturn(mockReservation);
 
         ReservationResponseDto response = reservationService.reservationPersonal(requestDto, authUser);
 
         assertNotNull(response);
-        assertEquals(1L, response.getReservationId());
+        assertEquals(List.of(1L), response.getReservationId());
         verify(matchRepository, times(1)).save(any(Match.class));
         verify(reservationRepository, times(1)).save(any(Reservation.class));
     }
@@ -187,12 +217,19 @@ public class ReservationServiceTest {
                 .bTeamCount(6)
                 .stadiumTime(stadiumTime)
                 .build();
+        CashLog cashLog = CashLog.builder()
+                .id(1L)
+                .price(stadium.getPrice())
+                .type(CashType.PAYMENT)
+                .user(authUser.getUser())
+                .build();
 
+        when(cashLogRepository.save(any())).thenReturn(cashLog);
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
         when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(false);
 
-        when(matchRepository.findByIdAndDateAndTime(any(),any(), any()))
+        when(matchRepository.findByIdAndDateAndTime(any(), any(), any()))
                 .thenReturn(Optional.of(existingMatch));
 
         when(matchRepository.save(any()))
@@ -212,39 +249,34 @@ public class ReservationServiceTest {
         ReservationResponseDto response = reservationService.reservationPersonal(requestDto, authUser);
 
         assertNotNull(response);
-//        assertEquals(1L, response.getReservationId());
 
         verify(matchRepository, times(1)).save(any(Match.class));
         verify(reservationRepository, times(1)).save(any(Reservation.class)); // 예약 저장 호출 검증
     }
 
 
-
-
     @Test
     @DisplayName("단체 예약에 대한 성공 케이스")
     void reservationGroup_validReservation() {
-        // Additional setup
         requestDto.setTeamId(1);
-        requestDto.setTeamMemberIdList(List.of(1L,2L,3L));
+        requestDto.setTeamMemberIdList(List.of(2L, 3L, 4L));
 
         User user1 = new User();
-        user1.setId(1L);
-        User user2 = new User();
         user1.setId(2L);
-        User user3 = new User();
+        User user2 = new User();
         user1.setId(3L);
+        User user3 = new User();
+        user1.setId(4L);
 
-        List<User> users = List.of(user1,user2,user3);
+        List<User> users = List.of(user1, user2, user3);
 
         when(teamRepository.findById(any())).thenReturn(Optional.of(team));
         when(userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList())).thenReturn(users);
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
-        when(reservationRepository.existsByUserAndMatchTimeAndReservationDate(any(), any(), any()))
+        when(reservationRepository.existsByUsersAndMatchTimeAndReservationDate(any(), any(), any()))
                 .thenReturn(false);
-        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(),requestDto.getReservationDate(), requestDto.getTime()))
+        when(matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()))
                 .thenReturn(java.util.Optional.empty());
-        when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
         Reservation mockReservation1 = Reservation.builder()
                 .id(1L)
@@ -276,19 +308,36 @@ public class ReservationServiceTest {
                 .thenReturn(mockReservation2)
                 .thenReturn(mockReservation3);
 
+        CashLog cashLog = CashLog.builder()
+                .id(1L)
+                .price(stadium.getPrice())
+                .type(CashType.PAYMENT)
+                .user(authUser.getUser())
+                .build();
+
+        when(cashLogRepository.save(any())).thenReturn(cashLog);
+
+
         ReservationResponseDto response = reservationService.reservationGroup(requestDto, authUser);
 
 
         assertNotNull(response);
         assertEquals(users.size(), response.getReservationId().size());
+        assertEquals(50000L, authUser.getUser().getCash());
+
         verify(reservationRepository, times(3)).save(any(Reservation.class));
+        verify(cashLogRepository, times(1)).save(any(CashLog.class));
+        verify(cashLogReservationMappingRepository, times(3)).save(any(CashLogReservationMapping.class));
+
+
     }
+
     @Test
     @DisplayName("단건 예약 조회 성공")
     public void testFindReservation_Success() {
         Match match = Match.builder()
                 .id(1L)
-                .date(LocalDate.of(2024,12,3))
+                .date(LocalDate.of(2024, 12, 3))
                 .time(10)
                 .stadiumTime(stadiumTime)
                 .aTeamCount(6)
@@ -297,7 +346,7 @@ public class ReservationServiceTest {
 
         Reservation reservation = Reservation.builder()
                 .id(1L)
-                .reservationDate(LocalDate.of(2024,12,3))
+                .reservationDate(LocalDate.of(2024, 12, 3))
                 .team(team)
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
@@ -323,7 +372,7 @@ public class ReservationServiceTest {
 
         Match match = Match.builder()
                 .id(1L)
-                .date(LocalDate.of(2024,12,3))
+                .date(LocalDate.of(2024, 12, 3))
                 .time(10)
                 .stadiumTime(stadiumTime)
                 .aTeamCount(6)
@@ -332,7 +381,7 @@ public class ReservationServiceTest {
 
         Reservation reservation = Reservation.builder()
                 .id(1L)
-                .reservationDate(LocalDate.of(2024,12,3))
+                .reservationDate(LocalDate.of(2024, 12, 3))
                 .team(team)
                 .user(user2)
                 .teamColor(TeamColor.A)
@@ -355,7 +404,7 @@ public class ReservationServiceTest {
 
         Match match1 = Match.builder()
                 .id(1L)
-                .date(LocalDate.of(2024,12,3))
+                .date(LocalDate.of(2024, 12, 3))
                 .time(10)
                 .stadiumTime(stadiumTime)
                 .aTeamCount(6)
@@ -364,7 +413,7 @@ public class ReservationServiceTest {
 
         Reservation reservation1 = Reservation.builder()
                 .id(1L)
-                .reservationDate(LocalDate.of(2024,12,3))
+                .reservationDate(LocalDate.of(2024, 12, 3))
                 .team(team)
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
@@ -374,7 +423,7 @@ public class ReservationServiceTest {
 
         Match match2 = Match.builder()
                 .id(2L)
-                .date(LocalDate.of(2024,12,4))
+                .date(LocalDate.of(2024, 12, 4))
                 .time(10)
                 .stadiumTime(stadiumTime)
                 .aTeamCount(6)
@@ -383,7 +432,7 @@ public class ReservationServiceTest {
 
         Reservation reservation2 = Reservation.builder()
                 .id(2L)
-                .reservationDate(LocalDate.of(2024,12,4))
+                .reservationDate(LocalDate.of(2024, 12, 4))
                 .team(team)
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
@@ -413,7 +462,7 @@ public class ReservationServiceTest {
         Long reservationId = 1L;
         Match match = Match.builder()
                 .id(1L)
-                .date(LocalDate.of(2024,12,3))
+                .date(LocalDate.of(2024, 12, 3))
                 .time(10)
                 .stadiumTime(stadiumTime)
                 .aTeamCount(5)
@@ -422,7 +471,7 @@ public class ReservationServiceTest {
 
         Reservation reservation = Reservation.builder()
                 .id(1L)
-                .reservationDate(LocalDate.of(2024,12,3))
+                .reservationDate(LocalDate.of(2024, 12, 3))
                 .team(team)
                 .user(authUser.getUser())
                 .teamColor(TeamColor.A)
@@ -449,7 +498,6 @@ public class ReservationServiceTest {
         assertEquals(ReservationStatus.CANCELED, savedReservation.getStatus());
         assertEquals(6, savedMatch.getATeamCount());
         assertEquals(6, savedMatch.getBTeamCount());
-
 
 
     }
