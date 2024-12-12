@@ -44,7 +44,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter writer = response.getWriter();
-        writer.write("{\"accessToken\": \"" + token + "\"}");
+        writer.write("{\"jwt\": \"" +"Bearer " + token + "\"}");
         writer.flush();
     }
 }
