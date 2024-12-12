@@ -69,9 +69,14 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 
+
     implementation 'org.springframework.security:spring-security-oauth2-core'
     implementation 'org.springframework.security:spring-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // 비동기 웹을 위한 의존성
+
+
+    implementation 'com.cronutils:cron-utils:9.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 
 }

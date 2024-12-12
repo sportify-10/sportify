@@ -9,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
+import com.sparta.sportify.dto.cash.request.CashRequestDto;
+
 @Getter
 @Setter
 @Entity
@@ -55,6 +57,12 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    public void addCash(CashRequestDto cashRequestDto) {
+        if (this.cash == null) {
+            this.cash = 0L; // 0으로 초기화
+        }
+        this.cash += cashRequestDto.getAmount();
+    }
 
     public String getAccessToken() {
         return null;

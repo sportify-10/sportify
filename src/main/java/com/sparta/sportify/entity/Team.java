@@ -6,7 +6,6 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -31,8 +30,9 @@ public class Team {
     private Float winRate;
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TeamMember> teamMembers;
+    @Enumerated(EnumType.STRING)
+    private TeamMemberRole teamMemberRole;
+
 //
 //    @OneToMany(mappedBy = "teams", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<Reservation> reservations;
@@ -56,7 +56,7 @@ public class Team {
     }
 
     public void softDelete() {
-        this.setDeletedAt(LocalDateTime.now());
+        this.deletedAt = LocalDateTime.now();
     }
 
     // Getters and Setters
