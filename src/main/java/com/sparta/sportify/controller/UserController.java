@@ -165,21 +165,18 @@ public class UserController {
 
 
     @GetMapping("/kakao/login")
-    public String kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User, Model model) {
+    public ResponseEntity<ApiResult<String>> kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
         if (oAuth2User == null) {
             throw new IllegalArgumentException("OAuth2User is null");
         }
-// attributes 디버깅
+
+        // attributes 디버깅
         logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
         String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
 
-        if (email == null) {
-            model.addAttribute("email", "Email not available"); // 디폴트 값 설정
-        } else {
-            model.addAttribute("email", email);
-        }
+        String responseMessage = (email == null) ? "Email not available" : email;
 
-        return "kakaoSuccess";
+        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
     }
 
 
