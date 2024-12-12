@@ -1,6 +1,7 @@
 package com.sparta.sportify.controller;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,13 +31,12 @@ public class MatchController {
 
 	@GetMapping
 	public ResponseEntity<ApiResult<MatchesByDateResponseDto>> getMatchesByDate(
-		// @RequestParam(defaultValue = "0") int page,
-		// @RequestParam(defaultValue = "5") int size,
-		@RequestParam LocalDate date
-		// @AuthenticationPrincipal UserDetailsImpl userDetails
+		@RequestParam LocalDate date,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "5") int size
 	) {
 		return ResponseEntity.ok(
-			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date/*page, size, date,  userDetails*/)));
+			ApiResult.success("날짜별 매치 조회 성공", matchService.getMatchesByDate(date, page, size)));
 	}
 
 	@GetMapping("/{stadiumId}/{date}/{time}")
@@ -45,7 +45,7 @@ public class MatchController {
 		@PathVariable LocalDate date,
 		@PathVariable Integer time) {
 
-		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(stadiumId, date, time);
+		MatchDetailResponseDto matchDetail = matchService.getMatchByDateAndTime(stadiumId, date, time, LocalDateTime.now());
 
 		return ResponseEntity.ok(
 			ApiResult.success("매치 조회 성공", matchDetail)
