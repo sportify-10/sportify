@@ -18,15 +18,14 @@ public class SignupResponseDto {
     private String gender;
 
     public SignupResponseDto(User user, String jwtToken) {
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.role = user.getRole();  // UserRole을 Enum으로 설정
+        this.region = user.getRegion();  // 지역 정보
+        this.age = user.getAge();  // 나이
+        this.gender = user.getGender();  // 성별
     }
 
-//    public SignupResponseDto(User user) {
-//        this.email = user.getEmail();
-//        this.name = user.getName();
-//        this.role = user.getRole();  // UserRole을 Enum으로 설정
-//        this.region = user.getRegion();  // 지역 정보
-//        this.age = user.getAge();  // 나이
-//        this.gender = user.getGender();  // 성별
-//    }
+
 
 }
