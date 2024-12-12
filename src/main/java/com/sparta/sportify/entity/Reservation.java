@@ -23,7 +23,7 @@ public class Reservation {
     private LocalDate reservationDate;
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
-    private Integer totalAmount;
+    private Long totalAmount;
     private LocalDateTime deletedAt;
 
     @Enumerated(EnumType.STRING)

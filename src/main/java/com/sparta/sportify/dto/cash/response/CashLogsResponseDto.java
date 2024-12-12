@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class CashLogsResponseDto {
-	 private int amount;
+	 private Long amount;
 	 private LocalDateTime createAt;
 	 private CashType type;
 }

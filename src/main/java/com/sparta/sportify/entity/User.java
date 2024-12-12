@@ -2,8 +2,10 @@ package com.sparta.sportify.entity;
 
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
+
 import lombok.*;
 import com.sparta.sportify.config.PasswordEncoder;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -13,10 +15,10 @@ import com.sparta.sportify.dto.cash.request.CashRequestDto;
 
 @Getter
 @Setter
-@Entity
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor
+@Entity
 @Table(name = "users")
 public class User {
     @Id

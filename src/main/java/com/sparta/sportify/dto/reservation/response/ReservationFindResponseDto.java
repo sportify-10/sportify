@@ -20,7 +20,7 @@ public class ReservationFindResponseDto {
     Long reservationId;
     StadiumResponseDto stadium;
     LocalDate reservationDate;
-    Integer totalAmount;
+    Long totalAmount;
 
     public ReservationFindResponseDto(Reservation reservation){
         this.userId = reservation.getUser().getId();

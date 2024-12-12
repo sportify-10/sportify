@@ -17,7 +17,7 @@ public class StadiumResponseDto {
 	private int aTeamCount;
 	private int bTeamCount;
 	private String description;
-	private int price;
+	private Long price;
 	private StadiumStatus status;
 	private LocalDateTime deletedAt;
 

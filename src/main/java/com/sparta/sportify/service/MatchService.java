@@ -1,7 +1,6 @@
 package com.sparta.sportify.service;
 
 import java.time.DayOfWeek;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -48,7 +47,6 @@ public class MatchService {
 		matchResult.setMatchStatus(requestDto.getMatchStatus());
 		matchResult.setMatchDate(LocalDate.now());
 
-
 		MatchResult savedResult = matchResultRepository.save(matchResult);
 		return new MatchResultResponseDto(
 			savedResult.getId(),
@@ -73,9 +71,7 @@ public class MatchService {
 		);
 	}
 
-	public MatchesByDateResponseDto getMatchesByDate(LocalDate date/*int page, int size, LocalDate date, UserDetailsImpl userDetails*/) {
-		//Pageable pageable = PageRequest.of(page, size);
-
+	public MatchesByDateResponseDto getMatchesByDate(LocalDate date) {
 		//하나의 값? 저장할 리스트
 		List<MatchByStadiumResponseDto> matches = new ArrayList<>();
 		/* 하나의 값? 예시
@@ -95,7 +91,7 @@ public class MatchService {
 		List<StadiumTime> stadiumTimes = stadiumTimeRepository.findByCronDay(cronDay);
 		//저장된 스타디움 타임이 없으면
 		if (stadiumTimes.isEmpty()) {
-			return new MatchesByDateResponseDto(List.of());
+			return new MatchesByDateResponseDto(matches);
 		}
 		for (int i = 0; i < stadiumTimes.size(); i++) {
 			String cron = stadiumTimes.get(i).getCron();//스타디움 타임에 저장된 크론식 조회
@@ -117,37 +113,17 @@ public class MatchService {
 				String endTimeFormatted = String.format("%02d:00", endTime);
 
 				LocalTime startTimeLocalTimeType = LocalTime.parse(startTimeFormatted); //LocalTime 형식으로 변환
-				LocalDateTime startDateTime = date.atTime(startTimeLocalTimeType);//입력한 날짜 시간
-				Duration duration = Duration.between(LocalDateTime.now(), startDateTime);//시간 비교
 
-				int startTimeInt = startTimeLocalTimeType.getHour() * 100;//Integer형식과 비교하기 위해 변환
+				int startTimeInt = startTimeLocalTimeType.getHour();//Integer형식과 비교하기 위해 변환
 				//매치 테이블에서 예약 인원 수 조회하기 위헤
 				Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(),date, startTimeInt);
 
-				String status = ""; //마감, 모집중, 마감 임박
-
-				double totalMatchCount = 0;//매치에 예약된 인원 수
-				double totalStadiumCapacity = 0;//구장애서 정한 최대 인원 수
-				double reservationPercentage = 0;
-				if (match.isPresent()) {
-					//예약 인원 %
-					totalMatchCount = match.get().getATeamCount() + match.get().getBTeamCount();
-					totalStadiumCapacity = stadiumTimes.get(i).getStadium().getATeamCount() + stadiumTimes.get(i).getStadium().getBTeamCount();
-					reservationPercentage = (totalMatchCount / totalStadiumCapacity) * 100;
+				if(match.isEmpty()){
+					continue;
 				}
 
-				//시간이 지난 경우 || 인원이 다 찬 경우
-				if(duration.isNegative() || reservationPercentage == 100) {
-					status = "마감";
-				}
-				//현재 시작시간 까지 4시간 이내로 남은 경우 || 인원 80% 이상인 경우
-				else if(duration.toHours() <= 4 || reservationPercentage > 80) {
-					status = "마감 임박";
-				}
-
-				else {
-					status = "모집중";
-				}
+				//마감, 모집중, 마감 임박
+				String status = determineMatchStatus(match, LocalDateTime.now());
 
 				MatchByStadiumResponseDto matchResponse = new MatchByStadiumResponseDto(
 					stadiumTimes.get(i).getStadium().getId(),
@@ -160,6 +136,7 @@ public class MatchService {
 				);
 
 				matches.add(matchResponse);
+
 			}
 		}
 		matches.sort(Comparator.comparing(MatchByStadiumResponseDto::getStartTime));
@@ -189,7 +166,7 @@ public class MatchService {
 
 	// 매치 단건 조회
 	@Transactional(readOnly = true)
-	public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time) {
+	public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time, LocalDateTime now) {
 		// 매치 조회
 		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 경기장에 대한 경기 시간 정보를 찾을 수 없습니다."));
@@ -197,7 +174,8 @@ public class MatchService {
 			.orElseThrow(() ->new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다."));
 
 		// 매치 상태 결정
-		String status = determineMatchStatus(Optional.ofNullable(match));
+		String status = determineMatchStatus(Optional.ofNullable(match), now);
+		//String status = determineMatchStatus(match.getStartTime(), match.getEndTime(), match.getReservationPercentage(), now);
 
 		return new MatchDetailResponseDto(
 			match.getId(),
@@ -209,9 +187,9 @@ public class MatchService {
 			status
 		);
 	}
-	// 매치 상태 결정
-	private String determineMatchStatus(Optional<Match> match) {
-		LocalDateTime now = LocalDateTime.now();
+
+	//매치 상태 결정
+	private String determineMatchStatus(Optional<Match> match, LocalDateTime now) {
 		LocalDateTime matchStartTime = match.get().getStartTime();
 		LocalDateTime matchEndTime = match.get().getEndTime();
 

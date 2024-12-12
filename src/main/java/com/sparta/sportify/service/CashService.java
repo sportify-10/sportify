@@ -43,7 +43,7 @@ public class CashService {
 		return new CashResponseDto(cashLog);
 	}
 
-	public List<CashLogsResponseDto> getCashLogs(UserDetailsImpl userDetails, int page, int size) {
+	public Page<CashLogsResponseDto> getCashLogs(UserDetailsImpl userDetails, int page, int size) {
 		Pageable pageable = PageRequest.of(page-1, size);
 		Page<CashLog> cashLogs = cashLogRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
 
@@ -51,10 +51,10 @@ public class CashService {
 			throw new IllegalArgumentException("캐시 사용 내역이 없습니다");
 		}
 
-		return cashLogs.stream().map(cashLog -> new CashLogsResponseDto(
+		return cashLogs.map(cashLog -> new CashLogsResponseDto(
 			cashLog.getPrice(),
 			cashLog.getCreateAt(),
 			cashLog.getType()
-		)).collect(Collectors.toList());
+		));
 	}
 }

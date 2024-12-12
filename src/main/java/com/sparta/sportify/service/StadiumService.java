@@ -50,13 +50,14 @@ public class StadiumService {
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
 
-	public List<StadiumResponseDto> getStadiums(UserDetailsImpl userDetails, int page, int size) {
+	public Page<StadiumResponseDto> getStadiums(UserDetailsImpl userDetails, int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size);
 		Page<Stadium> stadiums = stadiumRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
+		if(stadiums.isEmpty()) {
+			throw new IllegalArgumentException("등록한 구장이 없습니다");
+		}
 
-		return stadiums.getContent().stream()
-			.map(StadiumResponseDto::new)
-			.collect(Collectors.toList());
+		return stadiums.map(StadiumResponseDto::new);
 	}
 
 	@Transactional
@@ -91,13 +92,14 @@ public class StadiumService {
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
 
-	public List<StadiumMatchResponseDto> findMatchesByStadium(Long stadiumId) {
+	public Page<StadiumMatchResponseDto> findMatchesByStadium(Long stadiumId, int page, int size) {
+		Pageable pageable = PageRequest.of(page - 1, size);
 		stadiumRepository.findById(stadiumId).orElseThrow(()->new IllegalArgumentException("구장이 존재하지 않습니다"));
 
 		////스타디움 아이디로 스타디움 타임을 가진 매치 조회
-		List<Match> matches = matchRepository.findByStadiumTime_Stadium_Id(stadiumId);
+		Page<Match> matches = matchRepository.findByStadiumTime_Stadium_Id(stadiumId, pageable);
 
-		return matches.stream().map(match -> {
+		return matches.map(match -> {
 			//매치별 totalAmount 계산
 			//reservation에서 matchId를 가진 totalAmount 총합
 			Integer totalAmount = reservationRepository.findTotalAmountByMatchId(match.getId(), ReservationStatus.CONFIRMED);
@@ -111,6 +113,6 @@ public class StadiumService {
 				match.getATeamCount(),
 				match.getBTeamCount()
 			);
-		}).collect(Collectors.toList());
+		});
 	}
 }
