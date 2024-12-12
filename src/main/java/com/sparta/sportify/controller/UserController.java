@@ -11,39 +11,57 @@ import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
+import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
+
 import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.util.Map;
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserController {
 
     @Autowired
     private final UserService userService;
 
-    @Autowired
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
+
+
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+
+
     private final UserRepository userRepository;
 
-    @Autowired
+
     private final PasswordEncoder passwordEncoder;
+
+
 
     @Autowired
     private JwtUtil jwtUtil;
 
+
     // 유저 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<SignupResponseDto>> signUp(
+    public ResponseEntity<ApiResult<User>> signUp(
             @Valid @RequestBody UserRequestDto requestDto
     ) {
         // 역할이 없는 경우 기본값 USER 설정
@@ -144,6 +162,25 @@ public class UserController {
                 HttpStatus.OK
         );
     }
+
+
+
+    @GetMapping("/kakao/login")
+    public ResponseEntity<ApiResult<String>> kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        if (oAuth2User == null) {
+            throw new IllegalArgumentException("OAuth2User is null");
+        }
+
+        // attributes 디버깅
+        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
+        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+
+        String responseMessage = (email == null) ? "Email not available" : email;
+
+        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+    }
+
+
 
 }
 
