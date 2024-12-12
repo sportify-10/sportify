@@ -27,5 +27,6 @@ public class SignupResponseDto {
     }
 
 
-
+    public SignupResponseDto(long l, String testUsername, String mail) {
+    }
 }

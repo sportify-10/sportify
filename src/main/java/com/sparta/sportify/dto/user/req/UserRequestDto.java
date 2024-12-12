@@ -41,4 +41,10 @@ public class UserRequestDto {
     private Long age;
 
     private UserRole role;
+
+    public UserRequestDto(String username, String password, String mail, UserRole userRole) {
+    }
+
+    public UserRequestDto(String mail, String validPassword) {
+    }
 }
