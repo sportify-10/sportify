@@ -21,6 +21,11 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     Page<TeamMember> findByTeamIdAndDeletedAtIsNull(Long teamId, Pageable pageable);
 
+    Object findByTeamId(Long teamId);
+
+    void approveTeamMember(TeamMember teamMember);
+
+    void grantRole(TeamMember teamMember, String admin);
     //Page<TeamMember> findByUserIdAndStatus(Long id, TeamMember.Status status, Pageable pageable);
     @Query("SELECT t FROM TeamMember t WHERE t.user.id = :userId AND t.status = 'APPROVED' AND t.deletedAt IS NULL")
     Page<TeamMember> findTeams(Long userId, Pageable pageable);
