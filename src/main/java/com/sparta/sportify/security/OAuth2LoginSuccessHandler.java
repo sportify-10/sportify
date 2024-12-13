@@ -31,7 +31,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             throws IOException, ServletException {
         // 사용자 정보 가져오기
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String oauthId = oAuth2User.getName(); // OAuth2 사용자 고유 ID
+        String oauthId = oAuth2User.getAttribute("sub");
 
         // 사용자 확인
         User user = userRepository.findByOauthId(oauthId)

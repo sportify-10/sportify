@@ -173,6 +173,36 @@ public class UserController {
         return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
     }
 
+    @GetMapping("/naver/login")
+    public ResponseEntity<ApiResult<String>>naverLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        if (oAuth2User == null) {
+            throw new IllegalArgumentException("OAuth2User is null");
+        }
+
+        // attributes 디버깅
+        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
+        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+
+        String responseMessage = (email == null) ? "Email not available" : email;
+
+        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+    }
+
+    @GetMapping("/google/login")
+    public ResponseEntity<ApiResult<String>> googleLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        if (oAuth2User == null) {
+            throw new IllegalArgumentException("OAuth2User is null");
+        }
+
+        // attributes 디버깅
+        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
+        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+
+        String responseMessage = (email == null) ? "Email not available" : email;
+
+        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+    }
+
 
     //유저의 팀 조회
     @GetMapping("/team")
