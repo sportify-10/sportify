@@ -1,11 +1,17 @@
-package com.sparta.sportify.entity.user;
+package com.sparta.sportify.entity;
 
+import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
+
 import lombok.*;
+import com.sparta.sportify.config.PasswordEncoder;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+
+import com.sparta.sportify.dto.cash.request.CashRequestDto;
 
 @Getter
 @Setter
@@ -28,15 +34,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true)
     private String oauthId;
-
     private String oauthProvider;
     private String region;
     private String gender;
     private Long age;
     @Builder.Default
-    private Long levelPoints = 1000L;
+    private Long levelPoints=1000L;
 
     private LocalDateTime deletedAt;
 
@@ -57,50 +61,20 @@ public class User {
     @Builder.Default
     private boolean active = true;
 
-    public void addCash(Long amount) {
+    public void addCash(CashRequestDto cashRequestDto) {
         if (this.cash == null) {
-            this.cash = 0L;
+            this.cash = 0L; // 0으로 초기화
         }
-        this.cash += amount;
-    }
-
-    public void subCash(Long amount) {
-        if (this.cash == null) {
-            this.cash = 0L;
-        }
-        this.cash -= amount;
+        this.cash += cashRequestDto.getAmount();
     }
 
     public String getAccessToken() {
         return null;
     }
 
-    public void disableUser() {
-        this.active = false;
-        this.deletedAt = LocalDateTime.now();
+    public User(UserRequestDto requestDto) {
+        this.email = requestDto.getEmail();
+        this.password = PasswordEncoder.encode(requestDto.getPassword());
+        this.role = requestDto.getRole() != null ? requestDto.getRole() : UserRole.USER;
     }
-
-    public void updatePassword(String password) {
-        this.password = password;
-    }
-
-    public void updateOf(String name, String region, String gender, Long age) {
-        this.name = name;
-        this.region = region;
-        this.gender = gender;
-        this.age = Long.valueOf(age);
-    }
-
-    public void updateNickname(String nickname) {
-        this.name = nickname;
-    }
-
-    public void discountCash(Long cash) {
-        this.cash = this.cash - cash;
-    }
-
-    public void addLevelPoint(int levelPoints) {
-        this.levelPoints += levelPoints;
-    }
-
 }
