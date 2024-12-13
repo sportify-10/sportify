@@ -53,20 +53,37 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     // 유저 회원가입
+//    @PostMapping("/signup")
+//    public ResponseEntity<ApiResult<User>> signUp(
+//            @Valid @RequestBody UserRequestDto requestDto
+//    ) {
+//        // 역할이 없는 경우 기본값 USER 설정
+//        UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
+//
+//        // 응답 데이터 생성
+//        return new ResponseEntity<>(
+//                ApiResult.success("회원가입 성공",
+//                        userService.signup(requestDto, role)),
+//                HttpStatus.OK
+//        );
+//    }
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<User>> signUp(
-            @Valid @RequestBody UserRequestDto requestDto
-    ) {
-        // 역할이 없는 경우 기본값 USER 설정
+    public ResponseEntity<ApiResult<SignupResponseDto>> signup(@RequestBody UserRequestDto requestDto) {
+        // Role 설정 (기본값: USER)
         UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
 
-        // 응답 데이터 생성
-        return new ResponseEntity<>(
-                ApiResult.success("회원가입 성공",
-                        userService.signup(requestDto, role)),
-                HttpStatus.OK
+        // 회원가입 처리
+        User user = userService.signup(requestDto, role);
+
+        // 응답 DTO 생성
+        SignupResponseDto responseDto = new SignupResponseDto(user);
+
+        // ApiResult로 감싸서 반환
+        return ResponseEntity.ok(
+                ApiResult.success("회원가입 성공", responseDto)
         );
     }
+
 
 
     // 유저 로그인
