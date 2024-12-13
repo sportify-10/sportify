@@ -21,6 +21,7 @@ import com.sparta.sportify.entity.Match;
 import com.sparta.sportify.entity.MatchResult;
 import com.sparta.sportify.entity.Reservation;
 import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.entity.Team;
 import com.sparta.sportify.entity.TeamColor;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.MatchRepository;
@@ -72,6 +73,22 @@ public class MatchService {
 
 			user.setLevelPoints(user.getLevelPoints() + pointChange);
 			userRepository.save(user);
+		});
+
+		// 경기 결과에 따른 팀 점수 부여
+		List<Reservation> reservationsTeam = reservationRepository.findAllByMatch(match);
+		reservationsTeam.forEach(reservation -> {
+			Team team = reservation.getTeam();
+			int teampointChange = 0;
+
+			if(requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
+				teampointChange = (reservation.getTeamColor() == TeamColor.A) ? 10: -10;
+			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
+				teampointChange= (reservation.getTeamColor() == TeamColor.B) ? 10: -10;
+			}
+
+			team.setTeamPoints(team.getTeamPoints() + teampointChange);
+			teamRepository.save(team);
 		});
 
 
