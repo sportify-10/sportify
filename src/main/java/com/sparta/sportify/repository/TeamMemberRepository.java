@@ -22,7 +22,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     Object findByTeamId(Long teamId);
 
-    void approveTeamMember(TeamMember teamMember);
+//    void approveTeamMember(TeamMember teamMember);
 
-    void grantRole(TeamMember teamMember, String admin);
+//    void grantRole(TeamMember teamMember, String admin);
 }
