@@ -39,7 +39,8 @@ public class User {
     private String region;
     private String gender;
     private Long age;
-    private Long levelPoints;
+    @Builder.Default
+    private Long levelPoints=1000L;
 
     private LocalDateTime deletedAt;
 
