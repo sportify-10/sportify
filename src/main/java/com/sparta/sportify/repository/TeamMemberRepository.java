@@ -20,4 +20,9 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     Page<TeamMember> findByTeamIdAndDeletedAtIsNull(Long teamId, Pageable pageable);
 
+    Object findByTeamId(Long teamId);
+
+    void approveTeamMember(TeamMember teamMember);
+
+    void grantRole(TeamMember teamMember, String admin);
 }
