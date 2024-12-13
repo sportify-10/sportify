@@ -1,26 +1,35 @@
 package com.sparta.sportify.service;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
+import com.sparta.sportify.entity.TeamMember;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
+import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -136,5 +145,26 @@ public class UserService {
 
         // 회원가입 응답 DTO 생성
         return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
+    }
+
+    public Page<UserTeamResponseDto> getUserTeams(UserDetailsImpl userDetails, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        //teamMember 상태 APPROVED 만 조회
+        Page<TeamMember> teamMembers = teamMemberRepository.findTeams(userDetails.getUser().getId(), pageable);
+
+        if(teamMembers.isEmpty()) {
+            throw new IllegalArgumentException("가입되어 있는 팀이 없습니다");
+        }
+
+        return teamMembers.map(teamMember -> new UserTeamResponseDto(
+            teamMember.getTeam().getId(),
+            teamMember.getTeam().getTeamName(),
+            teamMember.getTeam().getRegion(),
+            teamMember.getTeam().getActivityTime(),
+            teamMember.getTeam().getSkillLevel(),
+            teamMember.getTeam().getSportType(),
+            teamMember.getTeam().getTeamPoints(),
+            Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
+        ));
     }
 }

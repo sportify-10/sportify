@@ -1,10 +1,32 @@
 package com.sparta.sportify.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import org.springframework.data.domain.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
@@ -12,52 +34,23 @@ import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
-
 import com.sparta.sportify.util.api.ApiResult;
+
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
 @AllArgsConstructor
 public class UserController {
 
-    @Autowired
     private final UserService userService;
-
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
-
-
     private final CustomOAuth2UserService customOAuth2UserService;
-
-
-
     private final UserRepository userRepository;
-
-
     private final PasswordEncoder passwordEncoder;
-
-
-
-    @Autowired
     private JwtUtil jwtUtil;
-
 
     // 유저 회원가입
     @PostMapping("/signup")
@@ -181,6 +174,14 @@ public class UserController {
     }
 
 
-
+    //유저의 팀 조회
+    @GetMapping("/team")
+    public ResponseEntity<ApiResult<Page<UserTeamResponseDto>>> getUserTeams(
+        @AuthenticationPrincipal UserDetailsImpl userDetails,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "5") int size
+    ){
+        return ResponseEntity.ok(ApiResult.success("유저의 팀 조회 성공", userService.getUserTeams(userDetails, page, size)));
+    }
 }
 
