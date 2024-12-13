@@ -1,13 +1,16 @@
 package com.sparta.sportify.service.stadium;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
+import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
+import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
+import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
+import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
+import com.sparta.sportify.entity.*;
+import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.ReservationRepository;
+import com.sparta.sportify.repository.StadiumRepository;
+import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.service.StadiumService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,29 +22,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
-import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
-import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
-import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
-import com.sparta.sportify.entity.Match;
-import com.sparta.sportify.entity.ReservationStatus;
-import com.sparta.sportify.entity.Stadium;
-import com.sparta.sportify.entity.StadiumStatus;
-import com.sparta.sportify.entity.StadiumTime;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
-import com.sparta.sportify.repository.MatchRepository;
-import com.sparta.sportify.repository.ReservationRepository;
-import com.sparta.sportify.repository.StadiumRepository;
-import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
-import com.sparta.sportify.service.StadiumService;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class StadiumServiceTest {
 
