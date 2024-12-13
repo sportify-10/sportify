@@ -260,7 +260,7 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장에 예약된 매치 조회")
 	void findMatchesByStadium() {
-		when(matchRepository.findByStadiumTime_Stadium_Id(eq(1L), any(Pageable.class)))
+		when(matchRepository.findByStadiumTimeStadiumId(eq(1L), any(Pageable.class)))
 			.thenReturn(new PageImpl<>(List.of(match)));
 		when(reservationRepository.findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED)))
 			.thenReturn(10000); // 예약 총합
@@ -276,7 +276,7 @@ class StadiumServiceTest {
 		assertEquals(5, responseDto.getTeamBCount());
 
 		verify(stadiumRepository, times(1)).findById(1L);
-		verify(matchRepository, times(1)).findByStadiumTime_Stadium_Id(eq(1L), any(Pageable.class));
+		verify(matchRepository, times(1)).findByStadiumTimeStadiumId(eq(1L), any(Pageable.class));
 		verify(reservationRepository, times(1)).findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED));
 	}
 }
