@@ -19,10 +19,16 @@ import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.Match;
 import com.sparta.sportify.entity.MatchResult;
+import com.sparta.sportify.entity.Reservation;
 import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.entity.TeamColor;
+import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
+import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.repository.TeamRepository;
+import com.sparta.sportify.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +40,9 @@ public class MatchService {
 	private final MatchResultRepository matchResultRepository;
 	private final StadiumTimeRepository stadiumTimeRepository;
 	private final MatchRepository matchRepository;
+	private final ReservationRepository reservationRepository;
+	private final UserRepository userRepository;
+	private final TeamRepository teamRepository;
 
 	@Transactional
 	public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
@@ -48,6 +57,24 @@ public class MatchService {
 		matchResult.setMatchDate(LocalDate.now());
 
 		MatchResult savedResult = matchResultRepository.save(matchResult);
+
+		// 경기 결과에 따른 개인 점수 부여
+		List<Reservation> reservations = reservationRepository.findAllByMatch(match);
+		reservations.forEach(reservation -> {
+			User user = reservation.getUser();
+			int pointChange = 0;
+
+			if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
+				pointChange = (reservation.getTeamColor() == TeamColor.A) ? 10 : -10;
+			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
+				pointChange = (reservation.getTeamColor() == TeamColor.B) ? 10 : -10;
+			}
+
+			user.setLevelPoints(user.getLevelPoints() + pointChange);
+			userRepository.save(user);
+		});
+
+
 		return new MatchResultResponseDto(
 			savedResult.getId(),
 			savedResult.getTeamAScore(),
