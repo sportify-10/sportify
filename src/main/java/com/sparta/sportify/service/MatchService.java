@@ -69,6 +69,8 @@ public class MatchService {
 				pointChange = (reservation.getTeamColor() == TeamColor.A) ? 10 : -10;
 			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
 				pointChange = (reservation.getTeamColor() == TeamColor.B) ? 10 : -10;
+			} else {
+				pointChange = 5;
 			}
 
 			user.setLevelPoints(user.getLevelPoints() + pointChange);
@@ -85,6 +87,8 @@ public class MatchService {
 				teampointChange = (reservation.getTeamColor() == TeamColor.A) ? 10: -10;
 			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
 				teampointChange= (reservation.getTeamColor() == TeamColor.B) ? 10: -10;
+			} else {
+				teampointChange = 5;
 			}
 
 			team.setTeamPoints(team.getTeamPoints() + teampointChange);
