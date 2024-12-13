@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -47,11 +46,12 @@ public class TeamService {
         return new TeamResponseDto(savedTeam);
     }
 
-    public TeamResponsePage getAllTeams(int page, int size, String criteria) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, criteria));
-        Page<Team> teams = teamRepository.findAll(pageable);
+    public TeamResponsePage getAllTeams(int page, int size, String sportType, String skillLevel, String region) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Team> teams = teamRepository.findAllWithFilters(sportType, skillLevel, region, pageable);
         return new TeamResponsePage(teams);
     }
+
 
     public TeamResponseDto getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId)
