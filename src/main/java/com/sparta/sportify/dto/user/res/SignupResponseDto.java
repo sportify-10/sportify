@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class SignupResponseDto {
+    private  boolean active;
+    private Long levelPoints;
     private String email;
     private String name;
     private UserRole role;  // Enum 타입으로 Role을 포함
@@ -26,7 +28,18 @@ public class SignupResponseDto {
         this.gender = user.getGender();  // 성별
     }
 
+    public SignupResponseDto(User user) {
 
-    public SignupResponseDto(long l, String testUsername, String mail) {
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.role = user.getRole();
+        this.region = user.getRegion();
+        this.age = user.getAge();
+        this.gender = user.getGender();
+        this.levelPoints = user.getLevelPoints();
+        this.active = user.isActive();
     }
+
+
+
 }
