@@ -1,5 +1,28 @@
 package com.sparta.sportify.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
@@ -12,85 +35,39 @@ import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
-
 import com.sparta.sportify.util.api.ApiResult;
+
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
 @AllArgsConstructor
 public class UserController {
 
-    @Autowired
     private final UserService userService;
-
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
-
-
     private final CustomOAuth2UserService customOAuth2UserService;
-
-
-
     private final UserRepository userRepository;
-
-
     private final PasswordEncoder passwordEncoder;
-
-
-
-    @Autowired
     private JwtUtil jwtUtil;
 
-
     // 유저 회원가입
-//    @PostMapping("/signup")
-//    public ResponseEntity<ApiResult<User>> signUp(
-//            @Valid @RequestBody UserRequestDto requestDto
-//    ) {
-//        // 역할이 없는 경우 기본값 USER 설정
-//        UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
-//
-//        // 응답 데이터 생성
-//        return new ResponseEntity<>(
-//                ApiResult.success("회원가입 성공",
-//                        userService.signup(requestDto, role)),
-//                HttpStatus.OK
-//        );
-//    }
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<SignupResponseDto>> signup(@RequestBody UserRequestDto requestDto) {
-        // Role 설정 (기본값: USER)
+    public ResponseEntity<ApiResult<User>> signUp(
+            @Valid @RequestBody UserRequestDto requestDto
+    ) {
+        // 역할이 없는 경우 기본값 USER 설정
         UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
 
-        // 회원가입 처리
-        User user = userService.signup(requestDto, role);
-
-        // 응답 DTO 생성
-        SignupResponseDto responseDto = new SignupResponseDto(user);
-
-        // ApiResult로 감싸서 반환
-        return ResponseEntity.ok(
-                ApiResult.success("회원가입 성공", responseDto)
+        // 응답 데이터 생성
+        return new ResponseEntity<>(
+                ApiResult.success("회원가입 성공",
+                        userService.signup(requestDto, role)),
+                HttpStatus.OK
         );
     }
-
 
 
     // 유저 로그인
@@ -131,12 +108,12 @@ public class UserController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-            SignupResponseDto responseDto = userService.getUserById(id);
-                return new ResponseEntity<>(
-                        ApiResult.success("유저 정보 조회 성공", responseDto),
-                        HttpStatus.OK
-                );
-        }
+        SignupResponseDto responseDto = userService.getUserById(id);
+        return new ResponseEntity<>(
+                ApiResult.success("유저 정보 조회 성공", responseDto),
+                HttpStatus.OK
+        );
+    }
 
 
     // 자신의 계정 삭제
@@ -196,38 +173,29 @@ public class UserController {
 
         return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
     }
-
     @GetMapping("/naver/login")
-    public ResponseEntity<ApiResult<String>>naverLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+    public ResponseEntity<ApiResult<String>> naverLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
         if (oAuth2User == null) {
             throw new IllegalArgumentException("OAuth2User is null");
         }
 
         // attributes 디버깅
         logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+        String email = customOAuth2UserService.extractNaverUserAttributes(oAuth2User);
 
         String responseMessage = (email == null) ? "Email not available" : email;
 
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+        return ResponseEntity.ok(ApiResult.success("네이버 로그인 성공", responseMessage));
     }
 
-    @GetMapping("/google/login")
-    public ResponseEntity<ApiResult<String>> googleLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
-        }
+    @GetMapping("/oauth/loginInfo")
+    public String getJson(Authentication authentication) {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+        Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String responseMessage = (email == null) ? "Email not available" : email;
-
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+        return attributes.toString();
     }
-
-
-
 }
+
 

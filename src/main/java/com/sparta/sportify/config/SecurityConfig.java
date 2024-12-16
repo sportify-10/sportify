@@ -37,13 +37,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/kakao/login","/api/users/signup", "/api/users/login", "/api/users/oauth2/code/kakao","/login", "/oauth2/**").permitAll() // 회원가입/로그인은 인증 불필요
+                        .requestMatchers("/api/users/kakao/login","/api/users/signup", "/api/users/login", "/api/users/oauth2/code/kakao","/login", "/google/**","/naver/**").permitAll() // 회원가입/로그인은 인증 불필요
                         .anyRequest().authenticated() // 나머지는 인증 필요
 
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/api/users/kakao/login")
+                        //.defaultSuccessUrl("/api/users/oauth/loginInfo", true)
                         .loginProcessingUrl("/api/users/kakao/login")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(successHandler) // 성공 핸들러 등록
@@ -71,4 +71,3 @@ public class SecurityConfig {
 
 
 }
-
