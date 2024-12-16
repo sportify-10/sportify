@@ -48,6 +48,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.getWriter().flush();
     }
 
+
+
     private String extractOauthId(OAuth2User oAuth2User) {
         // OAuth2User로부터 플랫폼별 사용자 ID 추출
         Map<String, Object> attributes = oAuth2User.getAttributes();
