@@ -6,8 +6,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +25,17 @@ import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.Match;
 import com.sparta.sportify.entity.MatchResult;
+import com.sparta.sportify.entity.Reservation;
 import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.entity.Team;
+import com.sparta.sportify.entity.TeamColor;
+import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
+import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.repository.TeamRepository;
+import com.sparta.sportify.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +47,9 @@ public class MatchService {
 	private final MatchResultRepository matchResultRepository;
 	private final StadiumTimeRepository stadiumTimeRepository;
 	private final MatchRepository matchRepository;
+	private final ReservationRepository reservationRepository;
+	private final UserRepository userRepository;
+	private final TeamRepository teamRepository;
 
 	@Transactional
 	public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
@@ -48,6 +64,64 @@ public class MatchService {
 		matchResult.setMatchDate(LocalDate.now());
 
 		MatchResult savedResult = matchResultRepository.save(matchResult);
+
+		// 경기 결과에 따른 개인 점수 부여
+		List<Reservation> reservations = reservationRepository.findAllByMatch(match);
+		reservations.forEach(reservation -> {
+			User user = reservation.getUser();
+			int pointChange = 0;
+
+			if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
+				pointChange = (reservation.getTeamColor() == TeamColor.A) ? 10 : -10;
+			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
+				pointChange = (reservation.getTeamColor() == TeamColor.B) ? 10 : -10;
+			} else {
+				pointChange = 5;
+			}
+
+			user.setLevelPoints(user.getLevelPoints() + pointChange);
+			userRepository.save(user);
+		});
+
+		// 경기 결과에 따른 팀 점수 부여
+		List<Reservation> reservationsTeam = reservationRepository.findAllByMatch(match);
+		// 중복 없는 Team-Reservation 매핑을 Set으로 생성
+		Set<Map<Team, Reservation>> uniqueTeamReservations = new HashSet<>();
+		reservationsTeam.forEach(reservation -> {
+			Team team = reservation.getTeam();
+			if (team != null) {
+				Map<Team, Reservation> map = new HashMap<>();
+				map.put(team, reservation);
+				uniqueTeamReservations.add(map);
+			}
+		});
+		// Set 처리
+		Set<Team> uniqueTeams = reservationsTeam.stream()
+			.map(Reservation::getTeam)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+		uniqueTeams.forEach(team -> {
+			// 관련된 Reservation 중 하나를 가져오기 (팀 기반)
+			Reservation relatedReservation = reservationsTeam.stream()
+				.filter(reservation -> team.equals(reservation.getTeam()))
+				.findFirst() // 첫 번째 매칭된 Reservation 가져오기
+				.orElseThrow(() -> new IllegalStateException("Reservation not found for team"));
+			// Reservation의 TeamColor로 점수 계산
+			TeamColor teamColor = relatedReservation.getTeamColor();
+			int teampointChange = 0;
+			if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
+				teampointChange = (teamColor == TeamColor.A) ? 10 : -10;
+			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
+				teampointChange = (teamColor == TeamColor.B) ? 10 : -10;
+			} else {
+				teampointChange = 5;
+			}
+			// 점수 업데이트
+			team.setTeamPoints(team.getTeamPoints() + teampointChange);
+			teamRepository.save(team);
+		});
+
+
 		return new MatchResultResponseDto(
 			savedResult.getId(),
 			savedResult.getTeamAScore(),

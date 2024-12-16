@@ -8,4 +8,8 @@ import lombok.Setter;
 public class ApproveRequestDto {
     private Long userId;
     private boolean approve;
+
+    public ApproveRequestDto(Long id) {
+        this.userId = id;
+    }
 }

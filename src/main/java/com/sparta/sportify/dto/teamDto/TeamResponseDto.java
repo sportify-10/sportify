@@ -12,6 +12,7 @@ public class TeamResponseDto {
     private String skillLevel;
     private String sportType;
     private String description;
+    private Integer teamPoints;
 
     public TeamResponseDto(Team team) {
         this.id = team.getId();
@@ -21,5 +22,6 @@ public class TeamResponseDto {
         this.skillLevel = team.getSkillLevel();
         this.sportType = team.getSportType();
         this.description = team.getDescription();
+        this.teamPoints = team.getTeamPoints();
     }
 }

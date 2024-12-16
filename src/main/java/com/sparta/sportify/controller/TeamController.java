@@ -30,10 +30,12 @@ public class TeamController {
     @GetMapping()
     public ResponseEntity<ApiResult<TeamResponsePage>> getAllMenus(@RequestParam(required = false, defaultValue = "0") int page,
                                                                    @RequestParam(required = false, defaultValue = "10") int size,
-                                                                   @RequestParam(required = false, defaultValue = "modifiedAt") String criteria) {
+                                                                   @RequestParam(required = false) String sportType,
+                                                                   @RequestParam(required = false) String skillLevel,
+                                                                   @RequestParam(required = false) String region) {
         return new ResponseEntity<>(
                 ApiResult.success("팀 전체 조회 완료",
-                        teamService.getAllTeams(page, size, criteria)),
+                        teamService.getAllTeams(page, size, sportType, skillLevel, region)),
                 HttpStatus.OK);
     }
 

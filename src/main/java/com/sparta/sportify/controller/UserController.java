@@ -2,7 +2,9 @@ package com.sparta.sportify.controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 import java.util.Map;
+
 
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
@@ -10,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +32,7 @@ import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
@@ -187,6 +192,7 @@ public class UserController {
     }
 
 
+
     @GetMapping("/oauth/loginInfo")
     public String getJson(Authentication authentication) {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
@@ -194,6 +200,15 @@ public class UserController {
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         return attributes.toString();
+
+    //유저의 팀 조회
+    @GetMapping("/team")
+    public ResponseEntity<ApiResult<Page<UserTeamResponseDto>>> getUserTeams(
+        @AuthenticationPrincipal UserDetailsImpl userDetails,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "5") int size
+    ){
+
     }
 }
 
