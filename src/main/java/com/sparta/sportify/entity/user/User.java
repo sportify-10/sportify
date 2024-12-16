@@ -34,7 +34,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true)
     private String oauthId;
+
     private String oauthProvider;
     private String region;
     private String gender;
