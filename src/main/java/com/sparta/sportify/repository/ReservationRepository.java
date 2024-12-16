@@ -1,5 +1,6 @@
 package com.sparta.sportify.repository;
 
+import com.sparta.sportify.entity.Match;
 import com.sparta.sportify.entity.Reservation;
 import com.sparta.sportify.entity.ReservationStatus;
 import com.sparta.sportify.entity.User;
@@ -31,4 +32,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         "LEFT JOIN Reservation r ON r.match.id = m.id AND r.status = :status " +
         "WHERE m.id = :matchId")
     Integer findTotalAmountByMatchId(@Param("matchId") Long matchId, ReservationStatus status);
+
+    List<Reservation> findAllByMatch(Match match);
 }
