@@ -159,34 +159,33 @@ public class UserController {
 
 
 
-    @GetMapping("/kakao/login")
-    public ResponseEntity<ApiResult<String>> kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+    @GetMapping("/oAuth/login")
+    public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
             throw new IllegalArgumentException("OAuth2User is null");
         }
 
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
-
-        String responseMessage = (email == null) ? "Email not available" : email;
-
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
-    }
-    @GetMapping("/naver/login")
-    public ResponseEntity<ApiResult<String>> naverLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
+        // provider에 따라 이메일 추출 메서드를 호출
+        String email = null;
+        switch (provider.toLowerCase()) {
+            case "kakao":
+                email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+                break;
+            case "naver":
+                email = customOAuth2UserService.extractNaverUserAttributes(oAuth2User);
+                break;
+            case "google":
+                email = customOAuth2UserService.extractGoogleUserAttributes(oAuth2User);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid provider");
         }
 
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractNaverUserAttributes(oAuth2User);
-
         String responseMessage = (email == null) ? "Email not available" : email;
 
-        return ResponseEntity.ok(ApiResult.success("네이버 로그인 성공", responseMessage));
+        return ResponseEntity.ok(ApiResult.success(provider + " 로그인 성공", responseMessage));
     }
+
 
     @GetMapping("/oauth/loginInfo")
     public String getJson(Authentication authentication) {

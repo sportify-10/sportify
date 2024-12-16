@@ -133,6 +133,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return response.get("email").toString(); // 이메일 반환
     }
+    public String extractGoogleUserAttributes(OAuth2User oAuth2User) {
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        logger.info("OAuth2User attributes: {}", attributes);
 
+        if (!attributes.containsKey("email")) {
+            logger.warn("Email not found in Google account attributes");
+            return null; // 이메일 없음
+        }
+
+        return attributes.get("email").toString(); // 이메일 반환
+    }
 
 }
