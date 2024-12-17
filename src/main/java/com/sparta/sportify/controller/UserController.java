@@ -192,8 +192,7 @@ public class UserController {
     }
 
 
-
-    @GetMapping("/oauth/loginInfo")
+    @GetMapping("/oauth/login_info")
     public String getJson(Authentication authentication) {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
