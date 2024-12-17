@@ -21,5 +21,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 		registry.addHandler(teamChatWebSocketHandler, "/ws/{teamId}")
 			.addInterceptors(new WebSocketHandshakeInterceptor(jwtTokenProvider))
 			.setAllowedOrigins("*");
+			//.setAllowedOrigins("http://192.168.0.10:8080", "http://localhost:8080");
 	}
 }
