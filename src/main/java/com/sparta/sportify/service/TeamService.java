@@ -53,7 +53,7 @@ public class TeamService {
 
         return new TeamResponseDto(savedTeam);
     }
-
+    @Cacheable(value = "teamsCache", key = "'teams_' + #sportType + '_' + #skillLevel + '_' + #region + '_' + #page + '_' + #size")
     public TeamResponsePage getAllTeams(int page, int size, String sportType, String skillLevel, String region) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Team> teams = teamRepository.findAllWithFilters(sportType, skillLevel, region, pageable);
