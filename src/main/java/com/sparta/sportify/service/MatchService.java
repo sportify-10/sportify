@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MatchService {
 
+	private static final String MATCH_DATE = "matchDate";
 	private final MatchResultRepository matchResultRepository;
 	private final StadiumTimeRepository stadiumTimeRepository;
 	private final MatchRepository matchRepository;
@@ -145,6 +147,7 @@ public class MatchService {
 		);
 	}
 
+	@Cacheable(cacheNames = MATCH_DATE, key = "#date.toString()")
 	public MatchesByDateResponseDto getMatchesByDate(LocalDate date) {
 		//하나의 값? 저장할 리스트
 		List<MatchByStadiumResponseDto> matches = new ArrayList<>();

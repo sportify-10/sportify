@@ -10,19 +10,27 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class TeamService {
+    private static final Object TEAM_MATCH = "teamMatch";
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final TeamMemberRepository teamMemberRepository;
+    // private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     public TeamResponseDto createTeam(TeamRequestDto requestDto, Long creatorId) {
@@ -52,12 +60,23 @@ public class TeamService {
         return new TeamResponsePage(teams);
     }
 
-
+    @Cacheable(value = "teamCache", key = "#teamId") // 캐시에 저장
     public TeamResponseDto getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
         return new TeamResponseDto(team);
     }
+
+    // @CachePut(value = "teamCache", key = "#teamId")
+    // public TeamResponseDto updateTeamRanking(Long teamId, int teamRanking) {
+    //     // Redis의 Sorted Set에 순위를 업데이트합니다.
+    //     redisTemplate.opsForZSet().add("teamRanking", teamId, teamRanking);
+    //
+    //     // 팀 정보를 다시 조회하여 캐시를 업데이트합니다.
+    //     Team team = teamRepository.findById(teamId)
+    //         .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
+    //     return new TeamResponseDto(team);
+    // }
 
     @Transactional
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto) {

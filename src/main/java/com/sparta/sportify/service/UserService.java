@@ -3,9 +3,12 @@ package com.sparta.sportify.service;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,7 @@ public class UserService {
     private final TeamMemberRepository teamMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    // private final RedisTemplate<String, Object> redisTemplate;
 
     // 회원가입
     @Transactional
@@ -77,6 +81,7 @@ public class UserService {
     }
 
     // 특정 유저 정보 조회 (ID로 유저 정보 반환)
+    @Cacheable(value = "userCache", key = "#userId")
     public SignupResponseDto getUserById(Long userId) {
         // 유저 조회
         User user = userRepository.findById(userId)
@@ -85,6 +90,19 @@ public class UserService {
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
+
+    // @CachePut(value = "userCache", key = "#userId")
+    // public SignupResponseDto updateUserRanking(Long userId, Long userRanking) {
+    //     // Redis의 Sorted Set에 개인 순위를 업데이트합니다.
+    //     redisTemplate.opsForZSet().add("userRanking", userId, userRanking);
+    //
+    //     // 유저 정보를 다시 조회하여 캐시를 업데이트합니다.
+    //     User user = userRepository.findById(userId)
+    //         .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    //
+    //     // 유저 정보 DTO로 변환 후 응답 반환
+    //     return new SignupResponseDto(user, null);
+    // }
 
     @Transactional
     public void deactivateUser(Long userId) {
