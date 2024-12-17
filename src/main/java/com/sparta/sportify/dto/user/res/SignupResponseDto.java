@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class SignupResponseDto {
-    private  boolean active;
+    private boolean active;
     private Long levelPoints;
     private String email;
     private String name;

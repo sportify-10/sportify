@@ -28,39 +28,21 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
-        // OAuth2User 정보 가져오기
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        CustomOAuth2User customUser = (CustomOAuth2User) authentication.getPrincipal();
 
-        // 플랫폼별 사용자 ID (oauthId) 가져오기
-        String oauthId = extractOauthId(oAuth2User);
+        // 사용자 등록 또는 업데이트 로직 (userRepository 사용)
+        User user = userRepository.findByOauthId(customUser.getProviderId())
+                .orElseThrow(() -> new IllegalArgumentException("OAuth2 사용자 정보가 없습니다: " + customUser.getProviderId()));
 
-        // 사용자 정보 확인 또는 등록
-        User user = userRepository.findByOauthId(oauthId)
-                .orElseThrow(() -> new IllegalArgumentException("OAuth2 사용자 정보가 없습니다: " + oauthId));
-
-        // JWT 토큰 생성
+        // JWT 생성
         String jwt = jwtUtil.generateToken(user.getEmail(), user.getRole());
 
-        // 응답을 JSON 형식으로 반환
+        // JSON 응답
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"jwt\": \"" +"Bearer "+ jwt + "\"}");
+        response.getWriter().write("{\"jwt\": \"" + "Bearer " + jwt + "\"}");
         response.getWriter().flush();
     }
 
 
-
-    private String extractOauthId(OAuth2User oAuth2User) {
-        // OAuth2User로부터 플랫폼별 사용자 ID 추출
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        if (attributes.containsKey("sub")) {
-            return (String) attributes.get("sub"); // Google
-        } else if (attributes.containsKey("id")) {
-            return String.valueOf(attributes.get("id")); // Kakao
-        } else if (attributes.containsKey("response")) {
-            Map<String, Object> response = (Map<String, Object>) attributes.get("response"); // Naver
-            return (String) response.get("id");
-        }
-        throw new IllegalArgumentException("OAuth2 사용자 ID를 추출할 수 없습니다.");
-    }
 }
