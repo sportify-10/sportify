@@ -67,17 +67,6 @@ public class TeamService {
         return new TeamResponseDto(team);
     }
 
-    // @CachePut(value = "teamCache", key = "#teamId")
-    // public TeamResponseDto updateTeamRanking(Long teamId, int teamRanking) {
-    //     // Redis의 Sorted Set에 순위를 업데이트합니다.
-    //     redisTemplate.opsForZSet().add("teamRanking", teamId, teamRanking);
-    //
-    //     // 팀 정보를 다시 조회하여 캐시를 업데이트합니다.
-    //     Team team = teamRepository.findById(teamId)
-    //         .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
-    //     return new TeamResponseDto(team);
-    // }
-
     @Transactional
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
