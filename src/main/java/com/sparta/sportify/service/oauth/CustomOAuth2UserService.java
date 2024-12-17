@@ -6,6 +6,7 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.jwt.JwtTokenProvider;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,29 +29,30 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
-        // DefaultOAuth2UserService의 loadUser 메서드 호출
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        // 클라이언트 registrationId 확인 (예: kakao, naver 등)
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
-
-        // 플랫폼별 사용자 정보 가져오기
+        String provider = userRequest.getClientRegistration().getRegistrationId();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String email = extractEmail(attributes, registrationId);
-        String oauthId = extractOauthId(attributes);
-        String nickname = extractNickname(attributes, registrationId); // 닉네임 추출
+        String providerId = extractOauthId(attributes, provider);
+        String email = extractEmail(attributes, provider);
+        String nickname = extractNickname(attributes, provider);
 
-        logger.info("Extracted Email: {}", email);
-        logger.info("Extracted OAuth ID: {}", oauthId);
-        logger.info("Extracted Nickname: {}", nickname);
-
-        // 사용자 등록 또는 업데이트 처리
-        User user = processUserRegistration(email, oauthId, registrationId, nickname);
-
-        // 사용자와 속성을 포함하는 OAuth2User 반환
-        return oAuth2User;
+        return new CustomOAuth2User(provider, providerId, email, nickname, attributes);
     }
+
+    private String extractOauthId(Map<String, Object> attributes, String provider) {
+        if ("kakao".equals(provider)) {
+            return String.valueOf(attributes.get("id"));
+        } else if ("naver".equals(provider)) {
+            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+            return (String) response.get("id");
+        } else if ("google".equals(provider)) {
+            return (String) attributes.get("sub");
+        }
+        throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
+    }
+
 
     private String extractEmail(Map<String, Object> attributes, String registrationId) {
         if ("kakao".equals(registrationId)) {
@@ -62,9 +64,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return (String) attributes.getOrDefault("email", null); // 다른 플랫폼은 기본 이메일 필드 확인
     }
 
-    private String extractOauthId(Map<String, Object> attributes) {
-        return String.valueOf(attributes.get("id"));
-    }
 
     private String extractNickname(Map<String, Object> attributes, String registrationId) {
         if ("kakao".equals(registrationId)) {
@@ -118,6 +117,31 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         return kakaoAccount.get("email").toString(); // 이메일 반환
+    }
+    public String extractNaverUserAttributes(OAuth2User oAuth2User) {
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        logger.info("OAuth2User attributes: {}", attributes);
+
+        // 네이버 로그인 시 사용자 정보 구조
+        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+
+        if (response == null || !response.containsKey("email")) {
+            logger.warn("Email not found in Naver account attributes");
+            return null; // 이메일 없음
+        }
+
+        return response.get("email").toString(); // 이메일 반환
+    }
+    public String extractGoogleUserAttributes(OAuth2User oAuth2User) {
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        logger.info("OAuth2User attributes: {}", attributes);
+
+        if (!attributes.containsKey("email")) {
+            logger.warn("Email not found in Google account attributes");
+            return null; // 이메일 없음
+        }
+
+        return attributes.get("email").toString(); // 이메일 반환
     }
 
 }
