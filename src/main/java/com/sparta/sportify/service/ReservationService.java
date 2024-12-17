@@ -78,7 +78,6 @@ public class ReservationService {
         Reservation reservation = reservationRepository.save(
                 Reservation.builder()
                         .reservationDate(requestDto.getReservationDate())
-                        .reservationDate(requestDto.getReservationDate())
                         .totalAmount(stadium.getPrice())
                         .status(ReservationStatus.CONFIRMED)
                         .teamColor(requestDto.getTeamColor())
