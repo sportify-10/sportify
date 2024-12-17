@@ -163,7 +163,6 @@ public class UserController {
     }
 
 
-
     @GetMapping("/oAuth/login")
     public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
@@ -199,16 +198,18 @@ public class UserController {
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         return attributes.toString();
+    }
 
     //유저의 팀 조회
     @GetMapping("/team")
     public ResponseEntity<ApiResult<Page<UserTeamResponseDto>>> getUserTeams(
-        @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "5") int size
-    ){
-
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(ApiResult.success("유저의 팀 조회 성공", userService.getUserTeams(userDetails, page, size)));
     }
 }
+
 
 
