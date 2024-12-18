@@ -42,9 +42,15 @@ public class Match {
 
     public void discountATeamCount(int count) {
         this.aTeamCount -= count;
+        if(this.aTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
     }
     public void discountBTeamCount(int count) {
         this.bTeamCount -= count;
+        if(this.bTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
     }
 
     public void addATeamCount(int count) {
