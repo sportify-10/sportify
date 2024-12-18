@@ -106,4 +106,17 @@ public class TeamArticleService {
 
 		return new TeamArticleResponseDto(teamArticleRepository.save(teamArticle));
 	}
+
+	public TeamArticleResponseDto getPost(Long teamId, Long articleId, UserDetailsImpl userDetails) {
+		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
+			.filter(article -> article.getDeletedAt() == null)
+			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
+
+		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
+			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
+			.filter(member -> member.getDeletedAt() == null)
+			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 조회 가능합니다"));
+
+		return new TeamArticleResponseDto(teamArticleRepository.save(teamArticle));
+	}
 }
