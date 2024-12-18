@@ -70,6 +70,7 @@ public class TeamArticleService {
 	public TeamArticleResponseDto updatePost(Long articleId, TeamArticleRequestDto teamArticleRequestDto,
 		UserDetailsImpl userDetails) {
 		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
+			.filter(article -> article.getDeletedAt() == null)
 			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
 
 		if(teamArticle.getUser().getId() != userDetails.getUser().getId()){
@@ -79,10 +80,29 @@ public class TeamArticleService {
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamArticle.getTeam().getId())
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 작성 가능합니다"));
+			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 수정 가능합니다"));
 
 		teamArticle.updateOf(teamArticleRequestDto.getTitle(), teamArticleRequestDto.getContent(),
 			userDetails.getUser(), teamArticle.getTeam());
+
+		return new TeamArticleResponseDto(teamArticleRepository.save(teamArticle));
+	}
+
+	public TeamArticleResponseDto deletePost(Long articleId, UserDetailsImpl userDetails) {
+		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
+			.filter(article -> article.getDeletedAt() == null)
+			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
+
+		if(teamArticle.getUser().getId() != userDetails.getUser().getId()){
+			throw new IllegalArgumentException("자신의 게시물만 삭제 가능합니다");
+		}
+
+		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamArticle.getTeam().getId())
+			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
+			.filter(member -> member.getDeletedAt() == null)
+			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 삭제 가능합니다"));
+
+		teamArticle.deleteOf();
 
 		return new TeamArticleResponseDto(teamArticleRepository.save(teamArticle));
 	}
