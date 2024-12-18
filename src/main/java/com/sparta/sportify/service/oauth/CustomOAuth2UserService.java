@@ -38,7 +38,35 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = extractEmail(attributes, provider);
         String nickname = extractNickname(attributes, provider);
 
-        return new CustomOAuth2User(provider, providerId, email, nickname, attributes);
+        // 사용자 등록 또는 업데이트
+        User user = processUserRegistration(email, providerId, provider, nickname);
+
+        // OAuth 공급자에 따라 nameAttributeKey 설정
+        String nameAttributeKey = getNameAttributeKey(provider);
+
+        return new CustomOAuth2User(
+                oAuth2User.getAuthorities(),
+                attributes,
+                nameAttributeKey, // 공급자에 따른 키 설정
+                provider,
+                providerId,
+                email,
+                nickname,
+                user.getId()
+        );
+    }
+
+    private String getNameAttributeKey(String provider) {
+        switch (provider.toLowerCase()) {
+            case "kakao":
+                return "id"; // 카카오의 기본 키
+            case "naver":
+                return "response.id"; // 네이버의 사용자 ID 키
+            case "google":
+                return "sub"; // 구글의 기본 키
+            default:
+                throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
+        }
     }
 
     private String extractOauthId(Map<String, Object> attributes, String provider) {
