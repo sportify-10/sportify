@@ -20,6 +20,7 @@ import com.sparta.sportify.entity.teamChat.TeamChat;
 import com.sparta.sportify.repository.TeamChat.TeamChatRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.util.BadWordFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 	private final TeamChatRepository teamChatRepository;
+	private final BadWordFilter badWordFilter;
 
 	// 연결된 WebSocket 세션 관리
 	private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
@@ -60,11 +62,13 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 		Team team = teamRepository.findById(teamId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 팀이 존재하지 않습니다."));
 
-		sendMessageToTeamSessions(teamId, message.getPayload(), session);
+		String containsProfanity =  badWordFilter.containsSimilarBadWord(message.getPayload());
+
+		sendMessageToTeamSessions(teamId, containsProfanity, session);
 
 		//채팅 내역 DB 저장
 		TeamChat teamChat = TeamChat.builder()
-			.content(message.getPayload())
+			.content(containsProfanity)
 			.user(userDetails.getUser())
 			.team(team)
 			.createAt(LocalDateTime.now())
