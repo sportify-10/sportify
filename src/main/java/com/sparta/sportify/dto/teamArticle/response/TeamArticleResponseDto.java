@@ -14,6 +14,7 @@ public class TeamArticleResponseDto {
 	private Long teamId;
 	private LocalDateTime createAt;
 
+
 	public TeamArticleResponseDto(TeamArticle teamArticle) {
 		this.title = teamArticle.getTitle();
 		this.content = teamArticle.getContent();
