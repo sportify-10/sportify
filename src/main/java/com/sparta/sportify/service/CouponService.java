@@ -71,6 +71,8 @@ public class CouponService {
         });
 
         coupon.validateStockCount();
+        coupon.decrease();
+        couponRepository.save(coupon);
 
         CashLog cashLog = cashLogRepository.save(CashLog.builder()
                 .user(authUser.getUser())
