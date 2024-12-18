@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import com.sparta.sportify.dto.teamArticle.request.TeamArticleRequestDto;
 import com.sparta.sportify.dto.teamArticle.response.TeamArticleResponseDto;
 import com.sparta.sportify.entity.Team;
+
+import com.sparta.sportify.entity.TeamMember;
 import com.sparta.sportify.entity.teamArticle.TeamArticle;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
