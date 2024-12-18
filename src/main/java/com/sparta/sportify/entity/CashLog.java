@@ -33,4 +33,8 @@ public class CashLog {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "coupon_id",nullable = true)
+    private Coupon coupon;
 }
