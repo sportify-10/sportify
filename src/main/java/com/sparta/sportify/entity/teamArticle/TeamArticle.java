@@ -42,6 +42,8 @@ public class TeamArticle {
 	@Temporal(TemporalType.TIMESTAMP)
 	private LocalDateTime createAt;
 
+	private LocalDateTime deletedAt;
+
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
@@ -58,5 +60,9 @@ public class TeamArticle {
 		this.content = content;
 		this.user = user;
 		this.team = team;
+	}
+
+	public void deleteOf() {
+		this.deletedAt = LocalDateTime.now();
 	}
 }
