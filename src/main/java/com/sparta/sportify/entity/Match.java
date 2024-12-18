@@ -41,7 +41,7 @@ public class Match {
     private StadiumTime stadiumTime;
 
     public void discountATeamCount(int count) {
-        this.bTeamCount -= count;
+        this.aTeamCount -= count;
     }
     public void discountBTeamCount(int count) {
         this.bTeamCount -= count;
