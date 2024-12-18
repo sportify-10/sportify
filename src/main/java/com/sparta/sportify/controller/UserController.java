@@ -2,10 +2,13 @@ package com.sparta.sportify.controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -182,6 +185,21 @@ public class UserController {
         @RequestParam(defaultValue = "5") int size
     ){
         return ResponseEntity.ok(ApiResult.success("유저의 팀 조회 성공", userService.getUserTeams(userDetails, page, size)));
+    }
+
+    // LevelPoints 순으로 유저 조회
+    @GetMapping("/levelPoints")
+    public ResponseEntity<ApiResult<Page<SignupResponseDto>>> getAllUsers(
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<SignupResponseDto> users = userService.getAllUsersOrderedByLevelPoints(pageable);
+
+        return new ResponseEntity<>(
+            ApiResult.success("전체 사용자 조회 성공", users),
+            HttpStatus.OK
+        );
     }
 }
 

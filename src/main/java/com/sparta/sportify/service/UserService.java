@@ -1,11 +1,14 @@
 package com.sparta.sportify.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -184,5 +187,15 @@ public class UserService {
             teamMember.getTeam().getTeamPoints(),
             Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
         ));
+    }
+
+    // LevelPoints 순으로 유저 조회
+    public Page<SignupResponseDto> getAllUsersOrderedByLevelPoints(Pageable pageable) {
+        Page<User> userPage = userRepository.findAllByOrderByLevelPointsDesc(pageable);
+        List<SignupResponseDto> users = userPage.getContent().stream()
+            .map(user -> new SignupResponseDto(user, user.getAccessToken())) // JWT 토큰을 가져오는 메서드를 수정해야 할 수 있습니다.
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(users, pageable, userPage.getTotalElements());
     }
 }
