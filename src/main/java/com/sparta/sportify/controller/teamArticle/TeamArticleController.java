@@ -49,6 +49,15 @@ public class TeamArticleController {
 		return ResponseEntity.ok(ApiResult.success("게시글 조회 성공", teamArticleService.getPostAll(teamId, userDetails, page, size)));
 	}
 
+	@GetMapping("/{teamId}/{articleId}")
+	public ResponseEntity<ApiResult<TeamArticleResponseDto>> getPost(
+		@PathVariable Long teamId,
+		@PathVariable Long articleId,
+		@AuthenticationPrincipal UserDetailsImpl userDetails
+	){
+		return ResponseEntity.ok(ApiResult.success("게시글 단건 조회 성공", teamArticleService.getPost(teamId,articleId,userDetails)));
+	}
+
 	@PatchMapping("/{articleId}")
 	public ResponseEntity<ApiResult<TeamArticleResponseDto>> updatePost(
 		@PathVariable Long articleId,
