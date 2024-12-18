@@ -27,11 +27,9 @@ public class SignupResponseDto {
         this.age = user.getAge();  // 나이
         this.gender = user.getGender();  // 성별
         this.levelPoints = user.getLevelPoints();  // levelPoints 추가
-        // this.userRanking = user.getUserRanking();
     }
 
     public SignupResponseDto(User user) {
-
         this.email = user.getEmail();
         this.name = user.getName();
         this.role = user.getRole();
