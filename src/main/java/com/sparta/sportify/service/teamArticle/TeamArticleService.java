@@ -72,6 +72,10 @@ public class TeamArticleService {
 		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
 			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
 
+		if(teamArticle.getUser().getId() != userDetails.getUser().getId()){
+			throw new IllegalArgumentException("자신의 게시물만 수정 가능합니다");
+		}
+
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamArticle.getTeam().getId())
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
