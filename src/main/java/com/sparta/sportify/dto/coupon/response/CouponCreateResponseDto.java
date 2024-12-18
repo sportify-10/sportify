@@ -1,9 +1,15 @@
 package com.sparta.sportify.dto.coupon.response;
 
 import com.sparta.sportify.entity.Coupon;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CouponCreateResponseDto {
     Long id;
     String code;

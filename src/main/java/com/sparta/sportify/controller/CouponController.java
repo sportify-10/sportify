@@ -29,7 +29,7 @@ public class CouponController {
     @PostMapping("/admin/coupon")
     public ResponseEntity<ApiResult<CouponCreateResponseDto>> createCoupon(
             @AuthenticationPrincipal UserDetailsImpl authUser,
-            CouponCreateRequestDto couponCreateRequestDto
+            @RequestBody CouponCreateRequestDto couponCreateRequestDto
     ) {
         return new ResponseEntity<>(
                 ApiResult.success(
@@ -71,7 +71,7 @@ public class CouponController {
     @PostMapping("/coupon")
     public ResponseEntity<ApiResult<CashLogCouponUseResponse>> useCoupon(
             @AuthenticationPrincipal UserDetailsImpl authUser,
-            CouponUseRequestDto couponUseRequestDto
+            @RequestBody CouponUseRequestDto couponUseRequestDto
     ) {
         return new ResponseEntity<>(
                 ApiResult.success(
