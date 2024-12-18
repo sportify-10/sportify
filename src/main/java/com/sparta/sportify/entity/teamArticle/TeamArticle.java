@@ -52,4 +52,11 @@ public class TeamArticle {
 
 	// @OneToMany(mappedBy = "article", cascade = CascadeType.REMOVE)
 	// private List<Comment> comments = new ArrayList<>();
+
+	public void updateOf(String title, String content, User user, Team team) {
+		this.title = title;
+		this.content = content;
+		this.user = user;
+		this.team = team;
+	}
 }

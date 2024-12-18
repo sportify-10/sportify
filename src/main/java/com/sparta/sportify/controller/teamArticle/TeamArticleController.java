@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,5 +46,14 @@ public class TeamArticleController {
 		@RequestParam(defaultValue = "5") int size
 	) {
 		return ResponseEntity.ok(ApiResult.success("게시글 조회 성공", teamArticleService.getPostAll(teamId, userDetails, page, size)));
+	}
+
+	@PatchMapping("/{articleId}")
+	public ResponseEntity<ApiResult<TeamArticleResponseDto>> updatePost(
+		@PathVariable Long articleId,
+		@RequestBody TeamArticleRequestDto teamArticleRequestDto,
+		@AuthenticationPrincipal UserDetailsImpl userDetails
+	){
+		return ResponseEntity.ok(ApiResult.success("게시글 수정 성공",teamArticleService.updatePost(articleId, teamArticleRequestDto, userDetails)));
 	}
 }
