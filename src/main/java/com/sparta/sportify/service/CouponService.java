@@ -1,5 +1,6 @@
 package com.sparta.sportify.service;
 
+import com.sparta.sportify.annotation.RedissonLock;
 import com.sparta.sportify.dto.cash.response.CashLogCouponUseResponse;
 import com.sparta.sportify.dto.coupon.request.CouponCreateRequestDto;
 import com.sparta.sportify.dto.coupon.response.CouponCreateResponseDto;
@@ -63,7 +64,7 @@ public class CouponService {
         return new SliceImpl<>(couponHistory, pageable, cashLogSlice.hasNext());
     }
 
-    @Transactional
+    @RedissonLock(key="'coupon-'.concat(#code)")
     public CashLogCouponUseResponse useCoupon(String code, UserDetailsImpl authUser) {
         Coupon coupon = couponRepository.findByCode(code).orElseThrow(()->{
             throw new RuntimeException("존재하지않는 쿠폰입니다.");
