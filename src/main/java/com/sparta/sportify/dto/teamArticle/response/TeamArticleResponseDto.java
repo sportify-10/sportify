@@ -1,14 +1,24 @@
 package com.sparta.sportify.dto.teamArticle.response;
 
+import java.time.LocalDateTime;
+
 import com.sparta.sportify.entity.teamArticle.TeamArticle;
 
+import lombok.Getter;
+
+@Getter
 public class TeamArticleResponseDto {
 	private String title;
 	private String content;
-	private String userName;
+	private Long userId;
+	private Long teamId;
+	private LocalDateTime createAt;
+
 	public TeamArticleResponseDto(TeamArticle teamArticle) {
 		this.title = teamArticle.getTitle();
 		this.content = teamArticle.getContent();
-		this.userName = teamArticle.getUserName();
+		this.userId = teamArticle.getUser().getId();
+		this.teamId = teamArticle.getTeam().getId();
+		this.createAt = teamArticle.getCreateAt();
 	}
 }

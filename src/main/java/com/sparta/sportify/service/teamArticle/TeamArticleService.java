@@ -2,12 +2,18 @@ package com.sparta.sportify.service.teamArticle;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.sparta.sportify.dto.teamArticle.request.TeamArticleRequestDto;
 import com.sparta.sportify.dto.teamArticle.response.TeamArticleResponseDto;
+import com.sparta.sportify.entity.Team;
 import com.sparta.sportify.entity.teamArticle.TeamArticle;
 import com.sparta.sportify.repository.TeamMemberRepository;
+import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.teamArticle.TeamArticleRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 
@@ -19,8 +25,11 @@ public class TeamArticleService {
 
 	private final TeamMemberRepository teamMemberRepository;
 	private final TeamArticleRepository teamArticleRepository;
+	private final TeamRepository teamRepository;
 
 	public TeamArticleResponseDto createPost(Long teamId, UserDetailsImpl userDetails, TeamArticleRequestDto teamArticleRequestDto) {
+		Team team = teamRepository.findById(teamId).orElseThrow(()->new IllegalArgumentException("존재하지 않는 팀입니다"));
+
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(),teamId)
 			.orElseThrow(()->new IllegalArgumentException("팀 멤버만 작성 가능합니다"));
 
@@ -28,10 +37,25 @@ public class TeamArticleService {
 			TeamArticle.builder()
 				.title(teamArticleRequestDto.getTitle())
 				.content(teamArticleRequestDto.getContent())
-				.userName(userDetails.getUser().getName())
+				.user(userDetails.getUser())
+				.team(team)
 				.createAt(LocalDateTime.now())
 				.build());
 
 		return new TeamArticleResponseDto(teamArticle);
+	}
+
+	public Page<TeamArticleResponseDto> getPostAll(Long teamId, UserDetailsImpl userDetails, int page, int size) {
+		Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createAt"));
+
+		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(),teamId)
+			.orElseThrow(()->new IllegalArgumentException("팀 멤버만 조회 가능합니다"));
+
+		Page<TeamArticle> teamArticle = teamArticleRepository.findAllByTeamId(teamId, pageable);
+		if(teamArticle.getContent().isEmpty()){
+			throw new IllegalArgumentException("게시글이 없습니다");
+		}
+
+		return teamArticle.map(TeamArticleResponseDto::new);
 	}
 }
