@@ -3,12 +3,18 @@ package com.sparta.sportify.controller;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import java.util.Map;
+
+
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -107,12 +113,12 @@ public class UserController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-            SignupResponseDto responseDto = userService.getUserById(id);
-                return new ResponseEntity<>(
-                        ApiResult.success("유저 정보 조회 성공", responseDto),
-                        HttpStatus.OK
-                );
-        }
+        SignupResponseDto responseDto = userService.getUserById(id);
+        return new ResponseEntity<>(
+                ApiResult.success("유저 정보 조회 성공", responseDto),
+                HttpStatus.OK
+        );
+    }
 
 
     // 자신의 계정 삭제
@@ -157,31 +163,53 @@ public class UserController {
     }
 
 
-
-    @GetMapping("/kakao/login")
-    public ResponseEntity<ApiResult<String>> kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+    @GetMapping("/oAuth/login")
+    public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
             throw new IllegalArgumentException("OAuth2User is null");
         }
 
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+        // provider에 따라 이메일 추출 메서드를 호출
+        String email = null;
+        switch (provider.toLowerCase()) {
+            case "kakao":
+                email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+                break;
+            case "naver":
+                email = customOAuth2UserService.extractNaverUserAttributes(oAuth2User);
+                break;
+            case "google":
+                email = customOAuth2UserService.extractGoogleUserAttributes(oAuth2User);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid provider");
+        }
 
         String responseMessage = (email == null) ? "Email not available" : email;
 
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+        return ResponseEntity.ok(ApiResult.success(provider + " 로그인 성공", responseMessage));
     }
 
+
+    @GetMapping("/oauth/login_info")
+    public String getJson(Authentication authentication) {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+
+        return attributes.toString();
+    }
 
     //유저의 팀 조회
     @GetMapping("/team")
     public ResponseEntity<ApiResult<Page<UserTeamResponseDto>>> getUserTeams(
-        @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "5") int size
-    ){
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
         return ResponseEntity.ok(ApiResult.success("유저의 팀 조회 성공", userService.getUserTeams(userDetails, page, size)));
     }
 }
+
+
 

@@ -1,44 +1,52 @@
 package com.sparta.sportify.security;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
-public class CustomOAuth2User implements OAuth2User {
+public class CustomOAuth2User extends DefaultOAuth2User {
 
-    private final OAuth2User oAuth2User;
+    private final String provider;
+    private final String providerId;
+    private final String email;
+    private final String nickname;
+    private final Long userId; // 사용자 ID 추가
 
-    public CustomOAuth2User(OAuth2User oAuth2User) {
-        this.oAuth2User = oAuth2User;
+    public CustomOAuth2User(Collection<? extends GrantedAuthority> authorities, Map<String, Object> attributes,
+                            String nameAttributeKey, String provider, String providerId,
+                            String email, String nickname, Long userId) {
+        super(authorities, attributes, nameAttributeKey); // nameAttributeKey 동적으로 전달
+        this.provider = provider;
+        this.providerId = providerId;
+        this.email = email;
+        this.nickname = nickname;
+        this.userId = userId;
     }
 
-    @Override
-    public Map<String, Object> getAttributes() {
-        return oAuth2User.getAttributes();
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
-    @Override
-    public String getName() {
-        // OAuth2 프로바이더에서 사용자 식별자로 사용하는 필드를 반환합니다.
-        // 예를 들어, Kakao의 경우 "id"를 사용할 수 있습니다.
-        return oAuth2User.getAttribute("id").toString();
-    }
-
-    public String getEmail() {
-        // 이메일 정보를 반환합니다. 프로바이더마다 다를 수 있으니 확인하세요.
-        return oAuth2User.getAttribute("email");
-    }
-
-    public String getNameAttribute() {
-        // 사용자의 이름을 반환합니다.
-        return oAuth2User.getAttribute("name");
+        return super.getAuthorities();
     }
 }

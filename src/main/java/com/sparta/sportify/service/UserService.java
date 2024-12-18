@@ -124,28 +124,31 @@ public class UserService {
     }
 
     // 카카오 로그인 혹은 회원가입 처리
-    public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {
-        // 이메일 기반으로 사용자 조회
-        String email = (String) userInfo.get("email");
-        User user = userRepository.findByEmail(email).orElse(null);
 
-        if (user == null) {
-            // 카카오에서 받은 정보로 회원가입 처리
-            UserRequestDto userRequestDto = new UserRequestDto();
-            userRequestDto.setEmail(email);
-            userRequestDto.setName((String) userInfo.get("name"));
-            userRequestDto.setRegion((String) userInfo.get("region"));
-            userRequestDto.setGender((String) userInfo.get("gender"));
-            userRequestDto.setAge((Long) userInfo.get("age"));
-            user = signup(userRequestDto, UserRole.USER);
-        }
+//    public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {
+//        // 이메일 기반으로 사용자 조회
+//        String email = (String) userInfo.get("email");
+//        User user = userRepository.findByEmail(email).orElse(null);
+//
+//        if (user == null) {
+//            // 카카오에서 받은 정보로 회원가입 처리
+//            UserRequestDto userRequestDto = new UserRequestDto();
+//            userRequestDto.setEmail(email);
+//            userRequestDto.setName((String) userInfo.get("name"));
+//            userRequestDto.setRegion((String) userInfo.get("region"));
+//            userRequestDto.setGender((String) userInfo.get("gender"));
+//            userRequestDto.setAge((Long) userInfo.get("age"));
+//            user = signup(userRequestDto, UserRole.USER);
+//        }
+//
+//        // JWT 토큰 생성
+//        String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getRole());
+//
+//        // 회원가입 응답 DTO 생성
+//        return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
+//    }
 
-        // JWT 토큰 생성
-        String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getRole());
-
-        // 회원가입 응답 DTO 생성
-        return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
-    }
+   
 
     public Page<UserTeamResponseDto> getUserTeams(UserDetailsImpl userDetails, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
@@ -167,4 +170,5 @@ public class UserService {
             Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
         ));
     }
+
 }
