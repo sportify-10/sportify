@@ -48,11 +48,6 @@ public class RedissonConfig {
 	public ObjectMapper objectMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.activateDefaultTyping(
-			objectMapper.getPolymorphicTypeValidator(),
-			ObjectMapper.DefaultTyping.EVERYTHING,
-			JsonTypeInfo.As.WRAPPER_OBJECT
-		);
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		return objectMapper;
 	}
