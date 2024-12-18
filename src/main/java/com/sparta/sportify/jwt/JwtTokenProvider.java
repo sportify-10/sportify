@@ -1,24 +1,25 @@
 package com.sparta.sportify.jwt;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.UserRole;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import static javax.crypto.Cipher.SECRET_KEY;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 
 @Component
 public class JwtTokenProvider {
 
-    @Value("${JWT_SECRET_KEY:default-secret}") // 환경 변수 사용, 기본값 설정
+    //@Value("${JWT_SECRET_KEY:default-Secret}") // 환경 변수 사용, 기본값 설정
+    @Value("${jwt.secret.key}") // '-' 문자가 Base64 인코딩 형식에 맞지 않아 사용x
     private String secretKey; // JWT 비밀 키
 
     private final UserRepository userRepository;
