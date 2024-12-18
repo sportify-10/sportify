@@ -9,12 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import com.sparta.sportify.config.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final PasswordEncoder customPasswordEncoder;
@@ -37,14 +39,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/kakao/login","/api/users/signup", "/api/users/login", "/api/users/oauth2/code/kakao","/login", "/oauth2/**").permitAll() // 회원가입/로그인은 인증 불필요
+                        .requestMatchers("/api/users/oAuth/login","/api/users/signup", "/api/users/login", "/api/users/oauth2/code/kakao","/login").permitAll() // 회원가입/로그인은 인증 불필요
                         .anyRequest().authenticated() // 나머지는 인증 필요
 
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/api/users/kakao/login")
-                        .loginProcessingUrl("/api/users/kakao/login")
+                        //.defaultSuccessUrl("/api/users/oauth/loginInfo", true)
+                        .loginProcessingUrl("/api/users/oAuth/login")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(successHandler) // 성공 핸들러 등록
                 );
@@ -71,4 +73,3 @@ public class SecurityConfig {
 
 
 }
-

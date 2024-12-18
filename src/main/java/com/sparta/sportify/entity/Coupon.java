@@ -8,35 +8,45 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@NoArgsConstructor
+@Table(name = "coupons")
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 @Getter
-@Table(name = "cash_logs")
-public class CashLog {
+@Builder
+public class Coupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String code;
+
+    private String name;
+
+    private Long count;
+
+    private LocalDate expireDate;
+
     private Long price;
+
+    private CouponStatus status;
 
     @CreatedDate
     @Column(updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
-    @Enumerated(EnumType.STRING)
-    private CashType type;
+    public void decrease() {
+        validateStockCount();
+        this.count -= 1;
+    }
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "coupon_id",nullable = true)
-    private Coupon coupon;
+    public void validateStockCount() {
+        if (this.count < 1 || this.status == CouponStatus.EXPIRED) {
+            throw new IllegalArgumentException("만료된 쿠폰입니다.");
+        }
+    }
 }
