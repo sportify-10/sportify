@@ -1,28 +1,28 @@
 package com.sparta.sportify.security;
 
-
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
+public class CustomOAuth2User extends DefaultOAuth2User {
 
-public class CustomOAuth2User implements OAuth2User {
-    private final String provider; // ex: kakao, naver
-    private final String providerId; // 플랫폼별 사용자 ID
+    private final String provider;
+    private final String providerId;
     private final String email;
     private final String nickname;
-    private final Map<String, Object> attributes;
+    private final Long userId; // 사용자 ID 추가
 
-    public CustomOAuth2User(String provider, String providerId, String email, String nickname, Map<String, Object> attributes) {
+    public CustomOAuth2User(Collection<? extends GrantedAuthority> authorities, Map<String, Object> attributes,
+                            String nameAttributeKey, String provider, String providerId,
+                            String email, String nickname, Long userId) {
+        super(authorities, attributes, nameAttributeKey); // nameAttributeKey 동적으로 전달
         this.provider = provider;
         this.providerId = providerId;
         this.email = email;
         this.nickname = nickname;
-        this.attributes = attributes;
+        this.userId = userId;
     }
 
     public String getProvider() {
@@ -41,18 +41,12 @@ public class CustomOAuth2User implements OAuth2User {
         return nickname;
     }
 
-    @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
+    public Long getUserId() {
+        return userId;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
-    @Override
-    public String getName() {
-        return providerId;
+        return super.getAuthorities();
     }
 }
