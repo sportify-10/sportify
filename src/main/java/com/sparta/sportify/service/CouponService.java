@@ -4,7 +4,6 @@ import com.sparta.sportify.dto.cash.response.CashLogCouponUseResponse;
 import com.sparta.sportify.dto.coupon.request.CouponCreateRequestDto;
 import com.sparta.sportify.dto.coupon.response.CouponCreateResponseDto;
 import com.sparta.sportify.dto.coupon.response.CouponUserHistoryResponseDto;
-import com.sparta.sportify.dto.reservation.response.ReservationFindResponseDto;
 import com.sparta.sportify.entity.*;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.CouponRepository;
@@ -69,6 +68,11 @@ public class CouponService {
         Coupon coupon = couponRepository.findByCode(code).orElseThrow(()->{
             throw new RuntimeException("존재하지않는 쿠폰입니다.");
         });
+
+        if(cashLogRepository.findByUserIdAndCouponId(authUser.getUser().getId(),coupon.getId()).isPresent()) {
+            throw new RuntimeException("이미 사용하신 쿠폰입니다.");
+        }
+
 
         coupon.validateStockCount();
         coupon.decrease();

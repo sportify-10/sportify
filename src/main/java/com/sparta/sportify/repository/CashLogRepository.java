@@ -1,6 +1,7 @@
 package com.sparta.sportify.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.sparta.sportify.entity.CashLog;
 
@@ -19,4 +20,7 @@ public interface CashLogRepository extends JpaRepository<CashLog, Long> {
 			"JOIN FETCH cl.coupon c " +
 			"WHERE u.id = :userId AND cl.coupon IS NOT NULL")
 	Slice<CashLog> findAllByUserIdWithCoupon(@Param("userId") Long userId, Pageable pageable);
+
+	Optional<CashLog> findByUserIdAndCouponId(Long userId, Long couponId);
+
 }
