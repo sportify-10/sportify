@@ -99,6 +99,9 @@ dependencies {
 
     implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 
+
+    implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
+
 }
 
 dependencyManagement {
