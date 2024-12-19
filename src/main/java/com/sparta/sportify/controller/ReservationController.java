@@ -39,7 +39,7 @@ public class ReservationController {
         } else {
             return new ResponseEntity<>(
                     ApiResult.success(
-                            "개인예약 성공",
+                            "단체예약 성공",
                             reservationService.reservationGroup(requestDto, authUser)
                     ),
                     HttpStatus.CREATED
@@ -57,7 +57,7 @@ public class ReservationController {
 
         return new ResponseEntity<>(
                 ApiResult.success(
-                        "개인예약 성공",
+                        "예약 조회 성공",
                         reservationService.findReservationsForInfiniteScroll(authUser,pageable)
                 ),
                 HttpStatus.OK
@@ -71,7 +71,7 @@ public class ReservationController {
     ) {
         return new ResponseEntity<>(
                 ApiResult.success(
-                        "개인예약 성공",
+                        "예약 조회 성공",
                         reservationService.findReservation(reservationId, authUser)
                 ),
                 HttpStatus.OK
