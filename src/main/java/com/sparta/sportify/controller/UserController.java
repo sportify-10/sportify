@@ -240,7 +240,7 @@ public class UserController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "5") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page-1, size);
         Page<SignupResponseDto> users = userService.getAllUsersOrderedByLevelPoints(pageable);
 
         return new ResponseEntity<>(
