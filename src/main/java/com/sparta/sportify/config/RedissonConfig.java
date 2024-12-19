@@ -44,13 +44,13 @@ public class RedissonConfig {
 		return redisson;
 	}
 
-	@Bean
-	public ObjectMapper objectMapper() {
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		return objectMapper;
-	}
+	// @Bean
+	// public ObjectMapper objectMapper() {
+	// 	ObjectMapper objectMapper = new ObjectMapper();
+	// 	objectMapper.registerModule(new JavaTimeModule());
+	// 	objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+	// 	return objectMapper;
+	// }
 
 	// spring의 캐시 타입 Redis로 설정한다. (이 과정이 있다면 spring.cache.type 설정 생략 가능)
 	@Bean
@@ -72,7 +72,8 @@ public class RedissonConfig {
 	public RedisCacheConfiguration redisCacheConfiguration() {
 		return RedisCacheConfiguration.defaultCacheConfig()
 			.serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer())) // 키를 String으로 직렬화해 저장
-			.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper()))) // 객체를 JSON으로 바꿔서 Redis에 저장
+			// .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper()))) // 객체를 JSON으로 바꿔서 Redis에 저장
+			.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())) // 기본 ObjectMapper 사용
 			.entryTtl(Duration.ofDays(1L)); //TTL을 1일로 설정
 	}
 
