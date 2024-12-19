@@ -1,6 +1,7 @@
 package com.sparta.sportify.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -190,10 +191,14 @@ public class UserService {
     }
 
     // LevelPoints 순으로 유저 조회
+    @Cacheable(value = "usersLevelPoints", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<SignupResponseDto> getAllUsersOrderedByLevelPoints(Pageable pageable) {
         Page<User> userPage = userRepository.findAllByOrderByLevelPointsDesc(pageable);
+        if (userPage.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0); // 사용자 목록이 비어있을 경우 빈 페이지 반환
+        }
         List<SignupResponseDto> users = userPage.getContent().stream()
-            .map(user -> new SignupResponseDto(user, user.getAccessToken())) // JWT 토큰을 가져오는 메서드를 수정해야 할 수 있습니다.
+            .map(user -> new SignupResponseDto(user, user.getAccessToken()))
             .collect(Collectors.toList());
 
         return new PageImpl<>(users, pageable, userPage.getTotalElements());
