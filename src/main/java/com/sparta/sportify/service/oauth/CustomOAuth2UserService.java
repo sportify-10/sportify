@@ -32,7 +32,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String provider = userRequest.getClientRegistration().getRegistrationId();
-        Map<String, Object> attributes = oAuth2User.getAttributes();
+        Map<String, Object> attributes = oAuthGetAttributes(oAuth2User.getAttributes(), provider);
+
+        System.out.println(attributes.toString());
 
         String providerId = extractOauthId(attributes, provider);
         String email = extractEmail(attributes, provider);
@@ -44,7 +46,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // OAuth 공급자에 따라 nameAttributeKey 설정
         String nameAttributeKey = getNameAttributeKey(provider);
 
-        return new CustomOAuth2User(
+
+
+
+        CustomOAuth2User cuser = new CustomOAuth2User(
                 oAuth2User.getAuthorities(),
                 attributes,
                 nameAttributeKey, // 공급자에 따른 키 설정
@@ -54,6 +59,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 nickname,
                 user.getId()
         );
+        System.out.println("========");
+        return cuser;
+    }
+
+    private Map<String, Object> oAuthGetAttributes(Map<String, Object> attributes,String provider) {
+        if(provider.toLowerCase().equals("naver")){
+            return (Map<String, Object>) attributes.get("response");
+        }else{
+            return attributes;
+        }
     }
 
     private String getNameAttributeKey(String provider) {
@@ -61,7 +76,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "kakao":
                 return "id"; // 카카오의 기본 키
             case "naver":
-                return "response.id"; // 네이버의 사용자 ID 키
+                return "id"; // 네이버의 사용자 ID 키
             case "google":
                 return "sub"; // 구글의 기본 키
             default:
@@ -73,8 +88,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if ("kakao".equals(provider)) {
             return String.valueOf(attributes.get("id"));
         } else if ("naver".equals(provider)) {
-            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-            return (String) response.get("id");
+//            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+            return (String) attributes.get("id");
         } else if ("google".equals(provider)) {
             return (String) attributes.get("sub");
         }
@@ -88,6 +103,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
                 return (String) kakaoAccount.get("email");
             }
+        } else if ("naver".equals(registrationId)) {
+            return (String) attributes.get("email");
         }
         return (String) attributes.getOrDefault("email", null); // 다른 플랫폼은 기본 이메일 필드 확인
     }
@@ -99,6 +116,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (properties != null && properties.containsKey("nickname")) {
                 return (String) properties.get("nickname");
             }
+        }else if ("naver".equals(registrationId)) {
+            return String.valueOf(attributes.get("nickname"));
         }
         return "anonymous"; // 닉네임 기본값
     }
