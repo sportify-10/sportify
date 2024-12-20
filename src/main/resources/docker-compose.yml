@@ -1,0 +1,19 @@
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2182:2181"
+  kafka:
+    image: wurstmeister/kafka
+    platform: linux/amd64
+    container_name: kafka
+    ports:
+      - "9093:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    mem_limit: 2g
