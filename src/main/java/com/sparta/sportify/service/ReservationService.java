@@ -1,5 +1,6 @@
 package com.sparta.sportify.service;
 
+import com.sparta.sportify.annotation.RedissonLock;
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
 import com.sparta.sportify.dto.reservation.response.ReservationFindResponseDto;
 import com.sparta.sportify.dto.reservation.response.ReservationResponseDto;
@@ -27,9 +28,8 @@ public class ReservationService {
     private final CashLogRepository cashLogRepository;
 
 
-    @Transactional
+    @RedissonLock(key="'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
     public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
-
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
                 () -> new RuntimeException("구장이 운영중이 아닙니다.")
         );
@@ -112,7 +112,7 @@ public class ReservationService {
         return new ReservationResponseDto(reservation.getId());
     }
 
-    @Transactional
+    @RedissonLock(key="'reservation-'.concat(#reqeustDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
 
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(

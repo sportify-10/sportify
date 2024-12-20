@@ -1,5 +1,6 @@
 package com.sparta.sportify.service;
 
+import com.sparta.sportify.annotation.RedissonLock;
 import com.sparta.sportify.dto.cash.response.CashLogCouponUseResponse;
 import com.sparta.sportify.dto.coupon.request.CouponCreateRequestDto;
 import com.sparta.sportify.dto.coupon.response.CouponCreateResponseDto;
@@ -7,6 +8,7 @@ import com.sparta.sportify.dto.coupon.response.CouponUserHistoryResponseDto;
 import com.sparta.sportify.entity.*;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.CouponRepository;
+import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 public class CouponService {
     public final CouponRepository couponRepository;
     public final CashLogRepository cashLogRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public CouponCreateResponseDto createCoupon(CouponCreateRequestDto couponCreateRequestDto) {
@@ -63,7 +66,7 @@ public class CouponService {
         return new SliceImpl<>(couponHistory, pageable, cashLogSlice.hasNext());
     }
 
-    @Transactional
+    @RedissonLock(key="'coupon-'.concat(#code)")
     public CashLogCouponUseResponse useCoupon(String code, UserDetailsImpl authUser) {
         Coupon coupon = couponRepository.findByCode(code).orElseThrow(()->{
             throw new RuntimeException("존재하지않는 쿠폰입니다.");
@@ -84,6 +87,9 @@ public class CouponService {
                 .type(CashType.COUPON)
                 .price(coupon.getPrice())
                 .build());
+
+        authUser.getUser().setCash(authUser.getUser().getCash()+coupon.getPrice());
+        userRepository.save(authUser.getUser());
 
         return CashLogCouponUseResponse.builder()
                 .couponCode(cashLog.getCoupon().getCode())
