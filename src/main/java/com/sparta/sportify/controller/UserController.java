@@ -45,6 +45,8 @@ import com.sparta.sportify.util.api.ApiResult;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.view.RedirectView;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
@@ -188,6 +190,20 @@ public class UserController {
         String responseMessage = (email == null) ? "Email not available" : email;
 
         return ResponseEntity.ok(ApiResult.success(provider + " 로그인 성공", responseMessage));
+    }
+
+
+    @GetMapping("/kakao/login")
+    public RedirectView redirectToKakao() {
+        return new RedirectView("/oauth2/authorization/kakao");
+    }
+    @GetMapping("/naver/login")
+    public RedirectView redirectToNaver() {
+        return new RedirectView("/oauth2/authorization/naver");
+    }
+    @GetMapping("/google/login")
+    public RedirectView redirectToGoogle() {
+        return new RedirectView("/oauth2/authorization/google");
     }
 
 
