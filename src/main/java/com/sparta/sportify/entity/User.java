@@ -1,17 +1,13 @@
 package com.sparta.sportify.entity;
 
+import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
-
 import lombok.*;
-import com.sparta.sportify.config.PasswordEncoder;
-
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-
-import com.sparta.sportify.dto.cash.request.CashRequestDto;
 
 @Getter
 @Setter
@@ -63,11 +59,18 @@ public class User {
     @Builder.Default
     private boolean active = true;
 
-    public void addCash(CashRequestDto cashRequestDto) {
+    public void addCash(Long amount) {
         if (this.cash == null) {
-            this.cash = 0L; // 0으로 초기화
+            this.cash = 0L;
         }
-        this.cash += cashRequestDto.getAmount();
+        this.cash += amount;
+    }
+
+    public void subCash(Long amount) {
+        if (this.cash == null) {
+            this.cash = 0L;
+        }
+        this.cash -= amount;
     }
 
     public String getAccessToken() {
