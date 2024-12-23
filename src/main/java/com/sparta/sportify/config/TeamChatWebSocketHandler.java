@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.redisson.api.RList;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -16,7 +18,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.teamChat.TeamChat;
 import com.sparta.sportify.repository.TeamChat.TeamChatRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -30,6 +31,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 	private final TeamChatRepository teamChatRepository;
 	private final BadWordFilter badWordFilter;
+	private final RedissonClient redissonClient;
 
 	// 연결된 WebSocket 세션 관리
 	private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
@@ -66,15 +68,25 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 		sendMessageToTeamSessions(teamId, containsProfanity, session);
 
-		//채팅 내역 DB 저장
-		TeamChat teamChat = TeamChat.builder()
-			.content(containsProfanity)
-			.user(userDetails.getUser())
-			.team(team)
-			.createAt(LocalDateTime.now())
-			.build();
+		// //채팅 내역 DB 저장
+		// TeamChat teamChat = TeamChat.builder()
+		// 	.content(containsProfanity)
+		// 	.user(userDetails.getUser())
+		// 	.team(team)
+		// 	.createAt(LocalDateTime.now())
+		// 	.build();
+		//
+		// teamChatRepository.save(teamChat);
 
-		teamChatRepository.save(teamChat);
+		RList<Map<String, String>> messageList = redissonClient.getList("team:" + teamId + ":messages");
+
+		Map<String, String> chatData = new HashMap<>();
+		chatData.put("content", containsProfanity);
+		chatData.put("userId", userDetails.getUser().getId().toString());
+		chatData.put("teamId", teamId.toString());
+		chatData.put("timestamp", LocalDateTime.now().toString());
+
+		messageList.add(chatData); // Redis 리스트에 추가
 	}
 
 	@Override
