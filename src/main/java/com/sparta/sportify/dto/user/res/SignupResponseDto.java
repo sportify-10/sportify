@@ -26,10 +26,10 @@ public class SignupResponseDto {
         this.region = user.getRegion();  // 지역 정보
         this.age = user.getAge();  // 나이
         this.gender = user.getGender();  // 성별
+        this.levelPoints = user.getLevelPoints();  // levelPoints 추가
     }
 
     public SignupResponseDto(User user) {
-
         this.email = user.getEmail();
         this.name = user.getName();
         this.role = user.getRole();
@@ -39,7 +39,4 @@ public class SignupResponseDto {
         this.levelPoints = user.getLevelPoints();
         this.active = user.isActive();
     }
-
-
-
 }

@@ -1,11 +1,18 @@
 package com.sparta.sportify.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +39,7 @@ public class UserService {
     private final TeamMemberRepository teamMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    // private final RedisTemplate<String, Object> redisTemplate;
 
     // 회원가입
     @Transactional
@@ -77,6 +85,7 @@ public class UserService {
     }
 
     // 특정 유저 정보 조회 (ID로 유저 정보 반환)
+    @Cacheable(value = "userCache", key = "#userId")
     public SignupResponseDto getUserById(Long userId) {
         // 유저 조회
         User user = userRepository.findById(userId)
@@ -85,6 +94,19 @@ public class UserService {
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
+
+    // @CachePut(value = "userCache", key = "#userId")
+    // public SignupResponseDto updateUserRanking(Long userId, Long userRanking) {
+    //     // Redis의 Sorted Set에 개인 순위를 업데이트합니다.
+    //     redisTemplate.opsForZSet().add("userRanking", userId, userRanking);
+    //
+    //     // 유저 정보를 다시 조회하여 캐시를 업데이트합니다.
+    //     User user = userRepository.findById(userId)
+    //         .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    //
+    //     // 유저 정보 DTO로 변환 후 응답 반환
+    //     return new SignupResponseDto(user, null);
+    // }
 
     @Transactional
     public void deactivateUser(Long userId) {
@@ -124,31 +146,28 @@ public class UserService {
     }
 
     // 카카오 로그인 혹은 회원가입 처리
+    public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {
+        // 이메일 기반으로 사용자 조회
+        String email = (String) userInfo.get("email");
+        User user = userRepository.findByEmail(email).orElse(null);
 
-//    public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {
-//        // 이메일 기반으로 사용자 조회
-//        String email = (String) userInfo.get("email");
-//        User user = userRepository.findByEmail(email).orElse(null);
-//
-//        if (user == null) {
-//            // 카카오에서 받은 정보로 회원가입 처리
-//            UserRequestDto userRequestDto = new UserRequestDto();
-//            userRequestDto.setEmail(email);
-//            userRequestDto.setName((String) userInfo.get("name"));
-//            userRequestDto.setRegion((String) userInfo.get("region"));
-//            userRequestDto.setGender((String) userInfo.get("gender"));
-//            userRequestDto.setAge((Long) userInfo.get("age"));
-//            user = signup(userRequestDto, UserRole.USER);
-//        }
-//
-//        // JWT 토큰 생성
-//        String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getRole());
-//
-//        // 회원가입 응답 DTO 생성
-//        return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
-//    }
+        if (user == null) {
+            // 카카오에서 받은 정보로 회원가입 처리
+            UserRequestDto userRequestDto = new UserRequestDto();
+            userRequestDto.setEmail(email);
+            userRequestDto.setName((String) userInfo.get("name"));
+            userRequestDto.setRegion((String) userInfo.get("region"));
+            userRequestDto.setGender((String) userInfo.get("gender"));
+            userRequestDto.setAge((Long) userInfo.get("age"));
+            user = signup(userRequestDto, UserRole.USER);
+        }
 
-   
+        // JWT 토큰 생성
+        String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
+        // 회원가입 응답 DTO 생성
+        return new SignupResponseDto(user, jwtToken); // JWT 토큰 추가
+    }
 
     public Page<UserTeamResponseDto> getUserTeams(UserDetailsImpl userDetails, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
@@ -171,4 +190,17 @@ public class UserService {
         ));
     }
 
+    // LevelPoints 순으로 유저 조회
+    @Cacheable(value = "usersLevelPoints", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    public Page<SignupResponseDto> getAllUsersOrderedByLevelPoints(Pageable pageable) {
+        Page<User> userPage = userRepository.findAllByOrderByLevelPointsDesc(pageable);
+        if (userPage.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0); // 사용자 목록이 비어있을 경우 빈 페이지 반환
+        }
+        List<SignupResponseDto> users = userPage.getContent().stream()
+            .map(user -> new SignupResponseDto(user, user.getAccessToken()))
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(users, pageable, userPage.getTotalElements());
+    }
 }

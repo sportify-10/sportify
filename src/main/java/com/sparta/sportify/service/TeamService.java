@@ -10,19 +10,27 @@ import com.sparta.sportify.entity.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class TeamService {
+    private static final Object TEAM_MATCH = "teamMatch";
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final TeamMemberRepository teamMemberRepository;
+    // private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     public TeamResponseDto createTeam(TeamRequestDto requestDto, Long creatorId) {
@@ -45,14 +53,14 @@ public class TeamService {
 
         return new TeamResponseDto(savedTeam);
     }
-
+    @Cacheable(value = "teamsCache", key = "'teams_' + #sportType + '_' + #skillLevel + '_' + #region + '_' + #page + '_' + #size")
     public TeamResponsePage getAllTeams(int page, int size, String sportType, String skillLevel, String region) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Team> teams = teamRepository.findAllWithFilters(sportType, skillLevel, region, pageable);
         return new TeamResponsePage(teams);
     }
 
-
+    @Cacheable(value = "teamCache", key = "#teamId") // 캐시에 저장
     public TeamResponseDto getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
