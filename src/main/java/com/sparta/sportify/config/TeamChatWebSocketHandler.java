@@ -62,7 +62,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 		//팀 정보
 		Long teamId = (Long)session.getAttributes().get("teamId");
-		Team team = teamRepository.findById(teamId)
+		teamRepository.findById(teamId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 팀이 존재하지 않습니다."));
 
 		String containsProfanity =  badWordFilter.containsSimilarBadWord(message.getPayload());
@@ -72,7 +72,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 		//조회 용 캐시
 		RList<TeamChatResponseDto> messageList = redissonClient.getList("team:" + teamId + ":messages");
 		//DB 저장용 캐시
-		RList<TeamChatResponseDto> messageList_DB = redissonClient.getList("teamChats::team:" + teamId + ":messages");
+		RList<TeamChatResponseDto> messageListDatabase = redissonClient.getList("teamChats::team:" + teamId + ":messages");
 		TeamChatResponseDto chatData = new TeamChatResponseDto(
 			userDetails.getUser().getId(),
 			teamId,
@@ -81,10 +81,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 		);
 
 		messageList.add(chatData);
-		messageList_DB.add(chatData);
-
-		//DB저장 후에 TTL 적용되야함
-		//redissonClient.getKeys().expire("team:" + teamId + ":messages", 25, TimeUnit.SECONDS);
+		messageListDatabase.add(chatData);
 	}
 
 	@Override
