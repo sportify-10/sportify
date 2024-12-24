@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -15,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.sparta.sportify.dto.teamChat.response.TeamChatResponseDto;
 import com.sparta.sportify.entity.Team;
 import com.sparta.sportify.entity.User;
 import com.sparta.sportify.entity.teamChat.TeamChat;
@@ -36,11 +36,11 @@ public class ChatScheduler {
 	@Scheduled(fixedRate = 5000) //5초
 	public void saveChatsToDB() {
 		RKeys keys = redissonClient.getKeys();
-		Iterable<String> messageKeys = keys.getKeysByPattern("team:*:messages");
+		Iterable<String> messageKeys = keys.getKeysByPattern("teamChats::team:*:messages");
 
-		List<Map<String, String>> messages = new ArrayList<>();
+		List<TeamChatResponseDto> messages = new ArrayList<>();
 		for (String key : messageKeys) {
-			RList<Map<String, String>> messageList = redissonClient.getList(key);
+			RList<TeamChatResponseDto> messageList = redissonClient.getList(key);
 			messages.addAll(messageList);
 			messageList.clear();
 		}
@@ -50,11 +50,11 @@ public class ChatScheduler {
 		}
 	}
 
-	private void saveMessagesToDB(List<Map<String, String>> messages) {
+	private void saveMessagesToDB(List<TeamChatResponseDto> messages) {
 		List<TeamChat> teamChats = messages.stream().map(chatData -> {
 			try {
-				Long teamId = Long.valueOf(chatData.get("teamId"));
-				Long userId = Long.valueOf(chatData.get("userId"));
+				Long teamId = chatData.getTeamId();
+				Long userId = chatData.getUserId();
 
 				Team team = teamRepository.findById(teamId)
 					.orElseThrow(() -> new IllegalArgumentException("해당 팀이 존재하지 않습니다."));
@@ -62,10 +62,10 @@ public class ChatScheduler {
 					.orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다"));
 
 				return TeamChat.builder()
-					.content(chatData.get("content"))
+					.content(chatData.getContent())
 					.user(user)
 					.team(team)
-					.createAt(LocalDateTime.parse(chatData.get("timestamp"), DateTimeFormatter.ISO_DATE_TIME))
+					.createAt(LocalDateTime.parse(chatData.getTimestamp(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")))
 					.build();
 			} catch (Exception e) {
 				throw new RuntimeException("메시지 변환 실패: " + chatData, e);
