@@ -17,6 +17,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.sparta.sportify.dto.teamChat.response.TeamChatResponseDto;
 import com.sparta.sportify.entity.Team;
 import com.sparta.sportify.repository.TeamChat.TeamChatRepository;
 import com.sparta.sportify.repository.TeamRepository;
@@ -68,25 +69,22 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 		sendMessageToTeamSessions(teamId, containsProfanity, session);
 
-		// //채팅 내역 DB 저장
-		// TeamChat teamChat = TeamChat.builder()
-		// 	.content(containsProfanity)
-		// 	.user(userDetails.getUser())
-		// 	.team(team)
-		// 	.createAt(LocalDateTime.now())
-		// 	.build();
-		//
-		// teamChatRepository.save(teamChat);
+		//조회 용 캐시
+		RList<TeamChatResponseDto> messageList = redissonClient.getList("team:" + teamId + ":messages");
+		//DB 저장용 캐시
+		RList<TeamChatResponseDto> messageList_DB = redissonClient.getList("teamChats::team:" + teamId + ":messages");
+		TeamChatResponseDto chatData = new TeamChatResponseDto(
+			userDetails.getUser().getId(),
+			teamId,
+			containsProfanity,
+			LocalDateTime.now()
+		);
 
-		RList<Map<String, String>> messageList = redissonClient.getList("team:" + teamId + ":messages");
+		messageList.add(chatData);
+		messageList_DB.add(chatData);
 
-		Map<String, String> chatData = new HashMap<>();
-		chatData.put("content", containsProfanity);
-		chatData.put("userId", userDetails.getUser().getId().toString());
-		chatData.put("teamId", teamId.toString());
-		chatData.put("timestamp", LocalDateTime.now().toString());
-
-		messageList.add(chatData); // Redis 리스트에 추가
+		//DB저장 후에 TTL 적용되야함
+		//redissonClient.getKeys().expire("team:" + teamId + ":messages", 25, TimeUnit.SECONDS);
 	}
 
 	@Override
