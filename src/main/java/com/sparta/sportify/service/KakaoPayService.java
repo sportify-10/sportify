@@ -19,7 +19,6 @@ import java.util.Map;
 public class KakaoPayService {
 
 
-
     @Value("${kakao.pay.secret-key-dev}")
     private String secretKeyDev;
 
@@ -32,7 +31,7 @@ public class KakaoPayService {
         body.put("cid", "TC0ONETIME");
         body.put("partner_order_id", "order_1234");
         body.put("partner_user_id", "1"/*userDetails.getUser().getId().toString()*/);
-        body.put("item_name", "500,000 로열 크리스탈");
+        body.put("item_name", "캐쉬 충전");
         body.put("quantity", "1");
         body.put("total_amount", String.valueOf(cashRequestDto.getAmount()));
         body.put("tax_free_amount", "0");
@@ -59,13 +58,13 @@ public class KakaoPayService {
         return responseDto;
     }
 
-    public void approvePayment(KakaoPayApproveRequestDto requestDto) {
+    public void approvePayment(KakaoPayApproveRequestDto requestDto, String tid) {
         String url = "https://open-api.kakaopay.com/online/v1/payment/approve";
 
         // 요청 데이터
         HashMap<String, String> body = new HashMap<>();
         body.put("cid", "TC0ONETIME");
-        body.put("tid", requestDto.getTid());
+        body.put("tid", tid);
         body.put("partner_order_id", "order_1234");
         body.put("partner_user_id", requestDto.getUserId());
         body.put("pg_token", requestDto.getPgToken());
@@ -81,6 +80,7 @@ public class KakaoPayService {
         // API 호출
         restTemplate.exchange(url, HttpMethod.POST, requestEntity, Map.class);
     }
+
     public CashResponseDto refundPayment(CashRequestDto requestDto, String tid) {
         String url = "https://open-api.kakaopay.com/online/v1/payment/cancel";
 

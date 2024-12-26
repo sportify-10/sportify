@@ -26,6 +26,8 @@ public class CashLog {
 
     private Long price;
 
+    private String tid;
+
     @CreatedDate
     @Column(updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -39,6 +41,6 @@ public class CashLog {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "coupon_id",nullable = true)
+    @JoinColumn(name = "coupon_id", nullable = true)
     private Coupon coupon;
 }

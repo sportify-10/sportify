@@ -22,63 +22,98 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class CashService {
 
-	private final CashLogRepository cashLogRepository;
-	private final UserRepository userRepository;
-	private final KakaoPayService kakaoPayService;
+    private final CashLogRepository cashLogRepository;
+    private final UserRepository userRepository;
+    private final KakaoPayService kakaoPayService;
 
 
-	/**
-	 * 결제 준비 요청 (결제 URL 반환)
-	 */
-	public KakaoPayReadyResponseDto prepareCashPayment(UserDetailsImpl userDetails, CashRequestDto request) {
-		return kakaoPayService.preparePayment(userDetails, request);
-	}
+    /**
+     * 결제 준비 요청 (결제 URL 반환)
+     */
+    public KakaoPayReadyResponseDto prepareCashPayment(UserDetailsImpl userDetails, CashRequestDto request) {
 
-	public CashResponseDto approveCashPayment(UserDetailsImpl userDetails, KakaoPayApproveRequestDto request) {
-		kakaoPayService.approvePayment(request);
+        KakaoPayReadyResponseDto responseDto = kakaoPayService.preparePayment(userDetails, request);
 
-		CashLog cashLog = cashLogRepository.save(
-				CashLog.builder()
-						.price(request.getAmount())
-						.createAt(LocalDateTime.now())
-						.type(CashType.CHARGE)
-						.user(userDetails.getUser())
-						.build());
+        CashLog cashLog = CashLog.builder()
+                .price(request.getAmount()) // 충전 금액
+                .tid(responseDto.getTid()) // 카카오페이 TID
+                .createAt(LocalDateTime.now())
+                .type(CashType.PENDING) // CHARGE 타입으로 설정
+                .user(userDetails.getUser()) // 현재 사용자
+                .build();
+        cashLogRepository.save(cashLog);
 
-		userDetails.getUser().addCash(request.getAmount());
-		userRepository.save(userDetails.getUser());
+        return responseDto;
 
-		return new CashResponseDto(cashLog);
-	}
 
-	public CashResponseDto CashRefund(UserDetailsImpl userDetails, CashRequestDto request, String tid) {
-		kakaoPayService.refundPayment(request, tid);
-		CashLog cashLog = cashLogRepository.save(
-				CashLog.builder()
-						.price(-(request.getAmount()))
-						.createAt(LocalDateTime.now())
-						.type(CashType.REFUND)
-						.user(userDetails.getUser())
-						.build());
-		userDetails.getUser().subCash(request.getAmount());
-		userRepository.save(userDetails.getUser());
+    }
 
-		return new CashResponseDto(cashLog);
-	}
+    public CashResponseDto approveCashPayment(UserDetailsImpl userDetails, KakaoPayApproveRequestDto request) {
+        CashLog existingCashLog = cashLogRepository.findByUserIdAndTypeAndPrice(
+                        userDetails.getUser().getId(),
+                        CashType.PENDING, // 승인 가능한 로그는 CHARGE 타입
+                        request.getAmount()) // 요청 금액과 일치하는 로그 조회
+                .orElseThrow(() -> new IllegalArgumentException("승인할 결제 로그를 찾을 수 없습니다."));
+        String tid = existingCashLog.getTid();
+        kakaoPayService.approvePayment(request, tid);
 
-	public Page<CashLogsResponseDto> getCashLogs(UserDetailsImpl userDetails, int page, int size) {
-		Pageable pageable = PageRequest.of(page-1, size);
-		Page<CashLog> cashLogs = cashLogRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
+        CashLog updatedCashLog = CashLog.builder()
+                .id(existingCashLog.getId()) // 기존 로그의 ID 유지
+                .price(existingCashLog.getPrice()) // 기존 금액 유지
+                .createAt(LocalDateTime.now()) // 승인 시간 갱신
+                .type(CashType.CHARGE) // 승인 상태로 변경
+                .user(existingCashLog.getUser()) // 사용자 정보 유지
+                .tid(existingCashLog.getTid()) // 기존 TID 유지
+                .build();
+        cashLogRepository.save(updatedCashLog);
+        userDetails.getUser().addCash(existingCashLog.getPrice());
+        userRepository.save(userDetails.getUser());
 
-		if(cashLogs.isEmpty()) {
-			throw new IllegalArgumentException("캐시 사용 내역이 없습니다");
-		}
+        return new CashResponseDto(updatedCashLog);
+    }
 
-		return cashLogs.map(cashLog -> new CashLogsResponseDto(
-			cashLog.getPrice(),
-			cashLog.getCreateAt(),
-			cashLog.getType()
-		));
-	}
+    public CashResponseDto CashRefund(UserDetailsImpl userDetails, CashRequestDto request) {
+        CashLog existingCashLog = cashLogRepository.findByUserIdAndTypeAndPrice(
+                        userDetails.getUser().getId(),
+                        CashType.CHARGE, // 환불은 CHARGE 타입에서만 가능
+                        request.getAmount()) // 요청 금액과 일치하는 로그 조회
+                .orElseThrow(() -> new IllegalArgumentException("환불할 결제 로그를 찾을 수 없습니다."));
+        String tid = existingCashLog.getTid();
+        kakaoPayService.refundPayment(request, tid);
+        CashLog refundCashLog = CashLog.builder()
+                .id(existingCashLog.getId()) // 기존 로그의 ID 유지
+                .price(-existingCashLog.getPrice()) // 환불 금액 (음수로 설정)
+                .createAt(LocalDateTime.now()) // 환불 시간 갱신
+                .type(CashType.REFUND) // 환불 상태로 변경
+                .user(existingCashLog.getUser()) // 사용자 정보 유지
+                .tid(existingCashLog.getTid()) // 기존 TID 유지
+                .build();
+        cashLogRepository.save(refundCashLog);
+        userDetails.getUser().subCash(existingCashLog.getPrice());
+        userRepository.save(userDetails.getUser());
 
+        return new CashResponseDto(refundCashLog);
+    }
+
+    public Page<CashLogsResponseDto> getCashLogs(UserDetailsImpl userDetails, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<CashLog> cashLogs = cashLogRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
+
+        if (cashLogs.isEmpty()) {
+            throw new IllegalArgumentException("캐시 사용 내역이 없습니다");
+        }
+
+        return cashLogs.map(cashLog -> new CashLogsResponseDto(
+                cashLog.getPrice(),
+                cashLog.getCreateAt(),
+                cashLog.getType()
+        ));
+    }
+
+    public CashLog findPendingCashLog(UserDetailsImpl userDetails) {
+        return cashLogRepository.findFirstByUserIdAndTypeOrderByCreateAtDesc(
+                        userDetails.getUser().getId(),
+                        CashType.PENDING) // PENDING 상태의 로그 조회
+                .orElseThrow(() -> new IllegalArgumentException("승인 대기 중인 결제 로그가 없습니다."));
+    }
 }

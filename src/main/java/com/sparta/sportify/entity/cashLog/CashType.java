@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum CashType {
-    REFUND("환불"),PAYMENT("사용"),CHARGE("충전"),COUPON("쿠폰사용");
+    REFUND("환불"), PAYMENT("사용"), CHARGE("충전"), COUPON("쿠폰사용"), PENDING("승인대기");
 
     private final String value;
 }
