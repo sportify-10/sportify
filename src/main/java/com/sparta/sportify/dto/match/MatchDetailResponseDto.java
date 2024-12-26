@@ -2,6 +2,8 @@ package com.sparta.sportify.dto.match;
 
 import java.time.LocalDate;
 
+import com.sparta.sportify.entity.matchResult.MatchStatus;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -14,5 +16,5 @@ public class MatchDetailResponseDto {
 	private final Integer aTeamCount;
 	private final Integer bTeamCount;
 	private final String stadiumName;
-	private final String status;
+	private final MatchStatus status;
 }

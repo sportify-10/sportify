@@ -8,6 +8,7 @@ import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.matchResult.MatchResult;
+import com.sparta.sportify.entity.matchResult.MatchStatus;
 import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
@@ -108,7 +109,6 @@ public class MatchService {
             teamRepository.save(team);
         });
 
-
         return new MatchResultResponseDto(
                 savedResult.getId(),
                 savedResult.getTeamAScore(),
@@ -169,7 +169,7 @@ public class MatchService {
                         return; // continue
                     }
 
-                    String status = determineMatchStatus(match, LocalDateTime.now());
+                    MatchStatus status = determineMatchStatus(match, LocalDateTime.now());
 
                     MatchByStadiumResponseDto matchResponse = new MatchByStadiumResponseDto(
                         stadiumTime.getStadium().getId(),
@@ -189,7 +189,6 @@ public class MatchService {
         return new MatchesByDateResponseDto(matches);
     }
 
-
     // 매치 단건 조회
     @Transactional(readOnly = true)
     public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time, LocalDateTime now) {
@@ -202,7 +201,7 @@ public class MatchService {
         );
 
         // 매치 상태 결정
-        String status = determineMatchStatus(Optional.ofNullable(match), now);
+        MatchStatus status = determineMatchStatus(Optional.ofNullable(match), now);
 
         return new MatchDetailResponseDto(
                 match.getId(),
@@ -216,7 +215,7 @@ public class MatchService {
     }
 
     //매치 상태 결정
-    private String determineMatchStatus(Optional<Match> match, LocalDateTime now) {
+    private MatchStatus determineMatchStatus(Optional<Match> match, LocalDateTime now) {
         LocalDateTime matchStartTime = match.get().getStartTime();
         LocalDateTime matchEndTime = match.get().getEndTime();
 
@@ -225,11 +224,11 @@ public class MatchService {
 
         // 상태 결정 로직
         if (now.isAfter(matchEndTime)) {
-            return "마감"; // 종료 시간이 지난 경우
+            return MatchStatus.CLOSED; // 종료 시간이 지난 경우
         } else if (now.isAfter(matchStartTime.minusHours(4)) || reservationPercentage > 80) {
-            return "마감 임박"; // 시작 4시간 이내이거나 예약 비율이 80% 이상인 경우
+            return MatchStatus.ALMOST_FULL; // 시작 4시간 이내이거나 예약 비율이 80% 이상인 경우
         } else {
-            return "모집중"; // 그 외의 경우
+            return MatchStatus.OPEN; // 그 외의 경우
         }
     }
 }
