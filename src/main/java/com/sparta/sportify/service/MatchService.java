@@ -104,7 +104,7 @@ public class MatchService {
                 teampointChange = 5;
             }
             // 점수 업데이트
-            team.setTeamPoints(team.getTeamPoints() + teampointChange);
+            team.addTeamPoints(teampointChange);
             teamRepository.save(team);
         });
 
