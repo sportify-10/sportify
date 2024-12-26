@@ -1,4 +1,4 @@
-package com.sparta.sportify.dto.teamDto;
+package com.sparta.sportify.dto.teamDto.res;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
