@@ -1,6 +1,7 @@
 package com.sparta.sportify.controller.team;
 
 import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.DeleteResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamResponsePage;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -67,7 +68,7 @@ public class TeamController {
     }
 
     @DeleteMapping("/{teamId}")
-    public ResponseEntity<ApiResult<TeamResponseDto>> deleteMenu(
+    public ResponseEntity<ApiResult<DeleteResponseDto>> deleteMenu(
             @PathVariable Long teamId,
             @AuthenticationPrincipal UserDetailsImpl authUser
     ) {

@@ -1,6 +1,7 @@
 package com.sparta.sportify.service;
 
 import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.DeleteResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamResponsePage;
 import com.sparta.sportify.entity.team.Team;
@@ -92,7 +93,7 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponseDto deleteTeam(Long teamId, UserDetailsImpl authUser) {
+    public DeleteResponseDto deleteTeam(Long teamId, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
         TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
                 () -> new IllegalArgumentException("유저를 찾을수 없습니다")
@@ -103,6 +104,6 @@ public class TeamService {
         team.softDelete();
         teamRepository.save(team);
 
-        return new TeamResponseDto(team);
+        return new DeleteResponseDto(team);
     }
 }
