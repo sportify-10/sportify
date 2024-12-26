@@ -30,10 +30,11 @@ public class StadiumService {
 	private final ReservationRepository reservationRepository;
 
 	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto, UserDetailsImpl userDetails) {
-		stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName()).orElseThrow(
-				() -> new IllegalArgumentException("구장 이름이 이미 존재합니다")
-		);
+		Optional<Stadium> stadiumName = stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName());
 
+		if (stadiumName.isPresent()) {
+			throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
+		}
 		Stadium stadium = Stadium.builder()
 				.stadiumName(stadiumCreateRequestDto.getStadiumName())
 				.location(stadiumCreateRequestDto.getLocation())
@@ -41,6 +42,7 @@ public class StadiumService {
 				.bTeamCount(stadiumCreateRequestDto.getBTeamCount())
 				.description(stadiumCreateRequestDto.getDescription())
 				.price(stadiumCreateRequestDto.getPrice())
+				.user(userDetails.getUser())
 				.build();
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}

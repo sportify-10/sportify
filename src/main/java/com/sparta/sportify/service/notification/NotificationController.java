@@ -11,7 +11,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/matches")
 public class NotificationController {
     private final SseEmitterService sseEmitterService;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private final NotificationService notificationService;
 
     @PostMapping("/notifications")
     public ResponseEntity<String> sendNotification(@RequestBody NotificationRequestDto request) {
@@ -20,7 +21,7 @@ public class NotificationController {
                 request.getStadiumName(),
                 request.getStartTime()
         );
-        kafkaTemplate.send("match-notifications", message);
+        notificationService.sendUserNotification(message);
         return ResponseEntity.ok("Notification sent: " + message);
     }
 
