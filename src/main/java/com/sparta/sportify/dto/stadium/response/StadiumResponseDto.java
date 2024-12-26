@@ -2,8 +2,8 @@ package com.sparta.sportify.dto.stadium.response;
 
 import java.time.LocalDateTime;
 
-import com.sparta.sportify.entity.Stadium;
-import com.sparta.sportify.entity.StadiumStatus;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

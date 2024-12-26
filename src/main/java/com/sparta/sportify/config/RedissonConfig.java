@@ -44,14 +44,6 @@ public class RedissonConfig {
 		return redisson;
 	}
 
-	// @Bean
-	// public ObjectMapper objectMapper() {
-	// 	ObjectMapper objectMapper = new ObjectMapper();
-	// 	objectMapper.registerModule(new JavaTimeModule());
-	// 	objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-	// 	return objectMapper;
-	// }
-
 	// spring의 캐시 타입 Redis로 설정한다. (이 과정이 있다면 spring.cache.type 설정 생략 가능)
 	@Bean
 	public CacheManager cacheManager(RedisConnectionFactory cf) {
@@ -77,13 +69,4 @@ public class RedissonConfig {
 			.entryTtl(Duration.ofDays(1L)); //TTL을 1일로 설정
 	}
 
-	// Redis의 세밀한 조작이 필요할 경우 RedisTemplate를 빈 등록
-	// Redis의 모든 자료구조 다 쓸 수 있음 (String, List, Hash, Set 등)
-	// @Bean
-	// public RedisTemplate<?, ?> redisTemplate() {
-	// 	RedisTemplate<?, ?> redisTemplate = new RedisTemplate<>();
-	// 	redisTemplate.setConnectionFactory(redisConnectionFactory());
-	// 	redisTemplate.setDefaultSerializer(new StringRedisSerializer());
-	// 	return redisTemplate;
-	// }
 }

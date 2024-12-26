@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import com.cronutils.model.Cron;
+import com.sparta.sportify.util.cron.CronUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,9 +19,9 @@ import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
 import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
 import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
 import com.sparta.sportify.dto.stadiumTime.response.StadiumTimeResponseDto;
-import com.sparta.sportify.entity.Stadium;
-import com.sparta.sportify.entity.StadiumStatus;
-import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -89,7 +91,8 @@ class StadiumTimeServiceTest {
 
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
+//		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
@@ -111,7 +114,7 @@ class StadiumTimeServiceTest {
 		//stadium.setStatus(StadiumStatus.APPROVED);
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
@@ -130,7 +133,7 @@ class StadiumTimeServiceTest {
 	void existStadiumTime() {
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));

@@ -1,7 +1,7 @@
 package com.sparta.sportify.security;
 
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import lombok.Getter;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;

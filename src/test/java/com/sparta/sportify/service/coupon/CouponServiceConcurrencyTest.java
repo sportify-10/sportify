@@ -1,6 +1,9 @@
 package com.sparta.sportify.service.coupon;
 
-import com.sparta.sportify.entity.*;
+import com.sparta.sportify.entity.coupon.Coupon;
+import com.sparta.sportify.entity.coupon.CouponStatus;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.CouponRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -74,7 +77,7 @@ public class CouponServiceConcurrencyTest {
             executorService.submit(() -> {
                 try {
                     barrier.await();
-                    UserDetailsImpl authUser = new UserDetailsImpl(listUser.get(index).getEmail(),UserRole.USER,listUser.get(index));
+                    UserDetailsImpl authUser = new UserDetailsImpl(listUser.get(index).getEmail(), UserRole.USER,listUser.get(index));
                     couponService.useCoupon("NEWYEAR2025",authUser);
 
 

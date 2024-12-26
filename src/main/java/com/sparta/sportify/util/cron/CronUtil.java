@@ -5,12 +5,14 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
+import com.sparta.sportify.dto.stadiumTime.request.StadiumTimeRequestDto;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CronUtil {
 
@@ -27,37 +29,54 @@ public class CronUtil {
         return isMatch.orElse(false);
     }
 
-//    날짜별 매치 리스트 구현하기 위한 레퍼런스
-//    public List<String> sortStoreSchedules(List<Map<String, String>> scheduleData) {
-//        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(UNIX));
-//
-//        List<String> scheduleList = new ArrayList<>();
-//        for (Map<String, String> data : scheduleData) {
-//            String cronExpr = data.get("cronExpr");
-//            String storeName = data.get("storeName");
-//
-//            // Cron 파싱
-//            Cron cron = parser.parse(cronExpr);
-//            Set<Integer> hours = cron.retrieve("hours").getValues(); // 시간
-//            Set<Integer> daysOfWeek = cron.retrieve("dayOfWeek").getValues(); // 요일
-//
-//            // 요일 및 시간 데이터를 읽어서 결과 생성
-//            for (Integer day : daysOfWeek) {
-//                for (Integer hour : hours) {
-//                    scheduleList.add(String.format("%02d시 %s - %s", hour, DAY_OF_WEEK_MAP.get(day), storeName));
-//                }
-//            }
-//        }
-//
-//        // 시간(시) -> 가게 이름 순서로 정렬
-//        scheduleList.sort(Comparator.comparing(s -> {
-//            String[] parts = s.split(" "); // "09시 월요일 - A"
-//            int hour = Integer.parseInt(parts[0].replace("시", "")); // 시간
-//            String storeName = parts[3]; // 가게 이름
-//            return hour * 1000 + storeName.hashCode(); // 시간 우선, 같은 시간대는 가게 이름으로 정렬
-//        }));
-//
-//        return scheduleList;
-//    }
+    public static List<Integer> extractStartTimes(String cronExpr, String cronDay) {
+        String[] parts = cronExpr.split(" ");
+        String timeRange = parts[2];  // 시간 정보는 cron의 세 번째 부분에 위치
 
+        //"08-12,13-15,15-17"에서 ,기준으로 나누기
+        String[] timeRanges = timeRange.split(",");
+        List<Integer> startTimes = new ArrayList<>();
+
+        for (int i = 0; i < timeRanges.length; i++) {
+            String range = timeRanges[i];
+            String[] hours = range.split("-");
+
+            int start = Integer.parseInt(hours[0]);  // -문자 앞에 있는 값
+            startTimes.add(start);
+        }
+
+        return startTimes;
+    }
+    public static String convertToCronExpression(List<String> weeks,List<String> hours) {
+
+        //크론식 요일 항상 대문자로 저장
+        weeks = weeks.stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList());
+        StringBuilder cronBuilder = new StringBuilder();
+
+        for (int i = 0; i < hours.size(); i++) {
+            String[] hour = hours.get(i).split("-");
+            String startHour = hour[0];
+            String endHour = hour[1];
+
+            if (i > 0) {
+                cronBuilder.append(",");
+            }
+
+            cronBuilder.append(startHour).append("-").append(endHour);
+        }
+
+        String hourString = cronBuilder.toString();
+
+        String weekString = "";
+        for (int i = 0; i < weeks.size(); i++) {
+            weekString += weeks.get(i);
+            if (i < weeks.size() - 1) { //마지막이면 쉼표 추가x
+                weekString += ",";
+            }
+        }
+
+        return String.format("0 0 %s ? * %s", hourString, weekString);
+    }
 }

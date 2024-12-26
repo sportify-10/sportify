@@ -1,7 +1,7 @@
 package com.sparta.sportify.dto.user.res;
 
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

@@ -2,7 +2,7 @@ package com.sparta.sportify.dto.match;
 
 import java.time.LocalDate;
 
-import com.sparta.sportify.entity.MatchStatus;
+import com.sparta.sportify.entity.matchResult.MatchStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

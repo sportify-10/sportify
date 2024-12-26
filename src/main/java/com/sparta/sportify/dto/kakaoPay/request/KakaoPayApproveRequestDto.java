@@ -1,10 +1,12 @@
 package com.sparta.sportify.dto.kakaoPay.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class KakaoPayApproveRequestDto {
     private String tid;
     private String pgToken;

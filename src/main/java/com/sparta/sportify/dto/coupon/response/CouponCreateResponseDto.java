@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.coupon.response;
 
-import com.sparta.sportify.entity.Coupon;
+import com.sparta.sportify.entity.coupon.Coupon;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

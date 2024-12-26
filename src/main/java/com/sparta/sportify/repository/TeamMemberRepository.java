@@ -1,8 +1,8 @@
 package com.sparta.sportify.repository;
 
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.TeamMember;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

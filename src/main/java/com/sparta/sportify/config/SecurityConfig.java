@@ -51,7 +51,6 @@ public class SecurityConfig {
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        //.defaultSuccessUrl("/api/users/oauth/loginInfo", true)
                         .loginProcessingUrl("/api/users/oAuth/login")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(successHandler) // 성공 핸들러 등록

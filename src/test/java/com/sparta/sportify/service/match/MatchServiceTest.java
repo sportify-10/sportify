@@ -15,9 +15,9 @@ import org.mockito.MockitoAnnotations;
 
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
-import com.sparta.sportify.entity.Match;
-import com.sparta.sportify.entity.MatchResult;
-import com.sparta.sportify.entity.MatchStatus;
+import com.sparta.sportify.entity.match.Match;
+import com.sparta.sportify.entity.matchResult.MatchResult;
+import com.sparta.sportify.entity.matchResult.MatchStatus;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
 import com.sparta.sportify.service.MatchService;

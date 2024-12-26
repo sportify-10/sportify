@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.teamDto;
 
-import com.sparta.sportify.entity.TeamMember;
+import com.sparta.sportify.entity.teamMember.TeamMember;
 import lombok.Getter;
 
 @Getter
