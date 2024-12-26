@@ -35,19 +35,22 @@ public class Match {
     private Integer bTeamCount;
     private String name;
 
+
     @ManyToOne
     @JoinColumn(name = "stadium_time_id", nullable = false)
     private StadiumTime stadiumTime;
 
     public void discountATeamCount(int count) {
         this.aTeamCount -= count;
-        if (this.aTeamCount < 0) {
+
+        if(this.aTeamCount < 0) {
             throw new RuntimeException("인원수가 초과되었습니다.");
         }
     }
     public void discountBTeamCount(int count) {
         this.bTeamCount -= count;
-        if (this.bTeamCount < 0) {
+
+        if(this.bTeamCount < 0) {
             throw new RuntimeException("인원수가 초과되었습니다.");
         }
     }
@@ -59,8 +62,10 @@ public class Match {
         this.bTeamCount += count;
     }
 
+
     private LocalDateTime startTime;
     private LocalDateTime startingAt;
+
     public LocalDateTime getStartTime() {
         String timeString = String.format("%02d:00", time);
         LocalTime localTime = LocalTime.parse(timeString);
@@ -87,5 +92,6 @@ public class Match {
     public String getName() {
         return name;
     }
+
 }
 
