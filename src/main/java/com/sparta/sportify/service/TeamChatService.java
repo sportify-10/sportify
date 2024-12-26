@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.sparta.sportify.dto.teamChat.response.TeamChatResponseDto;
 import com.sparta.sportify.entity.teamChat.TeamChat;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.TeamChatRepository;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -24,12 +26,12 @@ public class TeamChatService {
 
 	public void joinTeamChatting(Long teamId, UserDetailsImpl userDetails) {
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
-			.orElseThrow(()-> new IllegalArgumentException("해당 팀이 아닙니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.NOT_A_MEMBER_OF_THE_TEAM));
 	}
 
 	public List<TeamChatResponseDto> getChatData(Long teamId, UserDetailsImpl userDetails) {
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 팀이 아닙니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.NOT_A_MEMBER_OF_THE_TEAM));
 
 		RList<TeamChatResponseDto> messageList = redissonClient.getList("team:" + teamId + ":messages");
 
