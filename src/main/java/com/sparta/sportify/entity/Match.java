@@ -1,6 +1,5 @@
 package com.sparta.sportify.entity;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,8 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "matchs")
@@ -35,16 +32,23 @@ public class Match {
     private Integer time;
     private Integer aTeamCount;
     private Integer bTeamCount;
+    private String name;
 
     @ManyToOne
     @JoinColumn(name = "stadium_time_id", nullable = false)
     private StadiumTime stadiumTime;
 
     public void discountATeamCount(int count) {
-        this.bTeamCount -= count;
+        this.aTeamCount -= count;
+        if (this.aTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
     }
     public void discountBTeamCount(int count) {
         this.bTeamCount -= count;
+        if (this.bTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
     }
 
     public void addATeamCount(int count) {
@@ -54,6 +58,8 @@ public class Match {
         this.bTeamCount += count;
     }
 
+    private LocalDateTime startTime;
+    private LocalDateTime startingAt;
     public LocalDateTime getStartTime() {
         String timeString = String.format("%02d:00", time);
         LocalTime localTime = LocalTime.parse(timeString);
@@ -76,5 +82,8 @@ public class Match {
         double totalCapacity = getTotalStadiumCapacity();
         return totalCapacity > 0 ? (getTotalMatchCount() / totalCapacity) * 100 : 0;
     }
-}
 
+    public String getName() {
+        return name;
+    }
+}
