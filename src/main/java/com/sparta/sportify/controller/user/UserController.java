@@ -1,47 +1,33 @@
-package com.sparta.sportify.controller;
+package com.sparta.sportify.controller.user;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
+import com.sparta.sportify.dto.user.req.LoginRequestDto;
+import com.sparta.sportify.dto.user.req.UserRequestDto;
+import com.sparta.sportify.dto.user.res.LoginResponseDto;
+import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
+import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
+import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.service.UserService;
+import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
+import com.sparta.sportify.util.api.ApiResult;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
-import com.sparta.sportify.config.PasswordEncoder;
-import com.sparta.sportify.dto.user.req.LoginRequestDto;
-import com.sparta.sportify.dto.user.req.UserRequestDto;
-import com.sparta.sportify.dto.user.res.LoginResponseDto;
-import com.sparta.sportify.dto.user.res.SignupResponseDto;
-import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
-import com.sparta.sportify.jwt.JwtUtil;
-import com.sparta.sportify.repository.UserRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
-import com.sparta.sportify.service.UserService;
-import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
-import com.sparta.sportify.util.api.ApiResult;
+import java.util.Map;
 
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
@@ -49,61 +35,34 @@ import lombok.extern.slf4j.Slf4j;
 public class UserController {
 
     private final UserService userService;
-    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private JwtUtil jwtUtil;
 
     // 유저 회원가입
-//    @PostMapping("/signup")
-//    public ResponseEntity<ApiResult<User>> signUp(
-//            @Valid @RequestBody UserRequestDto requestDto
-//    ) {
-//        // 역할이 없는 경우 기본값 USER 설정
-//        UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
-//
-//        // 응답 데이터 생성
-//        return new ResponseEntity<>(
-//                ApiResult.success("회원가입 성공",
-//                        userService.signup(requestDto, role)),
-//                HttpStatus.OK
-//        );
-//    }
     @PostMapping("/signup")
-    public ResponseEntity<ApiResult<SignupResponseDto>> signup(@RequestBody UserRequestDto requestDto) {
-        // Role 설정 (기본값: USER)
+    public ResponseEntity<ApiResult<SignupResponseDto>> signUp(
+            @Valid @RequestBody UserRequestDto requestDto
+    ) {
         UserRole role = (requestDto.getRole() != null) ? requestDto.getRole() : UserRole.USER;
 
-        // 회원가입 처리
-        User user = userService.signup(requestDto, role);
-
-        // 응답 DTO 생성
-        SignupResponseDto responseDto = new SignupResponseDto(user);
-
-        // ApiResult로 감싸서 반환
-        return ResponseEntity.ok(
-                ApiResult.success("회원가입 성공", responseDto)
+        // 응답 데이터 생성
+        return new ResponseEntity<>(
+                ApiResult.success(
+                        "회원가입 성공",
+                        new SignupResponseDto(userService.signup(requestDto, role))
+                ),
+                HttpStatus.OK
         );
     }
-
 
 
     // 유저 로그인
     @PostMapping("/login")
     public ResponseEntity<ApiResult<LoginResponseDto>> login(@RequestBody LoginRequestDto requestDto) {
-        // 로그인 처리
-        String token = userService.login(requestDto);
-
-        // 응답 생성
-        LoginResponseDto responseDto = LoginResponseDto.builder()
-                .success(true)
-                .timeStamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")))
-                .token(token)
-                .build();
-
         return new ResponseEntity<>(
-                ApiResult.success("로그인 성공", responseDto),
+                ApiResult.success(
+                        "로그인 성공",
+                        new LoginResponseDto(userService.login(requestDto))
+                ),
                 HttpStatus.OK
         );
     }
@@ -111,11 +70,8 @@ public class UserController {
     // 자신의 유저 정보 조회 (자기 자신만 조회 가능)
     @GetMapping("/profile")
     public ResponseEntity<ApiResult<SignupResponseDto>> getUserProfile(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        // 현재 로그인한 사용자의 ID로 정보 조회
-        SignupResponseDto responseDto = userService.getUserById(userDetails.getUser().getId());
-
         return new ResponseEntity<>(
-                ApiResult.success("프로필 조회 성공", responseDto),
+                ApiResult.success("프로필 조회 성공", userService.getUserById(userDetails.getUser().getId())),
                 HttpStatus.OK
         );
     }
@@ -127,20 +83,24 @@ public class UserController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-            SignupResponseDto responseDto = userService.getUserById(id);
-                return new ResponseEntity<>(
-                        ApiResult.success("유저 정보 조회 성공", responseDto),
-                        HttpStatus.OK
-                );
-        }
+        SignupResponseDto responseDto = userService.getUserById(id);
+        return new ResponseEntity<>(
+                ApiResult.success(
+                        "유저 정보 조회 성공",
+                        responseDto
+                ),
+                HttpStatus.OK
+        );
+    }
 
 
     // 자신의 계정 삭제
     @DeleteMapping("/profile")
-    public ResponseEntity<ApiResult<String>> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        userService.deactivateUser(userDetails.getUser().getId());
+    public ResponseEntity<ApiResult<UserDeleteResponseDto>> deleteUser(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
         return new ResponseEntity<>(
-                ApiResult.success("계정이 비활성화되었습니다.", null),
+                ApiResult.success("계정이 비활성화되었습니다.", userService.deactivateUser(userDetails.getUser().getId())),
                 HttpStatus.OK
         );
     }
@@ -148,14 +108,11 @@ public class UserController {
     // 관리자가 특정 유저 삭제
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResult<String>> deleteUserByAdmin(
-            @PathVariable Long id // 삭제 대상 유저의 ID
+    public ResponseEntity<ApiResult<UserDeleteResponseDto>> deleteUserByAdmin(
+            @PathVariable Long id
     ) {
-        // 전달받은 id를 사용해 해당 유저를 비활성화
-        userService.deactivateUser(id);
-
         return new ResponseEntity<>(
-                ApiResult.success("사용자 계정이 비활성화되었습니다.", null),
+                ApiResult.success("사용자 계정이 비활성화되었습니다.", userService.deactivateUser(id)),
                 HttpStatus.OK
         );
     }
@@ -177,76 +134,95 @@ public class UserController {
     }
 
 
-
-    @GetMapping("/kakao/login")
-    public ResponseEntity<ApiResult<String>> kakaoLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
+    @GetMapping("/oAuth/login")
+    public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
             throw new IllegalArgumentException("OAuth2User is null");
         }
 
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+        // provider에 따라 이메일 추출 메서드를 호출
+        String email = null;
+        switch (provider.toLowerCase()) {
+            case "kakao":
+                email = customOAuth2UserService.extractUserAttributes(oAuth2User);
+                break;
+            case "naver":
+                email = customOAuth2UserService.extractNaverUserAttributes(oAuth2User);
+                break;
+            case "google":
+                email = customOAuth2UserService.extractGoogleUserAttributes(oAuth2User);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid provider");
+        }
 
         String responseMessage = (email == null) ? "Email not available" : email;
 
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+        return ResponseEntity.ok(
+                ApiResult.success(
+                        provider + " 로그인 성공",
+                        responseMessage
+                )
+        );
+    }
+
+
+    @GetMapping("/kakao/login")
+    public RedirectView redirectToKakao() {
+        return new RedirectView("/oauth2/authorization/kakao");
     }
 
     @GetMapping("/naver/login")
-    public ResponseEntity<ApiResult<String>>naverLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
-        }
-
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
-
-        String responseMessage = (email == null) ? "Email not available" : email;
-
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+    public RedirectView redirectToNaver() {
+        return new RedirectView("/oauth2/authorization/naver");
     }
 
     @GetMapping("/google/login")
-    public ResponseEntity<ApiResult<String>> googleLogin(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
-        }
-
-        // attributes 디버깅
-        logger.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
-        String email = customOAuth2UserService.extractUserAttributes(oAuth2User);
-
-        String responseMessage = (email == null) ? "Email not available" : email;
-
-        return ResponseEntity.ok(ApiResult.success("카카오 로그인 성공", responseMessage));
+    public RedirectView redirectToGoogle() {
+        return new RedirectView("/oauth2/authorization/google");
     }
 
+
+    @GetMapping("/oauth/login_info")
+    public String getJson(Authentication authentication) {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+
+        return attributes.toString();
+    }
 
     //유저의 팀 조회
     @GetMapping("/team")
     public ResponseEntity<ApiResult<Page<UserTeamResponseDto>>> getUserTeams(
-        @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "5") int size
-    ){
-        return ResponseEntity.ok(ApiResult.success("유저의 팀 조회 성공", userService.getUserTeams(userDetails, page, size)));
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(
+                ApiResult.success(
+                        "유저의 팀 조회 성공",
+                        userService.getUserTeams(userDetails, page, size)
+                )
+        );
     }
 
     // LevelPoints 순으로 유저 조회
     @GetMapping("/levelPoints")
     public ResponseEntity<ApiResult<Page<SignupResponseDto>>> getAllUsers(
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size) {
 
-        Pageable pageable = PageRequest.of(page-1, size);
-        Page<SignupResponseDto> users = userService.getAllUsersOrderedByLevelPoints(pageable);
+        Pageable pageable = PageRequest.of(page - 1, size);
 
         return new ResponseEntity<>(
-            ApiResult.success("전체 사용자 조회 성공", users),
-            HttpStatus.OK
+                ApiResult.success(
+                        "전체 사용자 조회 성공",
+                        userService.getAllUsersOrderedByLevelPoints(pageable)
+                ),
+                HttpStatus.OK
         );
     }
 }
+
 
