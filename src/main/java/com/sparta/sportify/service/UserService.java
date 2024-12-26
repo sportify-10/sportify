@@ -9,6 +9,8 @@ import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -41,7 +43,7 @@ public class UserService {
     public User signup(UserRequestDto requestDto, UserRole role) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         // 비밀번호 암호화
@@ -65,12 +67,13 @@ public class UserService {
     // 로그인
     public String login(LoginRequestDto requestDto) {
         // 이메일로 유저 검색
-        User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+        User user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(
+                () -> new CustomApiException(ErrorCode.INVALID_EMAIL)
+        );
 
         // 비밀번호 확인
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CustomApiException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
@@ -81,8 +84,9 @@ public class UserService {
     @Cacheable(value = "userCache", key = "#userId")
     public SignupResponseDto getUserById(Long userId) {
         // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
+        );
 
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
@@ -92,8 +96,9 @@ public class UserService {
     @Transactional
     public UserDeleteResponseDto deactivateUser(Long userId) {
         // 요청한 사용자 ID가 존재하는지 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
+        );
 
         // 사용자 비활성화
         user.disableUser();
@@ -107,7 +112,7 @@ public class UserService {
     public SignupResponseDto updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
 
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
-            throw new RuntimeException("이메일이 중복되었습니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_EMAIL);
         }
         String encodedPassword;
 
@@ -163,7 +168,7 @@ public class UserService {
         Page<TeamMember> teamMembers = teamMemberRepository.findTeams(userDetails.getUser().getId(), pageable);
 
         if (teamMembers.isEmpty()) {
-            throw new IllegalArgumentException("가입되어 있는 팀이 없습니다");
+            throw new CustomApiException(ErrorCode.TEAM_NOT_REGISTERED);
         }
 
         return teamMembers.map(teamMember -> new UserTeamResponseDto(

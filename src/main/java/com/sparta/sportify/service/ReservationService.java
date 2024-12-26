@@ -12,6 +12,8 @@ import com.sparta.sportify.entity.reservation.ReservationStatus;
 import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.util.cron.CronUtil;
@@ -38,15 +40,15 @@ public class ReservationService {
     @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
     public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                () -> new RuntimeException("구장이 운영중이 아닙니다.")
+                () -> new CustomApiException(ErrorCode.STADIUM_NOT_OPERATIONAL)
         );
 
         if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
-            throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
+            throw new CustomApiException(ErrorCode.INVALID_OPERATION_TIME);
         }
 
         if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
-            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_RESERVATION);
         }
 
 
@@ -123,25 +125,25 @@ public class ReservationService {
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
 
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                () -> new RuntimeException("구장이 운영중이 아닙니다.")
+                () -> new CustomApiException(ErrorCode.STADIUM_NOT_OPERATIONAL)
         );
 
         if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
-            throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
+            throw new CustomApiException(ErrorCode.INVALID_OPERATION_TIME);
         }
 
         List<User> users = userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList());
         if (users.size() != requestDto.getTeamMemberIdList().size()) {
-            throw new RuntimeException("유저 정보가 잘못됨 ");
+            throw new CustomApiException(ErrorCode.USER_INFO_INVALID);
         }
 
         if (reservationRepository.existsByUsersAndMatchTimeAndReservationDate(users, requestDto.getTime(), requestDto.getReservationDate())) {
-            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_RESERVATION);
         }
 
 
         Team team = teamRepository.findById(requestDto.getTeamId()).orElseThrow(
-                () -> new RuntimeException("팀을 찾을 수 없습니다")
+                () -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND)
         );
 
 
@@ -149,17 +151,17 @@ public class ReservationService {
             switch (requestDto.getTeamColor()) {
                 case A -> {
                     if (findMatch.getATeamCount() < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
+                        throw new CustomApiException(ErrorCode.NOT_ENOUGH_SPOTS_FOR_TEAM);
                     }
                     findMatch.discountATeamCount(users.size());
                 }
                 case B -> {
                     if (findMatch.getBTeamCount() < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
+                        throw new CustomApiException(ErrorCode.NOT_ENOUGH_SPOTS_FOR_TEAM);
                     }
                     findMatch.discountBTeamCount(users.size());
                 }
-                default -> throw new RuntimeException("잘못된 요청");
+                default -> throw new CustomApiException(ErrorCode.INVALID_REQUEST);
             }
             return matchRepository.save(findMatch);
         }).orElseGet(() -> {
@@ -168,17 +170,17 @@ public class ReservationService {
             switch (requestDto.getTeamColor()) {
                 case A -> {
                     if (aTeamCount < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
+                        throw new CustomApiException(ErrorCode.NOT_ENOUGH_SPOTS_FOR_TEAM);
                     }
                     aTeamCount = aTeamCount - users.size();
                 }
                 case B -> {
                     if (bTeamCount < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
+                        throw new CustomApiException(ErrorCode.NOT_ENOUGH_SPOTS_FOR_TEAM);
                     }
                     bTeamCount = bTeamCount - users.size();
                 }
-                default -> throw new RuntimeException("잘못된 요청");
+                default -> throw new CustomApiException(ErrorCode.INVALID_REQUEST);
             }
             return matchRepository.save(
                     Match.builder()
@@ -241,11 +243,11 @@ public class ReservationService {
     @Transactional
     public ReservationFindResponseDto findReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new RuntimeException("찾을 수 없는 예약 ID입니다.")
+                () -> new CustomApiException(ErrorCode.RESERVATION_NOT_FOUND)
         );
 
         if (reservation.getUser().getId() != authUser.getUser().getId()) {
-            throw new RuntimeException("해당 유저 정보가 다릅니다");
+            throw new CustomApiException(ErrorCode.USER_INFO_MISMATCH);
         }
 
         return new ReservationFindResponseDto(reservation);
@@ -263,17 +265,17 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto deleteReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new RuntimeException("예약ID를 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.RESERVATION_NOT_FOUND)
         );
         if (reservation.getUser().getId() != authUser.getUser().getId()) {
-            throw new RuntimeException("해당 유저 정보가 다릅니다.");
+            throw new CustomApiException(ErrorCode.USER_INFO_MISMATCH);
         }
 
         reservation.markAsDeleted();
         reservationRepository.save(reservation);
 
         Match match = matchRepository.findById(reservation.getMatch().getId()).orElseThrow(
-                () -> new RuntimeException("해당 유저 정보가 다릅니다.")
+                () -> new CustomApiException(ErrorCode.USER_INFO_MISMATCH)
         );
 
         switch (reservation.getTeamColor()) {

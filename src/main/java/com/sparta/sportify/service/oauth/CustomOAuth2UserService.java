@@ -2,6 +2,8 @@ package com.sparta.sportify.service.oauth;
 
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +77,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "google":
                 return "sub"; // 구글의 기본 키
             default:
-                throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
+                throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
         }
     }
 
@@ -88,7 +90,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else if ("google".equals(provider)) {
             return (String) attributes.get("sub");
         }
-        throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
+        throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
     }
 
 
