@@ -8,6 +8,8 @@ import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamMember.TeamMemberRole;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -41,7 +43,7 @@ public class TeamService {
 
         Team savedTeam = teamRepository.save(team);
         User creator = userRepository.findById(creatorId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을수 없습니다"));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.USER_NOT_FOUND));
 
         TeamMember teamMember = TeamMember.builder()
                 .user(creator)
@@ -65,7 +67,7 @@ public class TeamService {
     @Cacheable(value = "teamCache", key = "#teamId") // 캐시에 저장
     public TeamResponseDto getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId).orElseThrow(
-                () -> new IllegalArgumentException("팀을 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND)
         );
         return new TeamResponseDto(team);
     }
@@ -74,10 +76,10 @@ public class TeamService {
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
         TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
-                () -> new IllegalArgumentException("유저를 찾을수 없습니다")
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
         );
         if (user.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
-            throw new IllegalStateException("팀을 수정할 권한이 없습니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
         team.updateData(
                 requestDto.getTeamName(),
@@ -94,12 +96,12 @@ public class TeamService {
 
     @Transactional
     public DeleteResponseDto deleteTeam(Long teamId, UserDetailsImpl authUser) {
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND));
         TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
-                () -> new IllegalArgumentException("유저를 찾을수 없습니다")
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
         );
         if (user.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
-            throw new IllegalStateException("팀을 삭제할 권한이 없습니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
         team.softDelete();
         teamRepository.save(team);

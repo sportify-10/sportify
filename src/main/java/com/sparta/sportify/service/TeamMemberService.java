@@ -10,6 +10,8 @@ import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamMember.TeamMemberRole;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -31,13 +33,13 @@ public class TeamMemberService {
     @Transactional
     public TeamMemberResponseDto applyToTeam(Long teamId, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(
-                () -> new IllegalArgumentException("팀을 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND)
         );
         User user = authUser.getUser();
         // 승인된 상태(가입) 확인
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(user, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
-            throw new IllegalStateException("이미 해당 팀에 가입되어 있습니다");
+            throw new CustomApiException(ErrorCode.ALREADY_MEMBER);
         }
 
         TeamMember teamMember = new TeamMember(user, team);
@@ -49,26 +51,26 @@ public class TeamMemberService {
     public ApproveResponseDto approveOrRejectApplication(Long teamId, UserDetailsImpl authUser, ApproveRequestDto requestDto) {
         // 팀과 사용자 객체 조회
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다"));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND));
         User approveUser = authUser.getUser();
         User applyUser = userRepository.findById(requestDto.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("신청자를 찾을 수 없습니다"));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.USER_NOT_FOUND));
 
         TeamMember approveMember = teamMemberRepository.findByUserAndTeam(approveUser, team)
-                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다"));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER));
         if (approveMember.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER &&
                 approveMember.getTeamMemberRole() != TeamMemberRole.MANAGER) {
-            throw new IllegalStateException("신청을 승인하거나 거부할 권한이 없습니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
 
 
         // 신청 상태 확인
         TeamMember teamMember = teamMemberRepository.findByUserAndTeam(applyUser, team)
-                .orElseThrow(() -> new IllegalArgumentException("신청 내역이 없습니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.APPLICATION_NOT_FOUND));
 
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(applyUser, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
-            throw new IllegalStateException("이미 해당 팀에 가입되어 있습니다");
+            throw new CustomApiException(ErrorCode.ALREADY_MEMBER);
         }
 
         if (requestDto.isApprove()) {
@@ -87,17 +89,17 @@ public class TeamMemberService {
     public RoleResponseDto grantRole(Long teamId, RoleRequestDto requestDto, UserDetailsImpl authUser) {
         // 요청자의 권한 확인
         TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(authUser.getUser().getId(), teamId)
-                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다"));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER));
         if (requester.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
-            throw new IllegalStateException("팀장이 아니므로 역할을 부여할 수 없습니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
         TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(requestDto.getUserId(), teamId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 팀 멤버가 아닙니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER));
         TeamMemberRole role;
         try {
             role = TeamMemberRole.valueOf(requestDto.getRole());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("유효하지 않은 역할입니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
 
         teamMember.grantRole(role);
@@ -117,17 +119,17 @@ public class TeamMemberService {
         // 요청자의 팀원 정보 확인
         Long requesterId = authUser.getUser().getId();
         TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(requesterId, teamId).orElseThrow(
-                () -> new IllegalArgumentException("팀원이 아닙니다")
+                () -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER)
         );
 
         // 요청자가 팀장인지 확인
         if (requester.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
-            throw new IllegalStateException("팀장이 아니므로 팀원을 퇴출할 수 없습니다.");
+            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
 
         // 퇴출 대상 팀원 조회
         TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, requester.getTeam().getId()).orElseThrow(
-                () -> new IllegalArgumentException("퇴출 대상 팀원을 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER)
         );
 
 
