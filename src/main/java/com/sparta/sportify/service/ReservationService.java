@@ -113,7 +113,7 @@ public class ReservationService {
                         .build()
         );
 
-        authUser.getUser().setCash(authUser.getUser().getCash() - stadium.getPrice());
+        authUser.getUser().discountCash(stadium.getPrice());
         userRepository.save(authUser.getUser());
 
         return new ReservationResponseDto(reservation.getId());
@@ -231,7 +231,7 @@ public class ReservationService {
                 }
         );
 
-        authUser.getUser().setCash(authUser.getUser().getCash() - (stadium.getPrice() * users.size()));
+        authUser.getUser().discountCash(stadium.getPrice() * users.size());
         userRepository.save(authUser.getUser());
 
         return new ReservationResponseDto(reservations.stream().map(Reservation::getId).toList());

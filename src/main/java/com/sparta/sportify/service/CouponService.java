@@ -34,7 +34,7 @@ public class CouponService {
     @Transactional
     public CouponCreateResponseDto createCoupon(CouponCreateRequestDto couponCreateRequestDto) {
         Optional<Coupon> couponOp = couponRepository.findByCode(couponCreateRequestDto.getCode());
-        if(couponOp.isPresent()) {
+        if (couponOp.isPresent()) {
             throw new RuntimeException("쿠폰이 이미 존재합니다");
         }
         return new CouponCreateResponseDto(couponRepository.save(Coupon.builder()
@@ -46,6 +46,7 @@ public class CouponService {
                 .status(CouponStatus.AVAILABLE)
                 .build()));
     }
+
     @Transactional
     public Slice<CouponCreateResponseDto> findAllCoupon(Pageable pageable) {
         Slice<Coupon> coupons = couponRepository.findAll(pageable);
@@ -54,7 +55,7 @@ public class CouponService {
 
     @Transactional
     public Slice<CouponUserHistoryResponseDto> getUserCouponHistory(UserDetailsImpl authUser, Pageable pageable) {
-        Slice<CashLog> cashLogSlice = cashLogRepository.findAllByUserIdWithCoupon(authUser.getUser().getId(),pageable);
+        Slice<CashLog> cashLogSlice = cashLogRepository.findAllByUserIdWithCoupon(authUser.getUser().getId(), pageable);
 
         List<CouponUserHistoryResponseDto> couponHistory = cashLogSlice.getContent().stream()
                 .map(cashLog -> new CouponUserHistoryResponseDto(
@@ -69,13 +70,13 @@ public class CouponService {
         return new SliceImpl<>(couponHistory, pageable, cashLogSlice.hasNext());
     }
 
-    @RedissonLock(key="'coupon-'.concat(#code)")
+    @RedissonLock(key = "'coupon-'.concat(#code)")
     public CashLogCouponUseResponse useCoupon(String code, UserDetailsImpl authUser) {
-        Coupon coupon = couponRepository.findByCode(code).orElseThrow(()->{
+        Coupon coupon = couponRepository.findByCode(code).orElseThrow(() -> {
             throw new RuntimeException("존재하지않는 쿠폰입니다.");
         });
 
-        if(cashLogRepository.findByUserIdAndCouponId(authUser.getUser().getId(),coupon.getId()).isPresent()) {
+        if (cashLogRepository.findByUserIdAndCouponId(authUser.getUser().getId(), coupon.getId()).isPresent()) {
             throw new RuntimeException("이미 사용하신 쿠폰입니다.");
         }
 
@@ -91,7 +92,7 @@ public class CouponService {
                 .price(coupon.getPrice())
                 .build());
 
-        authUser.getUser().setCash(authUser.getUser().getCash()+coupon.getPrice());
+        authUser.getUser().addCash(coupon.getPrice());
         userRepository.save(authUser.getUser());
 
         return CashLogCouponUseResponse.builder()

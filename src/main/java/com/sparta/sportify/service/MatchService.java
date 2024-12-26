@@ -68,7 +68,7 @@ public class MatchService {
                 pointChange = 5;
             }
 
-            user.setLevelPoints(user.getLevelPoints() + pointChange);
+            user.addLevelPoint(pointChange);
             userRepository.save(user);
         });
 
