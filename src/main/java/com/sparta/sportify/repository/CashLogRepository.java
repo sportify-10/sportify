@@ -1,9 +1,8 @@
 package com.sparta.sportify.repository;
 
-import java.util.List;
 import java.util.Optional;
 
-import com.sparta.sportify.entity.CashLog;
+import com.sparta.sportify.entity.cashLog.CashLog;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

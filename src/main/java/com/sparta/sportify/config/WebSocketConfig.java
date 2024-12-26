@@ -1,5 +1,7 @@
 package com.sparta.sportify.config;
 
+import com.sparta.sportify.config.websocket.TeamChatWebSocketHandler;
+import com.sparta.sportify.config.websocket.WebSocketHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;

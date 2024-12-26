@@ -17,11 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.TeamMember;
-import com.sparta.sportify.entity.TeamMemberRole;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.teamMember.TeamMemberRole;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
@@ -67,7 +67,6 @@ class UserServiceTest {
 			.teamPoints(1000)
 			.winRate(0.75F)
 			.deletedAt(null)
-			.teamMemberRole(TeamMemberRole.USER)
 			.build();
 
 		team2 = Team.builder()
@@ -80,7 +79,6 @@ class UserServiceTest {
 			.teamPoints(1000)
 			.winRate(0.75F)
 			.deletedAt(null)
-			.teamMemberRole(TeamMemberRole.USER)
 			.build();
 
 		teamMember1 = TeamMember.builder()

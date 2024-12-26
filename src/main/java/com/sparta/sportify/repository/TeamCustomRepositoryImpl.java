@@ -2,8 +2,8 @@ package com.sparta.sportify.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sparta.sportify.entity.QTeam;
-import com.sparta.sportify.entity.Team;
+import com.sparta.sportify.entity.team.QTeam;
+import com.sparta.sportify.entity.team.Team;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

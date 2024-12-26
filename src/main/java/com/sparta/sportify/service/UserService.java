@@ -1,18 +1,16 @@
 package com.sparta.sportify.service;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.cache.annotation.CachePut;
+import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +19,9 @@ import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
-import com.sparta.sportify.entity.TeamMember;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -39,7 +37,6 @@ public class UserService {
     private final TeamMemberRepository teamMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    // private final RedisTemplate<String, Object> redisTemplate;
 
     // 회원가입
     @Transactional
@@ -54,17 +51,15 @@ public class UserService {
 
 
         // User 객체 생성
-        User user = new User();
-        user.setEmail(requestDto.getEmail());
-        user.setName(requestDto.getName());
-        user.setPassword(encodedPassword);
-        user.setRegion(requestDto.getRegion());
-        user.setGender(requestDto.getGender());
-        user.setAge(Long.valueOf(requestDto.getAge()));
-        user.setRole(role); // 수정된 부분: role을 설정하도록 수정
-
-        // 저장
-        userRepository.save(user);
+        User user = userRepository.save( User.builder()
+                .email(requestDto.getEmail())
+                .name(requestDto.getName())
+                .password(encodedPassword)
+                .region(requestDto.getRegion())
+                .gender(requestDto.getGender())
+                .age(Long.valueOf(requestDto.getAge()))
+                .role(role)
+                .build());
 
         return user;
     }
@@ -95,43 +90,33 @@ public class UserService {
         return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
     }
 
-    // @CachePut(value = "userCache", key = "#userId")
-    // public SignupResponseDto updateUserRanking(Long userId, Long userRanking) {
-    //     // Redis의 Sorted Set에 개인 순위를 업데이트합니다.
-    //     redisTemplate.opsForZSet().add("userRanking", userId, userRanking);
-    //
-    //     // 유저 정보를 다시 조회하여 캐시를 업데이트합니다.
-    //     User user = userRepository.findById(userId)
-    //         .orElseThrow(() -> new IllegalArgumentException("User not found"));
-    //
-    //     // 유저 정보 DTO로 변환 후 응답 반환
-    //     return new SignupResponseDto(user, null);
-    // }
 
     @Transactional
-    public void deactivateUser(Long userId) {
+    public UserDeleteResponseDto deactivateUser(Long userId) {
         // 요청한 사용자 ID가 존재하는지 확인
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         // 사용자 비활성화
-        user.setActive(false);
-        user.setDeletedAt(LocalDateTime.now());
+        user.disableUser();
+
         userRepository.save(user);
+
+        return new UserDeleteResponseDto(userId);
     }
 
 
-    // 유저 정보 수정
     public void updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
-        // 이메일 중복 검사
+
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
             throw new RuntimeException("이메일이 중복되었습니다.");
         }
+        String encodedPassword;
 
         // 비밀번호 수정이 요청된 경우
         if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
             // 비밀번호를 암호화해서 저장
-            String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+            encodedPassword = passwordEncoder.encode(requestDto.getPassword());
             userDetails.getUser().setPassword(encodedPassword);
         }
 

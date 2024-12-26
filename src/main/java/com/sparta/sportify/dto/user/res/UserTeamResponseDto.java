@@ -1,7 +1,5 @@
 package com.sparta.sportify.dto.user.res;
 
-import com.sparta.sportify.entity.Team;
-
 import lombok.*;
 
 @Getter

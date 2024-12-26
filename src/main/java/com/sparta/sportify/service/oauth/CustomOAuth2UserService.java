@@ -1,10 +1,7 @@
 package com.sparta.sportify.service.oauth;
 
-import com.sparta.sportify.config.PasswordEncoder;
-import com.sparta.sportify.dto.user.req.OAuthAttributes;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
-import com.sparta.sportify.jwt.JwtTokenProvider;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;

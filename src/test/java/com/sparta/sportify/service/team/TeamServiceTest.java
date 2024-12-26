@@ -2,10 +2,10 @@ package com.sparta.sportify.service.team;
 
 import com.sparta.sportify.dto.teamDto.TeamRequestDto;
 import com.sparta.sportify.dto.teamDto.TeamResponseDto;
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.TeamMember;
-import com.sparta.sportify.entity.TeamMemberRole;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.teamMember.TeamMemberRole;
+import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;

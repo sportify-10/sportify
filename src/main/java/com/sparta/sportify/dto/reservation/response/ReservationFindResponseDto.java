@@ -2,8 +2,7 @@ package com.sparta.sportify.dto.reservation.response;
 
 
 import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
-import com.sparta.sportify.entity.Reservation;
-import com.sparta.sportify.entity.Stadium;
+import com.sparta.sportify.entity.reservation.Reservation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

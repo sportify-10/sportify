@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.reservation.request;
 
-import com.sparta.sportify.entity.TeamColor;
+import com.sparta.sportify.entity.team.TeamColor;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 

@@ -4,7 +4,14 @@ import com.sparta.sportify.annotation.RedissonLock;
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
 import com.sparta.sportify.dto.reservation.response.ReservationFindResponseDto;
 import com.sparta.sportify.dto.reservation.response.ReservationResponseDto;
-import com.sparta.sportify.entity.*;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.entity.cashLog.*;
+import com.sparta.sportify.entity.match.Match;
+import com.sparta.sportify.entity.reservation.Reservation;
+import com.sparta.sportify.entity.reservation.ReservationStatus;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.util.cron.CronUtil;
@@ -28,7 +35,7 @@ public class ReservationService {
     private final CashLogRepository cashLogRepository;
 
 
-    @RedissonLock(key="'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
+    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
     public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
                 () -> new RuntimeException("구장이 운영중이 아닙니다.")
@@ -112,7 +119,7 @@ public class ReservationService {
         return new ReservationResponseDto(reservation.getId());
     }
 
-    @RedissonLock(key="'reservation-'.concat(#reqeustDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
+    @RedissonLock(key = "'reservation-'.concat(#reqeustDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
 
         StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(

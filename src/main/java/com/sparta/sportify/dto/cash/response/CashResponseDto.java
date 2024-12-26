@@ -1,7 +1,7 @@
 package com.sparta.sportify.dto.cash.response;
 
-import com.sparta.sportify.entity.CashLog;
-import com.sparta.sportify.entity.CashType;
+import com.sparta.sportify.entity.cashLog.CashLog;
+import com.sparta.sportify.entity.cashLog.CashType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,13 +1,13 @@
 //package com.sparta.sportify.service.user;
 //
 //import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.sparta.sportify.controller.UserController;
+//import com.sparta.sportify.controller.user.UserController;
 //import com.sparta.sportify.dto.user.req.LoginRequestDto;
 //import com.sparta.sportify.dto.user.req.UserRequestDto;
 //import com.sparta.sportify.dto.user.res.LoginResponseDto;
 //import com.sparta.sportify.dto.user.res.SignupResponseDto;
-//import com.sparta.sportify.entity.User;
-//import com.sparta.sportify.entity.UserRole;
+//import com.sparta.sportify.entity.user.User;
+//import com.sparta.sportify.entity.user.UserRole;
 //import com.sparta.sportify.jwt.JwtUtil;
 //import com.sparta.sportify.service.UserService;
 //import com.sparta.sportify.service.oauth.CustomOAuth2UserService;

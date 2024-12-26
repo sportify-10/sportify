@@ -1,7 +1,6 @@
 package com.sparta.sportify.jwt;
 
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
