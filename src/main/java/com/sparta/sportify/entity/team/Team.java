@@ -1,6 +1,6 @@
 package com.sparta.sportify.entity.team;
 
-import com.sparta.sportify.dto.teamDto.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.Id;

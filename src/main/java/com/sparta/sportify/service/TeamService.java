@@ -1,8 +1,8 @@
 package com.sparta.sportify.service;
 
-import com.sparta.sportify.dto.teamDto.TeamRequestDto;
-import com.sparta.sportify.dto.teamDto.TeamResponseDto;
-import com.sparta.sportify.dto.teamDto.TeamResponsePage;
+import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
+import com.sparta.sportify.dto.teamDto.res.TeamResponsePage;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamMember.TeamMemberRole;
@@ -10,6 +10,7 @@ import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -69,8 +70,14 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto) {
+    public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
+        TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
+                () -> new IllegalArgumentException("유저를 찾을수 없습니다")
+        );
+        if (user.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
+            throw new IllegalStateException("팀을 수정할 권한이 없습니다.");
+        }
         team.updateData(
                 requestDto.getTeamName(),
                 requestDto.getRegion(),
@@ -85,8 +92,14 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponseDto deleteTeam(Long teamId) {
+    public TeamResponseDto deleteTeam(Long teamId, UserDetailsImpl authUser) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
+        TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
+                () -> new IllegalArgumentException("유저를 찾을수 없습니다")
+        );
+        if (user.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
+            throw new IllegalStateException("팀을 삭제할 권한이 없습니다.");
+        }
         team.softDelete();
         teamRepository.save(team);
 

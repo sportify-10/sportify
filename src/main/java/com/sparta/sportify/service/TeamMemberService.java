@@ -1,6 +1,11 @@
 package com.sparta.sportify.service;
 
-import com.sparta.sportify.dto.teamDto.*;
+import com.sparta.sportify.dto.teamDto.req.ApproveRequestDto;
+import com.sparta.sportify.dto.teamDto.req.RoleRequestDto;
+import com.sparta.sportify.dto.teamDto.res.ApproveResponseDto;
+import com.sparta.sportify.dto.teamDto.res.RoleResponseDto;
+import com.sparta.sportify.dto.teamDto.res.TeamMemberResponseDto;
+import com.sparta.sportify.dto.teamDto.res.TeamMemberResponsePage;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamMember.TeamMemberRole;
