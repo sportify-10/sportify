@@ -9,14 +9,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.redisson.api.RList;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.sparta.sportify.dto.teamChat.response.TeamChatResponseDto;
 import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.teamChat.TeamChat;
 import com.sparta.sportify.repository.TeamChat.TeamChatRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -30,6 +32,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 	private final TeamChatRepository teamChatRepository;
 	private final BadWordFilter badWordFilter;
+	private final RedissonClient redissonClient;
 
 	// 연결된 WebSocket 세션 관리
 	private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
@@ -59,22 +62,26 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 		//팀 정보
 		Long teamId = (Long)session.getAttributes().get("teamId");
-		Team team = teamRepository.findById(teamId)
+		teamRepository.findById(teamId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 팀이 존재하지 않습니다."));
 
 		String containsProfanity =  badWordFilter.containsSimilarBadWord(message.getPayload());
 
 		sendMessageToTeamSessions(teamId, containsProfanity, session);
 
-		//채팅 내역 DB 저장
-		TeamChat teamChat = TeamChat.builder()
-			.content(containsProfanity)
-			.user(userDetails.getUser())
-			.team(team)
-			.createAt(LocalDateTime.now())
-			.build();
+		//조회 용 캐시
+		RList<TeamChatResponseDto> messageList = redissonClient.getList("team:" + teamId + ":messages");
+		//DB 저장용 캐시
+		RList<TeamChatResponseDto> messageListDatabase = redissonClient.getList("teamChats::team:" + teamId + ":messages");
+		TeamChatResponseDto chatData = new TeamChatResponseDto(
+			userDetails.getUser().getId(),
+			teamId,
+			containsProfanity,
+			LocalDateTime.now()
+		);
 
-		teamChatRepository.save(teamChat);
+		messageList.add(chatData);
+		messageListDatabase.add(chatData);
 	}
 
 	@Override
