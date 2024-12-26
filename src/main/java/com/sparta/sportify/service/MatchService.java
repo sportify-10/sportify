@@ -147,52 +147,43 @@ public class MatchService {
             return new MatchesByDateResponseDto(matches);
         }
 
-        for (int i = 0; i < stadiumTimes.size(); i++) {
-            String cron = stadiumTimes.get(i).getCron();//스타디움 타임에 저장된 크론식 조회
+        stadiumTimes.stream()
+            // 크론식에 해당 요일이 없는 경우 제외
+            .filter(stadiumTime -> stadiumTime.getCron().contains(cronDay))
+            .forEach(stadiumTime -> {
+                String cron = stadiumTime.getCron();
+                List<Integer> startTimeList = CronUtil.extractStartTimes(cron, cronDay);
 
-            //크론식에 해당 요일이 없으면 건너뛰기
-            if (!cron.contains(cronDay)) {
-                continue;
-            }
+                startTimeList.forEach(startTime -> {
+                    int endTime = startTime + 2;
+                    String startTimeFormatted = String.format("%02d:00", startTime);
+                    String endTimeFormatted = String.format("%02d:00", endTime);
 
-            //크론식에서 시간 추출
-            List<Integer> startTimeList = CronUtil.extractStartTimes(cron, cronDay);
+                    LocalTime startTimeLocalTimeType = LocalTime.parse(startTimeFormatted);
+                    int startTimeInt = startTimeLocalTimeType.getHour();
 
-            for (int j = 0; j < startTimeList.size(); j++) {
-                int startTime = startTimeList.get(j);
-                int endTime = startTime + 2;
+                    Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(
+                        stadiumTime.getId(), date, startTimeInt);
 
-                //크론식의 시작시간과 종료 시간
-                String startTimeFormatted = String.format("%02d:00", startTime);
-                String endTimeFormatted = String.format("%02d:00", endTime);
+                    if (match.isEmpty()) {
+                        return; // continue
+                    }
 
-                LocalTime startTimeLocalTimeType = LocalTime.parse(startTimeFormatted); //LocalTime 형식으로 변환
+                    String status = determineMatchStatus(match, LocalDateTime.now());
 
-                int startTimeInt = startTimeLocalTimeType.getHour();//Integer형식과 비교하기 위해 변환
-                //매치 테이블에서 예약 인원 수 조회하기 위헤
-                Optional<Match> match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTimes.get(i).getId(), date, startTimeInt);
-
-                if (match.isEmpty()) {
-                    continue;
-                }
-
-                //마감, 모집중, 마감 임박
-                String status = determineMatchStatus(match, LocalDateTime.now());
-
-                MatchByStadiumResponseDto matchResponse = new MatchByStadiumResponseDto(
-                        stadiumTimes.get(i).getStadium().getId(),
-                        stadiumTimes.get(i).getStadium().getStadiumName(),
-                        stadiumTimes.get(i).getStadium().getDescription(),
-                        stadiumTimes.get(i).getStadium().getLocation(),
+                    MatchByStadiumResponseDto matchResponse = new MatchByStadiumResponseDto(
+                        stadiumTime.getStadium().getId(),
+                        stadiumTime.getStadium().getStadiumName(),
+                        stadiumTime.getStadium().getDescription(),
+                        stadiumTime.getStadium().getLocation(),
                         startTimeFormatted,
                         endTimeFormatted,
                         status
-                );
+                    );
 
-                matches.add(matchResponse);
-
-            }
-        }
+                    matches.add(matchResponse);
+                });
+            });
         matches.sort(Comparator.comparing(MatchByStadiumResponseDto::getStartTime));
 
         return new MatchesByDateResponseDto(matches);
