@@ -20,6 +20,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "matchs")
@@ -32,10 +34,12 @@ public class Match {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private LocalDate date;
-	private Integer time;
-	private Integer aTeamCount;
-	private Integer bTeamCount;
+    private LocalDate date;
+    private Integer time;
+    private Integer aTeamCount;
+    private Integer bTeamCount;
+    private String name;
+
 
 	@ManyToOne
 	@JoinColumn(name = "stadium_time_id", nullable = false)
@@ -63,11 +67,15 @@ public class Match {
 		this.bTeamCount += count;
 	}
 
-	public LocalDateTime getStartTime() {
-		String timeString = String.format("%02d:00", time);
-		LocalTime localTime = LocalTime.parse(timeString);
-		return LocalDateTime.of(date, localTime);
-	}
+
+    private LocalDateTime startTime;
+    private LocalDateTime startingAt;
+
+    public LocalDateTime getStartTime() {
+        String timeString = String.format("%02d:00", time);
+        LocalTime localTime = LocalTime.parse(timeString);
+        return LocalDateTime.of(date, localTime);
+    }
 
 	public LocalDateTime getEndTime() {
 		return getStartTime().plusHours(2); // 종료 시간은 시작 시간 + 2시간
