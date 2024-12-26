@@ -1,6 +1,6 @@
 package com.sparta.sportify.service.notification;
 
-import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.match.Match;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -1,6 +1,6 @@
 package com.sparta.sportify.service.notification;
 
-import com.sparta.sportify.entity.Match;
+import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.repository.MatchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
