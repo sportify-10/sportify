@@ -15,10 +15,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.sparta.sportify.dto.teamChat.response.TeamChatResponseDto;
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.teamChat.TeamChat;
-import com.sparta.sportify.repository.TeamChat.TeamChatRepository;
+import com.sparta.sportify.repository.TeamChatRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
 

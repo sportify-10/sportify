@@ -1,9 +1,9 @@
 package com.sparta.sportify.repository;
 
-import com.sparta.sportify.entity.Match;
-import com.sparta.sportify.entity.Reservation;
-import com.sparta.sportify.entity.ReservationStatus;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.match.Match;
+import com.sparta.sportify.entity.reservation.Reservation;
+import com.sparta.sportify.entity.reservation.ReservationStatus;
+import com.sparta.sportify.entity.user.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,5 +33,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         "WHERE m.id = :matchId")
     Integer findTotalAmountByMatchId(@Param("matchId") Long matchId, ReservationStatus status);
 
+
+    @Query("SELECT r FROM Reservation r " +
+            "JOIN FETCH r.user " +
+            "LEFT JOIN FETCH r.team " +
+            "JOIN FETCH r.match " +
+            "WHERE r.match = :match")
     List<Reservation> findAllByMatch(Match match);
 }

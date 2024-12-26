@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
 
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.teamDto;
 
-import com.sparta.sportify.entity.Team;
+import com.sparta.sportify.entity.team.Team;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

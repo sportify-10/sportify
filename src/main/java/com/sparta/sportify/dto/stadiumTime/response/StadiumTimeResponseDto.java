@@ -1,7 +1,7 @@
 package com.sparta.sportify.dto.stadiumTime.response;
 
-import com.sparta.sportify.entity.Stadium;
-import com.sparta.sportify.entity.StadiumTime;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 
 import lombok.Getter;
 

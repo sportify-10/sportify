@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.user.req;
 
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.user.UserRole;
 import jakarta.validation.constraints.*;
 
 import lombok.AllArgsConstructor;

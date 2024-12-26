@@ -1,10 +1,10 @@
 package com.sparta.sportify.service;
 
 import com.sparta.sportify.dto.teamDto.*;
-import com.sparta.sportify.entity.Team;
-import com.sparta.sportify.entity.TeamMember;
-import com.sparta.sportify.entity.TeamMemberRole;
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.teamMember.TeamMemberRole;
+import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -25,7 +25,9 @@ public class TeamMemberService {
 
     @Transactional
     public TeamMemberResponseDto applyToTeam(Long teamId, UserDetailsImpl authUser) {
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
+        Team team = teamRepository.findById(teamId).orElseThrow(
+                () -> new IllegalArgumentException("팀을 찾을 수 없습니다.")
+        );
         User user = authUser.getUser();
         // 승인된 상태(가입) 확인
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(user, team, TeamMember.Status.APPROVED);
@@ -65,12 +67,9 @@ public class TeamMemberService {
         }
 
         if (requestDto.isApprove()) {
-            // 승인 처리
-            teamMember.setStatus(TeamMember.Status.APPROVED);
-            teamMember.setTeamMemberRole(TeamMemberRole.USER);
+            teamMember.approve();
         } else {
-            // 거부 처리
-            teamMember.setStatus(TeamMember.Status.REJECTED);
+            teamMember.reject();
         }
 
         // 변경 사항 저장
@@ -96,7 +95,7 @@ public class TeamMemberService {
             throw new IllegalArgumentException("유효하지 않은 역할입니다.");
         }
 
-        teamMember.setTeamMemberRole(role);
+        teamMember.grantRole(role);
         teamMemberRepository.save(teamMember);
 
         return new RoleResponseDto(requestDto.getUserId(), requestDto.getRole());
@@ -112,8 +111,9 @@ public class TeamMemberService {
     public TeamMemberResponseDto rejectTeamMember(Long teamId, Long userId, UserDetailsImpl authUser) {
         // 요청자의 팀원 정보 확인
         Long requesterId = authUser.getUser().getId();
-        TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(requesterId, teamId)
-                .orElseThrow(() -> new IllegalArgumentException("팀원이 아닙니다"));
+        TeamMember requester = teamMemberRepository.findByUserIdAndTeamId(requesterId, teamId).orElseThrow(
+                () -> new IllegalArgumentException("팀원이 아닙니다")
+        );
 
         // 요청자가 팀장인지 확인
         if (requester.getTeamMemberRole() != TeamMemberRole.TEAM_OWNER) {
@@ -121,8 +121,9 @@ public class TeamMemberService {
         }
 
         // 퇴출 대상 팀원 조회
-        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, requester.getTeam().getId())
-                .orElseThrow(() -> new IllegalArgumentException("퇴출 대상 팀원을 찾을 수 없습니다."));
+        TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(userId, requester.getTeam().getId()).orElseThrow(
+                () -> new IllegalArgumentException("퇴출 대상 팀원을 찾을 수 없습니다.")
+        );
 
 
         // 소프트 삭제 처리

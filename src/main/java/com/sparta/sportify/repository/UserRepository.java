@@ -1,6 +1,6 @@
 package com.sparta.sportify.repository;
 
-import com.sparta.sportify.entity.User;
+import com.sparta.sportify.entity.user.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 

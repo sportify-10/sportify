@@ -1,6 +1,6 @@
 package com.sparta.sportify.dto.match;
 
-import com.sparta.sportify.entity.MatchStatus;
+import com.sparta.sportify.entity.matchResult.MatchStatus;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

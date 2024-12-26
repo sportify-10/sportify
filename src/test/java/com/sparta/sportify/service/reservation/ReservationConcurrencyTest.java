@@ -1,7 +1,15 @@
 package com.sparta.sportify.service.reservation;
 
 import com.sparta.sportify.dto.reservation.request.ReservationRequestDto;
-import com.sparta.sportify.entity.*;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.team.TeamColor;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.teamMember.TeamMemberRole;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.ReservationService;

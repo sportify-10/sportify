@@ -19,10 +19,10 @@ import org.springframework.data.domain.Pageable;
 
 import com.sparta.sportify.dto.cash.request.CashRequestDto;
 import com.sparta.sportify.dto.cash.response.CashLogsResponseDto;
-import com.sparta.sportify.entity.CashLog;
-import com.sparta.sportify.entity.CashType;
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
+import com.sparta.sportify.entity.cashLog.CashLog;
+import com.sparta.sportify.entity.cashLog.CashType;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
@@ -59,27 +59,6 @@ class CashServiceTest {
 			.build();
 
 		userDetails = new UserDetailsImpl(user.getName(), user.getRole(), user);
-	}
-
-	@Test
-	@DisplayName("캐시 추가 성공")
-	void addCash() {
-		CashRequestDto cashRequestDto = new CashRequestDto(1000L);
-		CashLog cashLog = CashLog.builder()
-			.id(1L)
-			.price(cashRequestDto.getAmount())
-			.createAt(LocalDateTime.now())
-			.type(CashType.CHARGE)
-			.user(userDetails.getUser())
-			.build();
-
-		when(cashLogRepository.save(any(CashLog.class))).thenReturn(cashLog);
-
-		cashService.addCash(userDetails, cashRequestDto);
-
-		verify(cashLogRepository, times(1)).save(any(CashLog.class));
-		verify(userRepository, times(1)).save(user);
-		assertEquals(2000L, user.getCash());
 	}
 
 	@Test

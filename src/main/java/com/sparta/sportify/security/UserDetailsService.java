@@ -1,8 +1,7 @@
 package com.sparta.sportify.security;
 
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.entity.UserRole;
-import com.sparta.sportify.exception.CustomValidationException;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
