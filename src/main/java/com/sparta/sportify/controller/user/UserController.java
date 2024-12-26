@@ -1,5 +1,26 @@
 package com.sparta.sportify.controller.user;
 
+import org.springframework.data.domain.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sparta.sportify.config.CustomPasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.LoginResponseDto;
@@ -13,19 +34,11 @@ import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
 import com.sparta.sportify.util.api.ApiResult;
+
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.reactive.result.view.RedirectView;
 
 @Slf4j
 @RestController
@@ -34,7 +47,9 @@ import org.springframework.web.servlet.view.RedirectView;
 public class UserController {
 
     private final UserService userService;
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomPasswordEncoder passwordEncoder;
 
     // 유저 회원가입
     @PostMapping("/signup")
@@ -52,6 +67,7 @@ public class UserController {
                 HttpStatus.OK
         );
     }
+
 
 
     // 유저 로그인
@@ -212,6 +228,4 @@ public class UserController {
         );
     }
 }
-
-
 
