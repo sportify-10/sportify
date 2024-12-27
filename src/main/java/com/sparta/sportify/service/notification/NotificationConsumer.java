@@ -1,9 +1,13 @@
 package com.sparta.sportify.service.notification;
 
+import com.sparta.sportify.entity.notification.Notification;
+import com.sparta.sportify.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,5 +27,15 @@ public class NotificationConsumer {
             // 오류 발생 시 로그 출력
             log.error("Error sending message to clients: {}", message, e);
         }
+    }
+
+    private final NotificationRepository notificationRepository;
+
+    @KafkaListener(topics = "match-notifications", groupId = "notification-group")
+    public void consumeNotification(String message) {
+        // 메시지를 DB에 저장
+        Notification notification = new Notification(message, LocalDateTime.now());
+        notificationRepository.save(notification);
+        System.out.println("Saved notification: " + message);
     }
 }
