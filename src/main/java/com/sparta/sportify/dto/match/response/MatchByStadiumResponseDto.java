@@ -1,5 +1,7 @@
 package com.sparta.sportify.dto.match.response;
 
+import com.sparta.sportify.entity.matchResult.MatchStatus;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,5 +14,5 @@ public class MatchByStadiumResponseDto {
 	private final String stadiumLocation;
 	private final String startTime;
 	private final String endTime;
-	private final String status;
+	private final MatchStatus status;
 }
