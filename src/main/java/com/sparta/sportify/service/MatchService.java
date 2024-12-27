@@ -182,6 +182,7 @@ public class MatchService {
         return new MatchesByDateResponseDto(matches);
     }
 
+
     // 매치 단건 조회
     @Transactional(readOnly = true)
     public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time,

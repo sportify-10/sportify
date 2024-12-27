@@ -49,7 +49,11 @@ public enum ErrorCode {
 	ONLY_OWN_POST_CAN_BE_DELETED(403, "자신의 게시물만 삭제 가능합니다"),
 	ONLY_TEAM_MEMBER_CAN_DELETE(403, "팀 멤버만 삭제 가능합니다"),
 	NOT_A_MEMBER_OF_THE_TEAM(403, "해당 팀이 아닙니다"),
-	STADIUM_NAME_ALREADY_EXISTS(400, "구장 이름이 이미 존재합니다");
+	STADIUM_NAME_ALREADY_EXISTS(400, "구장 이름이 이미 존재합니다"),
+    INSUFFICIENT_PERMISSION(403, "팀을 수정할 권한이 없습니다"),
+    ALREADY_MEMBER(400, "이미 해당 팀에 가입되어 있습니다"),
+    NOT_TEAM_MEMBER(403, "팀원이 아닙니다"),
+    APPLICATION_NOT_FOUND(404, "신청 내역이 없습니다");
 
     private final int status;
     private final String message;
