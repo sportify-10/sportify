@@ -31,11 +31,10 @@ public class StadiumController {
 
 	@PostMapping
 	public ResponseEntity<ApiResult<StadiumResponseDto>> createStadium(
-		@RequestBody StadiumCreateRequestDto stadiumCreateRequestDto,
-		@AuthenticationPrincipal UserDetailsImpl userDetails
+		@RequestBody StadiumCreateRequestDto stadiumCreateRequestDto
 	) {
 		return ResponseEntity.ok(
-				ApiResult.success("구장 생성 성공", stadiumService.createStadium(stadiumCreateRequestDto, userDetails))
+			ApiResult.success("구장 생성 성공", stadiumService.createStadium(stadiumCreateRequestDto))
 		);
 	}
 
@@ -46,7 +45,7 @@ public class StadiumController {
 		@RequestParam(defaultValue = "5") int size
 	) {
 		return ResponseEntity.ok(
-				ApiResult.success("구장 조회 성공",stadiumService.getStadiums(userDetails, page, size))
+			ApiResult.success("구장 조회 성공", stadiumService.getStadiums(userDetails, page, size))
 		);
 	}
 
@@ -57,7 +56,7 @@ public class StadiumController {
 		@AuthenticationPrincipal UserDetailsImpl userDetails
 	) {
 		return ResponseEntity.ok(
-				ApiResult.success("구장 수정 성공",stadiumService.updateStadium(stadiumId, stadiumUpdateRequestDto, userDetails))
+			ApiResult.success("구장 수정 성공", stadiumService.updateStadium(stadiumId, stadiumUpdateRequestDto, userDetails))
 		);
 	}
 
@@ -67,7 +66,7 @@ public class StadiumController {
 		@AuthenticationPrincipal UserDetailsImpl userDetails
 	) {
 		return ResponseEntity.ok(
-				ApiResult.success("구장 삭제 성공",stadiumService.deleteStadium(stadiumId, userDetails))
+			ApiResult.success("구장 삭제 성공", stadiumService.deleteStadium(stadiumId, userDetails))
 		);
 	}
 
@@ -76,9 +75,9 @@ public class StadiumController {
 		@PathVariable Long stadiumId,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "5") int size
-	){
+	) {
 		return ResponseEntity.ok(
-				ApiResult.success("구장에 예약된 매치 조회 성공", stadiumService.findMatchesByStadium(stadiumId, page, size))
+			ApiResult.success("구장에 예약된 매치 조회 성공", stadiumService.findMatchesByStadium(stadiumId, page, size))
 		);
 	}
 }
