@@ -254,7 +254,6 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장에 예약된 매치 조회")
 	void findMatchesByStadium() {
-		// Mock 데이터 설정
 		List<Object[]> content = List.of(
 			new Object[] {match, 10000L}, // Match 객체와 총 금액
 			new Object[] {match, null}   // 금액이 없을 때의 처리
@@ -267,10 +266,8 @@ class StadiumServiceTest {
 			any(Pageable.class)))
 			.thenReturn(pageResult);
 
-		// 테스트 실행
 		Page<StadiumMatchResponseDto> result = stadiumService.findMatchesByStadium(1L, 1, 10);
 
-		// 검증
 		assertEquals(2, result.getTotalElements());
 
 		StadiumMatchResponseDto responseDto = result.getContent().get(0);
@@ -279,7 +276,6 @@ class StadiumServiceTest {
 		assertEquals(5, responseDto.getTeamAmount());
 		assertEquals(5, responseDto.getTeamBCount());
 
-		// Verify 호출 횟수
 		verify(stadiumRepository, times(1)).findById(1L);
 		verify(matchRepository, times(1)).findMatchesWithTotalAmountByStadiumId(eq(1L), eq(ReservationStatus.CONFIRMED),
 			any(Pageable.class));
