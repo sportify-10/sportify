@@ -9,6 +9,8 @@ import com.sparta.sportify.entity.cashLog.CashLog;
 import com.sparta.sportify.entity.cashLog.CashType;
 import com.sparta.sportify.entity.coupon.Coupon;
 import com.sparta.sportify.entity.coupon.CouponStatus;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.CouponRepository;
 import com.sparta.sportify.repository.UserRepository;
@@ -35,7 +37,7 @@ public class CouponService {
     public CouponCreateResponseDto createCoupon(CouponCreateRequestDto couponCreateRequestDto) {
         Optional<Coupon> couponOp = couponRepository.findByCode(couponCreateRequestDto.getCode());
         if (couponOp.isPresent()) {
-            throw new RuntimeException("쿠폰이 이미 존재합니다");
+            throw new CustomApiException(ErrorCode.COUPON_ALREADY_EXISTS);
         }
         return new CouponCreateResponseDto(couponRepository.save(Coupon.builder()
                 .code(couponCreateRequestDto.getCode())
@@ -73,11 +75,11 @@ public class CouponService {
     @RedissonLock(key = "'coupon-'.concat(#code)")
     public CashLogCouponUseResponse useCoupon(String code, UserDetailsImpl authUser) {
         Coupon coupon = couponRepository.findByCode(code).orElseThrow(() -> {
-            throw new RuntimeException("존재하지않는 쿠폰입니다.");
+            throw new CustomApiException(ErrorCode.COUPON_NOT_FOUND);
         });
 
         if (cashLogRepository.findByUserIdAndCouponId(authUser.getUser().getId(), coupon.getId()).isPresent()) {
-            throw new RuntimeException("이미 사용하신 쿠폰입니다.");
+            throw new CustomApiException(ErrorCode.COUPON_ALREADY_USED);
         }
 
 

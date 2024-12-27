@@ -7,6 +7,8 @@ import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
 import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
@@ -133,7 +135,7 @@ public class UserController {
     @GetMapping("/oAuth/login")
     public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
+            throw new CustomApiException(ErrorCode.MISSING_OAUTH2_USER_INFO);
         }
 
         // provider에 따라 이메일 추출 메서드를 호출
@@ -149,7 +151,7 @@ public class UserController {
                 email = customOAuth2UserService.extractGoogleUserAttributes(oAuth2User);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid provider");
+                throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
         }
 
         String responseMessage = (email == null) ? "Email not available" : email;
