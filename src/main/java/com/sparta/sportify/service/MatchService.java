@@ -209,7 +209,7 @@ public class MatchService {
 	}
 
 	//매치 상태 결정
-	private MatchStatus determineMatchStatus(Match match, LocalDateTime now) {
+	public MatchStatus determineMatchStatus(Match match, LocalDateTime now) {
 		LocalDateTime matchStartTime = match.getStartTime();
 		LocalDateTime matchEndTime = match.getEndTime();
 

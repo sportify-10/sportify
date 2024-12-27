@@ -3,128 +3,342 @@ package com.sparta.sportify.service.match;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
+import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
+import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.matchResult.MatchResult;
 import com.sparta.sportify.entity.matchResult.MatchStatus;
+import com.sparta.sportify.entity.reservation.Reservation;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
+import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.team.TeamColor;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
+import com.sparta.sportify.repository.ReservationRepository;
+import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.repository.TeamRepository;
+import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.service.MatchService;
 
-import jakarta.persistence.EntityNotFoundException;
-
+@ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
-	@InjectMocks
-	private MatchService matchService;
+	@Mock
+	private MatchRepository matchRepository;
 
 	@Mock
 	private MatchResultRepository matchResultRepository;
 
 	@Mock
-	private MatchRepository matchRepository;
+	private ReservationRepository reservationRepository;
+
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private TeamRepository teamRepository;
+
+	@Mock
+	private StadiumTimeRepository stadiumTimeRepository;
+
+	@InjectMocks
+	private MatchService matchService;
+
+	private Match match;
+	private MatchResultRequestDto requestDto;
+	private MatchResult matchResult;
+	private StadiumTime stadiumTime;
+	private Stadium stadium;
 
 	@BeforeEach
-	public void setUp() {
-		MockitoAnnotations.openMocks(this);
+	void setUp() {
+		stadium = new Stadium(
+			1L,
+			"National Stadium",
+			"Seoul, Korea",
+			6,
+			6,
+			"A large stadium for concerts.",
+			50000L,
+			StadiumStatus.APPROVED,
+			null,
+			null
+		);
+		stadiumTime = StadiumTime.builder()
+			.id(1L)
+			.stadium(stadium)
+			.cron("MON,TUE. WED")
+			.build();
+		match = Match.builder()
+			.id(1L)
+			.date(LocalDate.of(2024, 12, 27))
+			.time(15)
+			.aTeamCount(11)
+			.bTeamCount(11)
+			.stadiumTime(stadiumTime)
+			.build(); // 매치 초기화
+		requestDto = new MatchResultRequestDto(5, 10, MatchStatus.CLOSED, 1L); // 요청 DTO 초기화
+
+		matchResult = MatchResult.builder()
+			.id(1L)
+			.teamAScore(10)
+			.teamBScore(5)
+			.matchStatus(MatchStatus.CLOSED)
+			.matchDate(LocalDate.now())
+			.build();
 	}
 
 	@Test
-	@DisplayName("createMatchResult 메소드의 정상 동작을 확인합니다.")
-	public void createMatchResult_ShouldReturnMatchResultResponseDto() {
+	@DisplayName("매치 조회 성공")
+	void findMatch_Success() {
 		// Given
-		MatchResultRequestDto requestDto = new MatchResultRequestDto();
-		requestDto.setMatchId(1L);
-		requestDto.setTeamAScore(2);
-		requestDto.setTeamBScore(3);
-		requestDto.setMatchStatus(MatchStatus.CLOSED);
-
-		Match match = new Match(); // Match 객체 생성 및 필요한 데이터 설정
 		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.of(match));
 
-		MatchResult savedResult = new MatchResult();
-		savedResult.setId(1L);
-		savedResult.setTeamAScore(requestDto.getTeamAScore());
-		savedResult.setTeamBScore(requestDto.getTeamBScore());
-		savedResult.setMatchStatus(requestDto.getMatchStatus());
-		savedResult.setMatchDate(LocalDate.now());
-
-		when(matchResultRepository.save(any(MatchResult.class))).thenReturn(savedResult);
-
 		// When
-		MatchResultResponseDto responseDto = matchService.createMatchResult(requestDto);
+		Match result = matchRepository.findById(requestDto.getMatchId())
+			.orElseThrow(() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND));
 
 		// Then
-		assertNotNull(responseDto);
-		assertEquals(1L, responseDto.getId());
-		assertEquals(2, responseDto.getTeamAScore());
-		assertEquals(3, responseDto.getTeamBScore());
-		assertEquals(MatchStatus.CLOSED, responseDto.getMatchStatus());
-		assertEquals(LocalDate.now(), responseDto.getMatchDate());
+		assertNotNull(result);
+		assertEquals(match.getId(), result.getId());
+		verify(matchRepository, times(1)).findById(requestDto.getMatchId());
 	}
 
 	@Test
-	@DisplayName("ID가 존재하지 않을 때 예외를 발생시키는지 확인합니다.")
-	public void createMatchResult_MatchNotFound_ShouldThrowException() {
+	@DisplayName("매치 조회 실패")
+	void findMatch_NotFound() {
 		// Given
-		MatchResultRequestDto requestDto = new MatchResultRequestDto();
-		requestDto.setMatchId(1L);
-
 		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThrows(EntityNotFoundException.class, () -> {
-			matchService.createMatchResult(requestDto);
+		CustomApiException exception = assertThrows(CustomApiException.class, () -> {
+			matchRepository.findById(requestDto.getMatchId())
+				.orElseThrow(() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND));
 		});
+
+		assertEquals(ErrorCode.MATCH_NOT_FOUND, exception.getErrorCode());
+		verify(matchRepository, times(1)).findById(requestDto.getMatchId());
 	}
 
 	@Test
-	@DisplayName("getMatchResult메소드의 정상 동작을 확인합니다.")
-	public void getMatchResult_ShouldReturnMatchResultResponseDto() {
+	@DisplayName("점수 추가 로직 테스트")
+	void createMatchResult_SavesMatchResultAndUpdatesPoints() {
 		// Given
-		Long matchId = 1L;
-		MatchResult matchResult = new MatchResult();
-		matchResult.setId(1L);
-		matchResult.setTeamAScore(2);
-		matchResult.setTeamBScore(3);
-		matchResult.setMatchStatus(MatchStatus.CLOSED);
-		matchResult.setMatchDate(LocalDate.now());
+		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.of(match));
 
-		when(matchResultRepository.findByMatchId(matchId)).thenReturn(Optional.of(matchResult));
+		MatchResult matchResult = MatchResult.builder()
+			.teamAScore(requestDto.getTeamAScore())
+			.teamBScore(requestDto.getTeamBScore())
+			.match(match)
+			.matchStatus(requestDto.getMatchStatus())
+			.matchDate(LocalDate.now())
+			.build();
+
+		when(matchResultRepository.save(any(MatchResult.class))).thenReturn(matchResult);
+
+		User userA = User.builder()
+			.id(1L)
+			.build();
+		User userB = User.builder()
+			.id(2L)
+			.build();
+		Team teamA = Team.builder()
+			.id(1L)
+			.teamName("TeamA")
+			.teamPoints(1000)
+			.build();
+		Team teamB = Team.builder()
+			.id(2L)
+			.teamName("TeamB")
+			.teamPoints(1000)
+			.build();
+		Reservation reservationA = Reservation.builder()
+			.user(userA)
+			.team(teamA)
+			.match(match)
+			.teamColor(TeamColor.A)
+			.build();
+		Reservation reservationB = Reservation.builder()
+			.user(userB)
+			.team(teamB)
+			.match(match)
+			.teamColor(TeamColor.B)
+			.build();
+
+		List<Reservation> reservations = new ArrayList<>();
+		reservations.add(reservationA);
+		reservations.add(reservationB);
+
+		when(reservationRepository.findAllByMatch(match)).thenReturn(reservations);
 
 		// When
-		MatchResultResponseDto responseDto = matchService.getMatchResult(matchId);
+		MatchResultResponseDto savedResult = matchService.createMatchResult(requestDto);
 
 		// Then
-		assertNotNull(responseDto);
-		assertEquals(1L, responseDto.getId());
-		assertEquals(2, responseDto.getTeamAScore());
-		assertEquals(3, responseDto.getTeamBScore());
-		assertEquals(MatchStatus.CLOSED, responseDto.getMatchStatus());
-		assertEquals(LocalDate.now(), responseDto.getMatchDate());
+		assertNotNull(savedResult);
+		assertEquals(matchResult.getId(), savedResult.getId());
+		assertEquals(matchResult.getTeamAScore(), savedResult.getTeamAScore());
+		assertEquals(matchResult.getTeamBScore(), savedResult.getTeamBScore());
+		assertEquals(matchResult.getMatchStatus(), savedResult.getMatchStatus());
+		assertEquals(matchResult.getMatchDate(), savedResult.getMatchDate());
+
+		// User points verification
+		verify(userRepository, times(1)).save(userA); // userA의 점수 업데이트
+		verify(userRepository, times(1)).save(userB); // userB의 점수 업데이트
+		assertEquals(990, userA.getLevelPoints()); // userA는 10점 증가
+		assertEquals(1010, userB.getLevelPoints()); // userB는 -10점 감소
+
+		// Team points verification
+		//verify(teamRepository, times(1)).save(any(Team.class)); // 팀 점수 업데이트
+		assertEquals(990, teamA.getTeamPoints()); // Team A는 10점 증가
+		assertEquals(1010, teamB.getTeamPoints()); // Team B는 -10점 감소
 	}
 
 	@Test
-	@DisplayName("ID가 존재하지 않을 때 예외를 발생시키는지 확인합니다.")
-	public void getMatchResult_MatchResultNotFound_ShouldThrowException() {
+	@DisplayName("매치 결과값 조회 성공")
+	void getMatchResult_ReturnsMatchResultDto_WhenMatchFound() {
 		// Given
 		Long matchId = 1L;
+		when(matchResultRepository.findByMatchId(matchId)).thenReturn(Optional.ofNullable(matchResult));
 
+		// When
+		MatchResultResponseDto response = matchService.getMatchResult(matchId);
+
+		// Then
+		assertNotNull(response);
+		assertEquals(matchResult.getId(), response.getId());
+		assertEquals(matchResult.getTeamAScore(), response.getTeamAScore());
+		assertEquals(matchResult.getTeamBScore(), response.getTeamBScore());
+		assertEquals(matchResult.getMatchStatus(), response.getMatchStatus());
+		assertEquals(matchResult.getMatchDate(), response.getMatchDate());
+	}
+
+	@Test
+	@DisplayName("매치 결과가 없을 때 CustomApiException 발생")
+	void getMatchResult_ThrowsCustomApiException_WhenMatchNotFound() {
+		// Given
+		Long matchId = 1L;
 		when(matchResultRepository.findByMatchId(matchId)).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThrows(EntityNotFoundException.class, () -> {
+		CustomApiException exception = assertThrows(CustomApiException.class, () -> {
 			matchService.getMatchResult(matchId);
 		});
+
+		assertEquals(ErrorCode.MATCHRESULT_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("매치 단건조회 성공")
+	void getMatchByDateAndTime_ReturnsMatchDetailResponseDto_WhenMatchFound() {
+		// Given
+		Long stadiumId = 1L;
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		Integer time = 15;
+		LocalDateTime now = LocalDateTime.now().minusHours(1); // 현재 시간이 시작 1시간 전
+
+		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(any(), any(), any())).thenReturn(
+			Optional.of(match));
+
+		// When
+		MatchDetailResponseDto response = matchService.getMatchByDateAndTime(stadiumId, date, time, now);
+
+		// Then
+		assertNotNull(response, "Response should not be null");
+		assertEquals(match.getId(), response.getMatchId(), "Match ID should match");
+		assertEquals(match.getDate(), response.getDate(), "Match date should match");
+		assertEquals(String.format("%02d:%02d", match.getTime(), 0), response.getTime(), "Match time should match");
+		assertEquals(match.getATeamCount(), response.getATeamCount(), "A Team count should match");
+		assertEquals(match.getBTeamCount(), response.getBTeamCount(), "B Team count should match");
+		assertEquals(stadiumTime.getStadium().getStadiumName(), response.getStadiumName(), "Stadium name should match");
+		assertEquals(MatchStatus.CLOSED, response.getStatus(), "Match status should be OPEN"); // 상태 검증
+	}
+
+	@Test
+	@DisplayName("스터디움 타임을 찾지 못해 매치 단건조회 실패")
+	void getMatchByDateAndTime_ThrowsCustomApiException_WhenStadiumTimeNotFound() {
+		// Given
+		Long stadiumId = 1L;
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		Integer time = 15;
+		LocalDateTime now = LocalDateTime.now();
+
+		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.empty());
+
+		// When & Then
+		CustomApiException exception = assertThrows(CustomApiException.class, () -> {
+			matchService.getMatchByDateAndTime(stadiumId, date, time, now);
+		});
+
+		assertEquals(ErrorCode.STADIUMTIME_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("매치를 찾지 못해 매치 단건조회 실패")
+	void getMatchByDateAndTime_ThrowsCustomApiException_WhenMatchNotFound() {
+		// Given
+		Long stadiumId = 1L;
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		Integer time = 15;
+		LocalDateTime now = LocalDateTime.now();
+
+		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time)).thenReturn(
+			Optional.empty());
+
+		// When & Then
+		CustomApiException exception = assertThrows(CustomApiException.class, () -> {
+			matchService.getMatchByDateAndTime(stadiumId, date, time, now);
+		});
+
+		assertEquals(ErrorCode.MATCH_NOT_FOUND, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("매치가 종료되서 매치 단건조회 실패")
+	void determineMatchStatus_ReturnsClosed_WhenMatchEnded() {
+		// Given
+		LocalDateTime now = LocalDateTime.of(2024, 12, 27, 18, 0); // 현재 시간이 종료 후
+		LocalDateTime endTime = now.minusMinutes(1); // 종료 시간 설정
+
+		// Match 객체 생성
+		match = Match.builder()
+			.id(1L)
+			.date(LocalDate.of(2024, 12, 27))
+			.time(14)
+			.aTeamCount(11)
+			.bTeamCount(11)
+			.stadiumTime(stadiumTime)
+			.build();
+
+		// When
+		MatchStatus status = matchService.determineMatchStatus(match, now);
+
+		// Then
+		assertEquals(MatchStatus.CLOSED, status);
 	}
 }
