@@ -1,23 +1,10 @@
 package com.sparta.sportify.service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
+import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
 import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.user.User;
@@ -26,8 +13,19 @@ import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +49,7 @@ public class UserService {
 
 
         // User 객체 생성
-        User user = userRepository.save( User.builder()
+        User user = userRepository.save(User.builder()
                 .email(requestDto.getEmail())
                 .name(requestDto.getName())
                 .password(encodedPassword)
@@ -106,7 +104,7 @@ public class UserService {
     }
 
 
-    public void updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
+    public SignupResponseDto updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
 
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
             throw new RuntimeException("이메일이 중복되었습니다.");
@@ -117,17 +115,20 @@ public class UserService {
         if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
             // 비밀번호를 암호화해서 저장
             encodedPassword = passwordEncoder.encode(requestDto.getPassword());
-            userDetails.getUser().setPassword(encodedPassword);
+            userDetails.getUser().updatePassword(encodedPassword);
         }
 
         // 수정 가능한 필드만 업데이트
-        userDetails.getUser().setName(requestDto.getName());
-        userDetails.getUser().setRegion(requestDto.getRegion());
-        userDetails.getUser().setAge(requestDto.getAge());
-        userDetails.getUser().setGender(requestDto.getGender());
+        userDetails.getUser().updateOf(
+                requestDto.getName(),
+                requestDto.getRegion(),
+                requestDto.getRegion(),
+                requestDto.getGender()
+        );
 
         // 변경된 유저 정보 저장
-        userRepository.save(userDetails.getUser());
+
+        return new SignupResponseDto(userRepository.save(userDetails.getUser()));
     }
 
     // 카카오 로그인 혹은 회원가입 처리
@@ -138,12 +139,14 @@ public class UserService {
 
         if (user == null) {
             // 카카오에서 받은 정보로 회원가입 처리
-            UserRequestDto userRequestDto = new UserRequestDto();
-            userRequestDto.setEmail(email);
-            userRequestDto.setName((String) userInfo.get("name"));
-            userRequestDto.setRegion((String) userInfo.get("region"));
-            userRequestDto.setGender((String) userInfo.get("gender"));
-            userRequestDto.setAge((Long) userInfo.get("age"));
+            UserRequestDto userRequestDto = UserRequestDto.builder()
+                    .email(email)
+                    .name((String) userInfo.get("name"))
+                    .region((String) userInfo.get("region"))
+                    .gender((String) userInfo.get("gender"))
+                    .age((Long) userInfo.get("age"))
+                    .build();
+
             user = signup(userRequestDto, UserRole.USER);
         }
 
@@ -159,19 +162,19 @@ public class UserService {
         //teamMember 상태 APPROVED 만 조회
         Page<TeamMember> teamMembers = teamMemberRepository.findTeams(userDetails.getUser().getId(), pageable);
 
-        if(teamMembers.isEmpty()) {
+        if (teamMembers.isEmpty()) {
             throw new IllegalArgumentException("가입되어 있는 팀이 없습니다");
         }
 
         return teamMembers.map(teamMember -> new UserTeamResponseDto(
-            teamMember.getTeam().getId(),
-            teamMember.getTeam().getTeamName(),
-            teamMember.getTeam().getRegion(),
-            teamMember.getTeam().getActivityTime(),
-            teamMember.getTeam().getSkillLevel(),
-            teamMember.getTeam().getSportType(),
-            teamMember.getTeam().getTeamPoints(),
-            Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
+                teamMember.getTeam().getId(),
+                teamMember.getTeam().getTeamName(),
+                teamMember.getTeam().getRegion(),
+                teamMember.getTeam().getActivityTime(),
+                teamMember.getTeam().getSkillLevel(),
+                teamMember.getTeam().getSportType(),
+                teamMember.getTeam().getTeamPoints(),
+                Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
         ));
     }
 
@@ -183,8 +186,8 @@ public class UserService {
             return new PageImpl<>(Collections.emptyList(), pageable, 0); // 사용자 목록이 비어있을 경우 빈 페이지 반환
         }
         List<SignupResponseDto> users = userPage.getContent().stream()
-            .map(user -> new SignupResponseDto(user, user.getAccessToken()))
-            .collect(Collectors.toList());
+                .map(user -> new SignupResponseDto(user, user.getAccessToken()))
+                .collect(Collectors.toList());
 
         return new PageImpl<>(users, pageable, userPage.getTotalElements());
     }

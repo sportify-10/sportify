@@ -1,16 +1,16 @@
 package com.sparta.sportify.entity.user;
 
-import com.sparta.sportify.config.PasswordEncoder;
-import com.sparta.sportify.dto.user.req.UserRequestDto;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -38,7 +38,7 @@ public class User {
     private String gender;
     private Long age;
     @Builder.Default
-    private Long levelPoints=1000L;
+    private Long levelPoints = 1000L;
 
     private LocalDateTime deletedAt;
 
@@ -77,14 +77,32 @@ public class User {
         return null;
     }
 
-    public void disableUser(){
+    public void disableUser() {
         this.active = false;
         this.deletedAt = LocalDateTime.now();
     }
 
-    public User(UserRequestDto requestDto) {
-        this.email = requestDto.getEmail();
-        this.password = PasswordEncoder.encode(requestDto.getPassword());
-        this.role = requestDto.getRole() != null ? requestDto.getRole() : UserRole.USER;
+    public void updatePassword(String password) {
+        this.password = password;
     }
+
+    public void updateOf(String name, String region, String age, String gender) {
+        this.name = name;
+        this.region = region;
+        this.gender = gender;
+        this.age = Long.valueOf(age);
+    }
+
+    public void updateNickname(String nickname) {
+        this.name = nickname;
+    }
+
+    public void discountCash(Long cash) {
+        this.cash = this.cash - cash;
+    }
+
+    public void addLevelPoint(int levelPoints) {
+        this.levelPoints += levelPoints;
+    }
+
 }
