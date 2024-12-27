@@ -1,6 +1,7 @@
 package com.sparta.sportify.service.notification;
 
 import com.sparta.sportify.entity.notification.Notification;
+import com.sparta.sportify.entity.notification.Notification.NotificationStatus;
 import com.sparta.sportify.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,9 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationConsumer {
+
     private final SseEmitterService sseEmitterService;
+    private final NotificationRepository notificationRepository;
 
     @KafkaListener(topics = "match-notification", groupId = "match-notification-group")
     public void consumeMessage(String message) {
@@ -29,13 +32,25 @@ public class NotificationConsumer {
         }
     }
 
-    private final NotificationRepository notificationRepository;
-
     @KafkaListener(topics = "match-notifications", groupId = "notification-group")
     public void consumeNotification(String message) {
-        // 메시지를 DB에 저장
-        Notification notification = new Notification(message, LocalDateTime.now());
-        notificationRepository.save(notification);
-        System.out.println("Saved notification: " + message);
+        log.info("Received Kafka notification message: {}", message);
+
+        // DB에 저장할 Notification 객체 생성
+        Notification notification = new Notification();
+        notification.setType("MATCH");
+        notification.setStatus(NotificationStatus.PENDING);
+        notification.setDeliveryMethod("PUSH");
+        notification.setMessage(message);
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setUserId(1L); // 예: 기본값 또는 실제 유저 ID 설정
+
+        // Notification 객체 저장
+        try {
+            notificationRepository.save(notification);
+            log.info("Saved notification to database: {}", notification);
+        } catch (Exception e) {
+            log.error("Failed to save notification to database: {}", notification, e);
+        }
     }
 }
