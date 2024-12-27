@@ -1,6 +1,9 @@
 package com.sparta.sportify.entity.match;
 
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,60 +28,62 @@ import jakarta.persistence.Table;
 @Getter
 @Builder
 public class Match {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private LocalDate date;
-    private Integer time;
-    private Integer aTeamCount;
-    private Integer bTeamCount;
+	private LocalDate date;
+	private Integer time;
+	private Integer aTeamCount;
+	private Integer bTeamCount;
 
-    @ManyToOne
-    @JoinColumn(name = "stadium_time_id", nullable = false)
-    private StadiumTime stadiumTime;
+	@ManyToOne
+	@JoinColumn(name = "stadium_time_id", nullable = false)
+	private StadiumTime stadiumTime;
 
-    public void discountATeamCount(int count) {
-        this.aTeamCount -= count;
-        if(this.aTeamCount < 0) {
-            throw new RuntimeException("인원수가 초과되었습니다.");
-        }
-    }
-    public void discountBTeamCount(int count) {
-        this.bTeamCount -= count;
-        if(this.bTeamCount < 0) {
-            throw new RuntimeException("인원수가 초과되었습니다.");
-        }
-    }
+	public void discountATeamCount(int count) {
+		this.aTeamCount -= count;
+		if (this.aTeamCount < 0) {
+			throw new CustomApiException(ErrorCode.ERR_USER_LIMIT_EXCEEDED);
+		}
+	}
 
-    public void addATeamCount(int count) {
-        this.aTeamCount += count;
-    }
-    public void addBTeamCount(int count) {
-        this.bTeamCount += count;
-    }
+	public void discountBTeamCount(int count) {
+		this.bTeamCount -= count;
+		if (this.bTeamCount < 0) {
+			throw new CustomApiException(ErrorCode.ERR_USER_LIMIT_EXCEEDED);
+		}
+	}
 
-    public LocalDateTime getStartTime() {
-        String timeString = String.format("%02d:00", time);
-        LocalTime localTime = LocalTime.parse(timeString);
-        return LocalDateTime.of(date, localTime);
-    }
+	public void addATeamCount(int count) {
+		this.aTeamCount += count;
+	}
 
-    public LocalDateTime getEndTime() {
-        return getStartTime().plusHours(2); // 종료 시간은 시작 시간 + 2시간
-    }
+	public void addBTeamCount(int count) {
+		this.bTeamCount += count;
+	}
 
-    public double getTotalMatchCount() {
-        return aTeamCount + bTeamCount;
-    }
+	public LocalDateTime getStartTime() {
+		String timeString = String.format("%02d:00", time);
+		LocalTime localTime = LocalTime.parse(timeString);
+		return LocalDateTime.of(date, localTime);
+	}
 
-    public double getTotalStadiumCapacity() {
-        return stadiumTime.getStadium().getATeamCount() + stadiumTime.getStadium().getBTeamCount();
-    }
+	public LocalDateTime getEndTime() {
+		return getStartTime().plusHours(2); // 종료 시간은 시작 시간 + 2시간
+	}
 
-    public double getReservationPercentage() {
-        double totalCapacity = getTotalStadiumCapacity();
-        return totalCapacity > 0 ? (getTotalMatchCount() / totalCapacity) * 100 : 0;
-    }
+	public double getTotalMatchCount() {
+		return aTeamCount + bTeamCount;
+	}
+
+	public double getTotalStadiumCapacity() {
+		return stadiumTime.getStadium().getATeamCount() + stadiumTime.getStadium().getBTeamCount();
+	}
+
+	public double getReservationPercentage() {
+		double totalCapacity = getTotalStadiumCapacity();
+		return totalCapacity > 0 ? (getTotalMatchCount() / totalCapacity) * 100 : 0;
+	}
 }
 
