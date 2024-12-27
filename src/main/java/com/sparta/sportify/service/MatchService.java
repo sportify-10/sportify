@@ -85,29 +85,22 @@ public class MatchService {
         });
 
 		// 경기 결과에 따른 팀 점수 부여
-		// 중복 없는 Team-Reservation 매핑을 Set으로 생성
-		Set<Map<Team, Reservation>> uniqueTeamReservations = new HashSet<>();
-		reservations.forEach(reservation -> {
-			Team team = reservation.getTeam();
-			if (team != null) {
-				Map<Team, Reservation> map = new HashMap<>();
-				map.put(team, reservation);
-				uniqueTeamReservations.add(map);
-			}
-		});
-		// Set 처리
-		Set<Team> uniqueTeams = reservations.stream()
+		List<Team> uniqueTeams = reservations.stream()
 			.map(Reservation::getTeam)
 			.filter(Objects::nonNull)
-			.collect(Collectors.toSet());
+			.distinct()
+			.collect(Collectors.toList());
+
 		uniqueTeams.forEach(team -> {
 			Reservation relatedReservation = reservations.stream()
 				.filter(reservation -> team.equals(reservation.getTeam()))
 				.findFirst()
 				.orElseThrow(() -> new IllegalStateException("Reservation not found for team"));
+
 			// Reservation의 TeamColor로 점수 계산
 			TeamColor teamColor = relatedReservation.getTeamColor();
 			int teampointChange = 0;
+
 			if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
 				teampointChange = (teamColor == TeamColor.A) ? 10 : -10;
 			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
@@ -115,9 +108,12 @@ public class MatchService {
 			} else {
 				teampointChange = 5;
 			}
-			// 점수 업데이트
-			team.setTeamPoints(team.getTeamPoints() + teampointChange);
-			teamRepository.save(team);
+
+			Team updatedTeam = Team.builder()
+				.id(team.getId())
+				.teamPoints(team.getTeamPoints() + teampointChange)
+				.build();
+			teamRepository.save(updatedTeam);
 		});
 
 		return new MatchResultResponseDto(
