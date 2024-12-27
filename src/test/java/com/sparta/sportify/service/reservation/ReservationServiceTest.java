@@ -79,10 +79,11 @@ public class ReservationServiceTest {
         requestDto.setTime(10);
         requestDto.setTeamColor(TeamColor.A);
 
-        User user = new User();
-        user.setId(1L);
-        user.setCash(200000L);
-
+//        User user = new User();
+//
+//        user.setId(1L);
+//        user.setCash(200000L);
+        User user = User.builder().id(1L).cash(200000L).build();
         team = Team.builder().id(1L).build();
 
 
@@ -272,12 +273,9 @@ public class ReservationServiceTest {
         requestDto.setTeamId(1);
         requestDto.setTeamMemberIdList(List.of(2L, 3L, 4L));
 
-        User user1 = new User();
-        user1.setId(2L);
-        User user2 = new User();
-        user1.setId(3L);
-        User user3 = new User();
-        user1.setId(4L);
+        User user1 = User.builder().id(2L).build();
+        User user2 = User.builder().id(3L).build();
+        User user3 = User.builder().id(4L).build();
 
         List<User> users = List.of(user1, user2, user3);
 
@@ -378,8 +376,7 @@ public class ReservationServiceTest {
     @Test
     @DisplayName("단건 예약 조회 실패 - 다른 유저")
     public void testFindReservation_Fail_UnauthorizedUser() {
-        User user2 = new User();
-        user2.setId(2L);
+        User user2 = User.builder().id(2L).build();
 
         Match match = Match.builder()
                 .id(1L)

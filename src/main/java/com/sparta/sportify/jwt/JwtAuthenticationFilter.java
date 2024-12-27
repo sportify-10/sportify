@@ -1,5 +1,7 @@
 package com.sparta.sportify.jwt;
 
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.security.UserDetailsImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,10 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
-import java.rmi.RemoteException;
 
 @Slf4j
 @Component
@@ -37,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Authorization 헤더에서 Bearer 토큰을 추출
         String token = jwtUtil.resolveToken(request);
-        if (token != null && jwtUtil.validateToken(token)!=null) {
+        if (token != null && jwtUtil.validateToken(token) != null) {
             String username = jwtUtil.getUsernameFromToken(token);  // 토큰에서 username 가져오기
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);  // email 대신 username으로 처리
 
@@ -51,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 삭제된 사용자 확인
             if (((UserDetailsImpl) userDetails).getUser().getDeletedAt() != null) {
-                throw new RemoteException("삭제된 유저입니다.");  // 삭제된 사용자 예외 처리
+                throw new CustomApiException(ErrorCode.DELETED_USER);  // 삭제된 사용자 예외 처리
 
             }
         }

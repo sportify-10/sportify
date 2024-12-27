@@ -7,6 +7,8 @@ import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
 import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.UserService;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
@@ -20,13 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
-
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -120,15 +119,14 @@ public class UserController {
 
     // 유저 정보 수정
     @PatchMapping("/profile")
-    public ResponseEntity<ApiResult<String>> updateUser(
+    public ResponseEntity<ApiResult<SignupResponseDto>> updateUser(
             @Valid @RequestBody UserRequestDto requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        // 유저 정보 수정 서비스 호출
-        userService.updateUser(requestDto, userDetails);
-
         return new ResponseEntity<>(
-                ApiResult.success("유저 정보가 수정되었습니다.", null),
+                ApiResult.success("유저 정보가 수정되었습니다.",
+                        userService.updateUser(requestDto, userDetails)
+                ),
                 HttpStatus.OK
         );
     }
@@ -137,7 +135,7 @@ public class UserController {
     @GetMapping("/oAuth/login")
     public ResponseEntity<ApiResult<String>> oAuthLogin(@AuthenticationPrincipal OAuth2User oAuth2User, @RequestParam("provider") String provider) {
         if (oAuth2User == null) {
-            throw new IllegalArgumentException("OAuth2User is null");
+            throw new CustomApiException(ErrorCode.MISSING_OAUTH2_USER_INFO);
         }
 
         // provider에 따라 이메일 추출 메서드를 호출
@@ -153,7 +151,7 @@ public class UserController {
                 email = customOAuth2UserService.extractGoogleUserAttributes(oAuth2User);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid provider");
+                throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
         }
 
         String responseMessage = (email == null) ? "Email not available" : email;
@@ -180,16 +178,6 @@ public class UserController {
     @GetMapping("/google/login")
     public RedirectView redirectToGoogle() {
         return new RedirectView("/oauth2/authorization/google");
-    }
-
-
-    @GetMapping("/oauth/login_info")
-    public String getJson(Authentication authentication) {
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-
-        return attributes.toString();
     }
 
     //유저의 팀 조회

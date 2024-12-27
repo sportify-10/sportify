@@ -6,13 +6,16 @@ import static org.mockito.Mockito.*;
 import java.util.Optional;
 
 import com.cronutils.model.Cron;
+import com.sparta.sportify.exception.CustomApiException;
 import com.sparta.sportify.util.cron.CronUtil;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import java.util.Arrays;
 
 import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
@@ -53,6 +56,7 @@ class StadiumTimeServiceTest {
 	private Long stadiumTimeId;
 
 	private Stadium stadium;
+	private Stadium stadiumPending;
 
 	@BeforeEach
 	void setUp() {
@@ -83,6 +87,19 @@ class StadiumTimeServiceTest {
 			.deletedAt(null) // 삭제 시간 (없음)
 			.user(userDetails.getUser()) // 유저 객체 (User 객체를 미리 생성하여 전달)
 			.build();
+
+		stadiumPending = Stadium.builder()
+			.id(1L) // ID는 일반적으로 자동 생성되므로 필요 시 설정
+			.stadiumName("Dream Stadium") // 구장 이름
+			.location("Seoul, South Korea") // 위치
+			.aTeamCount(5) // A팀 인원
+			.bTeamCount(5) // B팀 인원
+			.description("A fantastic stadium for sports events.") // 설명
+			.price(100000L) // 가격
+			.status(StadiumStatus.PENDING) // 상태 (Enum)
+			.deletedAt(null) // 삭제 시간 (없음)
+			.user(userDetails.getUser()) // 유저 객체 (User 객체를 미리 생성하여 전달)
+			.build();
 	}
 
 	@Test
@@ -91,8 +108,9 @@ class StadiumTimeServiceTest {
 
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-//		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
-		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
+		//		String cron = stadiumTimeService.convertToCronExpression(stadiumTimeRequestDto);
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),
+			stadiumTimeRequestDto.getHours());
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
@@ -102,7 +120,7 @@ class StadiumTimeServiceTest {
 		assertNotNull(response);
 		assertEquals(stadiumId, response.getStadiumId());
 		assertTrue(response.getCronExpression().contains("10-12"));
-		assertTrue(response.getCronExpression().contains("mon"));
+		assertTrue(response.getCronExpression().contains("MON"));
 
 		verify(stadiumRepository, times(1)).findById(stadiumId);
 		verify(stadiumTimeRepository, times(1)).save(any(StadiumTime.class));
@@ -112,14 +130,15 @@ class StadiumTimeServiceTest {
 	@DisplayName("구장이 승인되지 않아 에러")
 	void NotApprovedStadium() {
 		//stadium.setStatus(StadiumStatus.APPROVED);
-		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
+		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadiumPending));
 
-		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
-		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),
+			stadiumTimeRequestDto.getHours());
+		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadiumPending);
 
 		when(stadiumTimeRepository.save(any(StadiumTime.class))).thenReturn(stadiumTime);
 
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeRequestDto);
 		});
 
@@ -133,13 +152,14 @@ class StadiumTimeServiceTest {
 	void existStadiumTime() {
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 
-		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),stadiumTimeRequestDto.getHours());
+		String cron = CronUtil.convertToCronExpression(stadiumTimeRequestDto.getWeeks(),
+			stadiumTimeRequestDto.getHours());
 		StadiumTime stadiumTime = StadiumTime.createOf(cron, stadium);
 
 		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.of(stadium));
 		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
 
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumTimeService.createStadiumTime(stadiumId, stadiumTimeRequestDto);
 		});
 

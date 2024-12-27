@@ -3,15 +3,13 @@ package com.sparta.sportify.dto.user.req;
 import com.sparta.sportify.entity.user.UserRole;
 import jakarta.validation.constraints.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserRequestDto {
 
     @NotBlank(message = "이메일은 필수 항목입니다.")

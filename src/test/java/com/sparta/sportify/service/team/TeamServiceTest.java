@@ -1,7 +1,7 @@
 package com.sparta.sportify.service.team;
 
-import com.sparta.sportify.dto.teamDto.TeamRequestDto;
-import com.sparta.sportify.dto.teamDto.TeamResponseDto;
+import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamMember.TeamMemberRole;
@@ -60,9 +60,7 @@ class TeamServiceTest {
                 .build();
 
         // Mock User 객체 생성
-        user = new User();
-        user.setId(1L);
-        user.setCash(200000L);
+        user = User.builder().id(2L).cash(20000L).build();
 
     }
 

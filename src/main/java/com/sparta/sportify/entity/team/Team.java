@@ -1,6 +1,6 @@
 package com.sparta.sportify.entity.team;
 
-import com.sparta.sportify.dto.teamDto.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -8,7 +8,6 @@ import org.springframework.data.annotation.Id;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Entity
 @Builder
 @AllArgsConstructor
@@ -40,17 +39,20 @@ public class Team {
     }
 
     public void updateData(String teamName, String region, String activityTime, String skillLevel, String sportType, String description) {
-        this.setTeamName(teamName);
-        this.setRegion(region);
-        this.setActivityTime(activityTime);
-        this.setSkillLevel(skillLevel);
-        this.setSportType(sportType);
-        this.setDescription(description);
+        this.teamName = teamName;
+        this.region = region;
+        this.activityTime = activityTime;
+        this.skillLevel = skillLevel;
+        this.sportType = sportType;
+        this.description = description;
     }
 
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }
 
+    public void addTeamPoints(int teamPointChange) {
+        this.teamPoints += teamPointChange;
+    }
     // Getters and Setters
 }

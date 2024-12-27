@@ -14,6 +14,8 @@ import com.sparta.sportify.dto.teamArticle.response.TeamArticleResponseDto;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
 import com.sparta.sportify.entity.teamArticle.TeamArticle;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.TeamMemberRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.TeamArticleRepository;
@@ -31,12 +33,12 @@ public class TeamArticleService {
 
 	public TeamArticleResponseDto createPost(Long teamId, UserDetailsImpl userDetails,
 		TeamArticleRequestDto teamArticleRequestDto) {
-		Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 팀입니다"));
+		Team team = teamRepository.findById(teamId).orElseThrow(() -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND));
 
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 작성 가능합니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_WRITE));
 
 		TeamArticle teamArticle = teamArticleRepository.save(
 			TeamArticle.builder()
@@ -56,11 +58,11 @@ public class TeamArticleService {
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 조회 가능합니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_VIEW));
 
 		Page<TeamArticle> teamArticle = teamArticleRepository.findAllByTeamId(teamId, pageable);
 		if (teamArticle.getContent().isEmpty()) {
-			throw new IllegalArgumentException("게시글이 없습니다");
+			throw new CustomApiException(ErrorCode.POST_NOT_FOUND);
 		}
 
 		return teamArticle.map(TeamArticleResponseDto::new);
@@ -71,16 +73,16 @@ public class TeamArticleService {
 		UserDetailsImpl userDetails) {
 		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
 			.filter(article -> article.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.POST_NOT_FOUND));
 
-		if(teamArticle.getUser().getId() != userDetails.getUser().getId()){
-			throw new IllegalArgumentException("자신의 게시물만 수정 가능합니다");
+		if (teamArticle.getUser().getId() != userDetails.getUser().getId()) {
+			throw new CustomApiException(ErrorCode.ONLY_OWN_POST_CAN_BE_MODIFIED);
 		}
 
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamArticle.getTeam().getId())
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 수정 가능합니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_MODIFY));
 
 		teamArticle.updateOf(teamArticleRequestDto.getTitle(), teamArticleRequestDto.getContent(),
 			userDetails.getUser(), teamArticle.getTeam());
@@ -91,16 +93,16 @@ public class TeamArticleService {
 	public TeamArticleResponseDto deletePost(Long articleId, UserDetailsImpl userDetails) {
 		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
 			.filter(article -> article.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.POST_NOT_FOUND));
 
-		if(teamArticle.getUser().getId() != userDetails.getUser().getId()){
-			throw new IllegalArgumentException("자신의 게시물만 삭제 가능합니다");
+		if (teamArticle.getUser().getId() != userDetails.getUser().getId()) {
+			throw new CustomApiException(ErrorCode.ONLY_OWN_POST_CAN_BE_DELETED);
 		}
 
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamArticle.getTeam().getId())
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 삭제 가능합니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_DELETE));
 
 		teamArticle.deleteOf();
 
@@ -110,12 +112,12 @@ public class TeamArticleService {
 	public TeamArticleResponseDto getPost(Long teamId, Long articleId, UserDetailsImpl userDetails) {
 		TeamArticle teamArticle = teamArticleRepository.findById(articleId)
 			.filter(article -> article.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.POST_NOT_FOUND));
 
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
 			.filter(member -> member.getDeletedAt() == null)
-			.orElseThrow(() -> new IllegalArgumentException("팀 멤버만 조회 가능합니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_VIEW));
 
 		return new TeamArticleResponseDto(teamArticleRepository.save(teamArticle));
 	}

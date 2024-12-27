@@ -1,8 +1,9 @@
 package com.sparta.sportify.controller.team;
 
-import com.sparta.sportify.dto.teamDto.TeamRequestDto;
-import com.sparta.sportify.dto.teamDto.TeamResponseDto;
-import com.sparta.sportify.dto.teamDto.TeamResponsePage;
+import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.DeleteResponseDto;
+import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
+import com.sparta.sportify.dto.teamDto.res.TeamResponsePage;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.TeamService;
 import com.sparta.sportify.util.api.ApiResult;
@@ -56,22 +57,24 @@ public class TeamController {
     @PatchMapping("/{teamId}")
     public ResponseEntity<ApiResult<TeamResponseDto>> updateTeam(
             @PathVariable Long teamid,
-            @RequestBody TeamRequestDto requestDto
+            @RequestBody TeamRequestDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl authUser
     ) {
         return new ResponseEntity<>(
                 ApiResult.success("팀 수정 완료",
-                        teamService.updateTeam(teamid, requestDto)),
+                        teamService.updateTeam(teamid, requestDto, authUser)),
                 HttpStatus.OK);
 
     }
 
     @DeleteMapping("/{teamId}")
-    public ResponseEntity<ApiResult<TeamResponseDto>> deleteMenu(
-            @PathVariable Long teamId
+    public ResponseEntity<ApiResult<DeleteResponseDto>> deleteMenu(
+            @PathVariable Long teamId,
+            @AuthenticationPrincipal UserDetailsImpl authUser
     ) {
         return new ResponseEntity<>(
                 ApiResult.success("팀 삭제 완료",
-                        teamService.deleteTeam(teamId)),
+                        teamService.deleteTeam(teamId, authUser)),
                 HttpStatus.OK);
 
     }
