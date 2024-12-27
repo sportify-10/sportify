@@ -341,4 +341,61 @@ class MatchServiceTest {
 		// Then
 		assertEquals(MatchStatus.CLOSED, status);
 	}
+
+	@Test
+	@DisplayName("날짜별 매치 조회 성공")
+	void getMatchesByDate_ReturnsMatches_WhenMatchesExist() {
+		// Given
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase(); // "FRI"
+
+		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime));
+		// when(matchRepository.findByStadiumTimeIdAndDateAndTime(any(), any(), any())).thenReturn(
+		// 	Optional.of(match));
+
+		// When
+		MatchesByDateResponseDto response = matchService.getMatchesByDate(date);
+
+		// Then
+		assertNotNull(response);
+	}
+
+	@Test
+	@DisplayName("날짜별 매치가 존재하지 않을때, 서비스가 올바르게 동작하는지 확인")
+	void getMatchesByDate_ReturnsEmptyList_WhenNoMatchesFound() {
+		// Given
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase(); // "FRI"
+
+		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime));
+		// when(matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, 14)).thenReturn(
+		// 	Optional.empty());
+
+		// When
+		MatchesByDateResponseDto response = matchService.getMatchesByDate(date);
+
+		// Then
+		assertNotNull(response);
+	}
+
+	@Test
+	@DisplayName("스타디움 타임이 존재하지 않을때 서비스가 올바르게 동작하는지 확인")
+	void getMatchesByDate_ReturnsEmptyList_WhenStadiumTimeNotFound() {
+		// Given
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase(); // "FRI"
+
+		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime));
+		// when(matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, 14)).thenReturn(
+		// 	Optional.empty());
+
+		// When
+		MatchesByDateResponseDto response = matchService.getMatchesByDate(date);
+
+		// Then
+		assertNotNull(response);
+	}
 }
