@@ -24,7 +24,6 @@ import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.matchResult.MatchResult;
-import com.sparta.sportify.entity.matchResult.MatchStatus;
 import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
@@ -81,9 +80,9 @@ public class MatchService {
 				pointChange = 5;
 			}
 
-			user.setLevelPoints(user.getLevelPoints() + pointChange);
-			userRepository.save(user);
-		});
+            user.addLevelPoint(pointChange);
+            userRepository.save(user);
+        });
 
 		// 경기 결과에 따른 팀 점수 부여
 		// 중복 없는 Team-Reservation 매핑을 Set으로 생성
