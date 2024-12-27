@@ -104,14 +104,16 @@ public class StadiumService {
 			() -> new CustomApiException(ErrorCode.NO_STADIUM_FOUND)
 		);
 
-		////스타디움 아이디로 스타디움 타임을 가진 매치 조회
-		Page<Match> matches = matchRepository.findByStadiumTimeStadiumId(stadiumId, pageable);
+		Page<Object[]> result = matchRepository.findMatchesWithTotalAmountByStadiumId(stadiumId,
+			ReservationStatus.CONFIRMED, pageable);
 
-		return matches.map(match -> {
-			//매치별 totalAmount 계산
-			//reservation에서 matchId를 가진 totalAmount 총합
-			Integer totalAmount = reservationRepository.findTotalAmountByMatchId(match.getId(),
-				ReservationStatus.CONFIRMED);
+		return result.map(objects -> {
+			Match match = (Match)objects[0];
+
+			Integer totalAmount = 0;
+			if (objects[1] != null) {
+				totalAmount = ((Long)objects[1]).intValue();
+			}
 
 			return new StadiumMatchResponseDto(
 				match.getStadiumTime().getStadium().getId(),

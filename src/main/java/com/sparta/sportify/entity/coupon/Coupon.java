@@ -1,5 +1,7 @@
 package com.sparta.sportify.entity.coupon;
 
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,7 +48,7 @@ public class Coupon {
 
     public void validateStockCount() {
         if (this.count < 1 || this.status == CouponStatus.EXPIRED) {
-            throw new IllegalArgumentException("만료된 쿠폰입니다.");
+            throw new CustomApiException(ErrorCode.EXPIRED_COUPON);
         }
     }
 }
