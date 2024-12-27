@@ -13,9 +13,10 @@ import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.util.cron.CronUtil;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -33,42 +34,42 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MatchService {
 
-	private static final String MATCH_DATE = "matchDate";
-	private final MatchResultRepository matchResultRepository;
-	private final StadiumTimeRepository stadiumTimeRepository;
-	private final MatchRepository matchRepository;
-	private final ReservationRepository reservationRepository;
-	private final UserRepository userRepository;
-	private final TeamRepository teamRepository;
+    private static final String MATCH_DATE = "matchDate";
+    private final MatchResultRepository matchResultRepository;
+    private final StadiumTimeRepository stadiumTimeRepository;
+    private final MatchRepository matchRepository;
+    private final ReservationRepository reservationRepository;
+    private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
 
-	@Transactional
-	public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
-		Match match = matchRepository.findById(requestDto.getMatchId())
-			.orElseThrow(() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND));
+    @Transactional
+    public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
+        Match match = matchRepository.findById(requestDto.getMatchId())
+                .orElseThrow(() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND));
 
-		MatchResult matchResult = MatchResult.builder()
-			.teamAScore(requestDto.getTeamAScore())
-			.teamBScore(requestDto.getTeamBScore())
-			.match(match)
-			.matchStatus(requestDto.getMatchStatus())
-			.matchDate(LocalDate.now())
-			.build();
+        MatchResult matchResult = MatchResult.builder()
+                .teamAScore(requestDto.getTeamAScore())
+                .teamBScore(requestDto.getTeamBScore())
+                .match(match)
+                .matchStatus(requestDto.getMatchStatus())
+                .matchDate(LocalDate.now())
+                .build();
 
-		MatchResult savedResult = matchResultRepository.save(matchResult);
+        MatchResult savedResult = matchResultRepository.save(matchResult);
 
-		// 경기 결과에 따른 개인 점수 부여
-		List<Reservation> reservations = reservationRepository.findAllByMatch(match);
-		reservations.forEach(reservation -> {
-			User user = reservation.getUser();
-			int pointChange = 0;
+        // 경기 결과에 따른 개인 점수 부여
+        List<Reservation> reservations = reservationRepository.findAllByMatch(match);
+        reservations.forEach(reservation -> {
+            User user = reservation.getUser();
+            int pointChange = 0;
 
-			if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
-				pointChange = (reservation.getTeamColor() == TeamColor.A) ? 10 : -10;
-			} else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
-				pointChange = (reservation.getTeamColor() == TeamColor.B) ? 10 : -10;
-			} else {
-				pointChange = 5;
-			}
+            if (requestDto.getTeamAScore() > requestDto.getTeamBScore()) {
+                pointChange = (reservation.getTeamColor() == TeamColor.A) ? 10 : -10;
+            } else if (requestDto.getTeamBScore() > requestDto.getTeamAScore()) {
+                pointChange = (reservation.getTeamColor() == TeamColor.B) ? 10 : -10;
+            } else {
+                pointChange = 5;
+            }
 
             user.addLevelPoint(pointChange);
             userRepository.save(user);
@@ -115,27 +116,27 @@ public class MatchService {
         );
     }
 
-	@Transactional(readOnly = true)
-	public MatchResultResponseDto getMatchResult(Long matchId) {
-		MatchResult matchResult = matchResultRepository.findByMatchId(matchId)
-			.orElseThrow(() -> new CustomApiException(ErrorCode.MATCHRESULT_NOT_FOUND));
+    @Transactional(readOnly = true)
+    public MatchResultResponseDto getMatchResult(Long matchId) {
+        MatchResult matchResult = matchResultRepository.findByMatchId(matchId)
+                .orElseThrow(() -> new CustomApiException(ErrorCode.MATCHRESULT_NOT_FOUND));
 
-		return new MatchResultResponseDto(
-			matchResult.getId(),
-			matchResult.getTeamAScore(),
-			matchResult.getTeamBScore(),
-			matchResult.getMatchStatus(),
-			matchResult.getMatchDate()
-		);
-	}
+        return new MatchResultResponseDto(
+                matchResult.getId(),
+                matchResult.getTeamAScore(),
+                matchResult.getTeamBScore(),
+                matchResult.getMatchStatus(),
+                matchResult.getMatchDate()
+        );
+    }
 
     @Cacheable(cacheNames = MATCH_DATE, key = "#date.toString()")
     public MatchesByDateResponseDto getMatchesByDate(LocalDate date) {
         DayOfWeek dayOfWeek = date.getDayOfWeek();
         String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase();
 
-		//FULLTEXT 검색
-		List<StadiumTime> stadiumTimes = stadiumTimeRepository.findByCronDay(cronDay);
+        //FULLTEXT 검색
+        List<StadiumTime> stadiumTimes = stadiumTimeRepository.findByCronDay(cronDay);
 
         List<MatchByStadiumResponseDto> matches = stadiumTimes.stream()
                 // 크론식에 해당 요일이 포함된 경우만 필터링
@@ -179,20 +180,20 @@ public class MatchService {
                 .sorted(Comparator.comparing(MatchByStadiumResponseDto::getStartTime)) // 시작 시간으로 정렬
                 .collect(Collectors.toList());  // 결과를 List로 수집
 
-		return new MatchesByDateResponseDto(matches);
-	}
+        return new MatchesByDateResponseDto(matches);
+    }
 
-	// 매치 단건 조회
-	@Transactional(readOnly = true)
-	public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time,
-		LocalDateTime now) {
-		// 매치 조회
-		StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId).orElseThrow(
-			() -> new CustomApiException(ErrorCode.STADIUMTIME_NOT_FOUND)
-		);
-		Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time).orElseThrow(
-			() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND)
-		);
+    // 매치 단건 조회
+    @Transactional(readOnly = true)
+    public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time,
+                                                        LocalDateTime now) {
+        // 매치 조회
+        StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId).orElseThrow(
+                () -> new CustomApiException(ErrorCode.STADIUMTIME_NOT_FOUND)
+        );
+        Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time).orElseThrow(
+                () -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND)
+        );
 
         // 매치 상태 결정
         MatchStatus status = determineMatchStatus(match, now);
