@@ -15,6 +15,8 @@ import com.sparta.sportify.entity.stadium.StadiumStatus;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.ReservationService;
@@ -157,11 +159,12 @@ public class ReservationServiceTest {
 
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(teststadiumTime));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        CustomApiException exception = assertThrows(CustomApiException.class, () ->
                 reservationService.reservationPersonal(requestDto, authUser)
         );
 
-        assertEquals("구장 운영시간이 맞지 않습니다.", exception.getMessage());
+        assertEquals(ErrorCode.INVALID_OPERATION_TIME, exception.getErrorCode());
+
         verify(reservationRepository, never()).save(any(Reservation.class)); // save 메서드가 호출되지 않아야 한다
     }
 
@@ -174,11 +177,11 @@ public class ReservationServiceTest {
                 .thenReturn(true);
         when(stadiumTimeRepository.findById(1L)).thenReturn(java.util.Optional.of(stadiumTime));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        CustomApiException exception = assertThrows(CustomApiException.class, () ->
                 reservationService.reservationPersonal(requestDto, authUser)
         );
 
-        assertEquals("이미 중복된 시간에 예약을 하였습니다.", exception.getMessage());
+        assertEquals(ErrorCode.DUPLICATE_RESERVATION, exception.getErrorCode());
         verify(reservationRepository, never()).save(any(Reservation.class));
     }
 
