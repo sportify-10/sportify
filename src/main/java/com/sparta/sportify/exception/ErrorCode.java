@@ -53,7 +53,13 @@ public enum ErrorCode {
     INSUFFICIENT_PERMISSION(403, "팀을 수정할 권한이 없습니다"),
     ALREADY_MEMBER(400, "이미 해당 팀에 가입되어 있습니다"),
     NOT_TEAM_MEMBER(403, "팀원이 아닙니다"),
-    APPLICATION_NOT_FOUND(404, "신청 내역이 없습니다");
+    APPLICATION_NOT_FOUND(404, "신청 내역이 없습니다"),
+	CASH_LOG_NOT_FOUND(404, "캐시 사용 내역이 없습니다."),
+	MATCH_NOT_FOUND(404, "경기를 찾을 수 없습니다."),
+	RESERVATION_NOT_FOUND_FOR_TEAM(404, "팀에 대한 예약을 찾을 수 없습니다."),
+	MATCHRESULT_NOT_FOUND(404, "경기 결과를 찾을 수 없습니다."),
+	STADIUMTIME_NOT_FOUND(404, "경기 시간을 찾을 수 없습니다"),
+	ERR_USER_LIMIT_EXCEEDED(429, "인원수가 초과되었습니다.");
 
     private final int status;
     private final String message;

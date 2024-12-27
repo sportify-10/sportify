@@ -13,9 +13,10 @@ import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.util.cron.CronUtil;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class MatchService {
     @Transactional
     public MatchResultResponseDto createMatchResult(MatchResultRequestDto requestDto) {
         Match match = matchRepository.findById(requestDto.getMatchId())
-                .orElseThrow(() -> new EntityNotFoundException("경기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND));
 
         MatchResult matchResult = MatchResult.builder()
                 .teamAScore(requestDto.getTeamAScore())
@@ -118,7 +119,7 @@ public class MatchService {
     @Transactional(readOnly = true)
     public MatchResultResponseDto getMatchResult(Long matchId) {
         MatchResult matchResult = matchResultRepository.findByMatchId(matchId)
-                .orElseThrow(() -> new EntityNotFoundException("경기 결과를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.MATCHRESULT_NOT_FOUND));
 
         return new MatchResultResponseDto(
                 matchResult.getId(),
@@ -182,17 +183,16 @@ public class MatchService {
         return new MatchesByDateResponseDto(matches);
     }
 
-
     // 매치 단건 조회
     @Transactional(readOnly = true)
     public MatchDetailResponseDto getMatchByDateAndTime(Long stadiumId, LocalDate date, Integer time,
                                                         LocalDateTime now) {
         // 매치 조회
         StadiumTime stadiumTime = stadiumTimeRepository.findByStadiumId(stadiumId).orElseThrow(
-                () -> new EntityNotFoundException("해당 경기장에 대한 경기 시간 정보를 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.STADIUMTIME_NOT_FOUND)
         );
         Match match = matchRepository.findByStadiumTimeIdAndDateAndTime(stadiumTime.getId(), date, time).orElseThrow(
-                () -> new EntityNotFoundException("해당 날짜와 시간에 매치가 존재하지 않습니다.")
+                () -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND)
         );
 
         // 매치 상태 결정

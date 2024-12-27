@@ -7,10 +7,14 @@ import com.sparta.sportify.dto.kakaoPay.request.KakaoPayApproveRequestDto;
 import com.sparta.sportify.dto.kakaoPay.response.KakaoPayReadyResponseDto;
 import com.sparta.sportify.entity.cashLog.CashLog;
 import com.sparta.sportify.entity.cashLog.CashType;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -99,9 +103,9 @@ public class CashService {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<CashLog> cashLogs = cashLogRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
 
-        if (cashLogs.isEmpty()) {
-            throw new IllegalArgumentException("캐시 사용 내역이 없습니다");
-        }
+		if (cashLogs.isEmpty()) {
+			throw new CustomApiException(ErrorCode.CASH_LOG_NOT_FOUND);
+		}
 
         return cashLogs.map(cashLog -> new CashLogsResponseDto(
                 cashLog.getPrice(),
