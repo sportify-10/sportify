@@ -11,12 +11,14 @@ import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.stadium.StadiumStatus;
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.StadiumService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +54,6 @@ class StadiumServiceTest {
 
 	@Mock
 	private StadiumTimeRepository stadiumTimeRepository;
-
 
 	private StadiumCreateRequestDto stadiumCreateRequestDto;
 	private StadiumUpdateRequestDto stadiumUpdateRequestDto;
@@ -145,7 +146,7 @@ class StadiumServiceTest {
 		when(stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName()))
 			.thenReturn(Optional.of(new Stadium()));
 
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.createStadium(stadiumCreateRequestDto, userDetails);
 		});
 
@@ -170,7 +171,7 @@ class StadiumServiceTest {
 	@DisplayName("구장 존재하지 않아 에러")
 	void notFoundStadium() {
 		when(stadiumRepository.findById(stadium.getId())).thenReturn(Optional.empty());
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.updateStadium(stadium.getId(), stadiumUpdateRequestDto, userDetails);
 		});
 
@@ -181,7 +182,7 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 주인이 아닌 사람의 수정 요청 시 에러")
 	void notOwnerStadium() {
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.updateStadium(stadium.getId(), stadiumUpdateRequestDto, notUserDetails);
 		});
 
@@ -200,7 +201,7 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 주인이 아닌 사람의 삭제 요청 시 에러")
 	void notOwnerDeleteStadium() {
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.deleteStadium(stadium.getId(), notUserDetails);
 		});
 
@@ -242,7 +243,7 @@ class StadiumServiceTest {
 		Page<Stadium> stadiumPage = Page.empty();
 		when(stadiumRepository.findAllByUserId(any(Long.class), any(Pageable.class))).thenReturn(stadiumPage);
 
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+		Exception exception = assertThrows(CustomApiException.class, () -> {
 			stadiumService.getStadiums(userDetails, 1, 10);
 		});
 

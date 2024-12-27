@@ -15,6 +15,9 @@ import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.reservation.ReservationStatus;
 import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.CustomJwtException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumRepository;
@@ -29,11 +32,12 @@ public class StadiumService {
 	private final MatchRepository matchRepository;
 	private final ReservationRepository reservationRepository;
 
-	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto) {
+	public StadiumResponseDto createStadium(StadiumCreateRequestDto stadiumCreateRequestDto,
+		UserDetailsImpl userDetails) {
 		Optional<Stadium> stadiumName = stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName());
 
 		if (stadiumName.isPresent()) {
-			throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
+			throw new CustomApiException(ErrorCode.STADIUM_NAME_ALREADY_EXISTS);
 		}
 
 		Stadium stadium = Stadium.builder()
@@ -43,6 +47,7 @@ public class StadiumService {
 			.bTeamCount(stadiumCreateRequestDto.getBTeamCount())
 			.description(stadiumCreateRequestDto.getDescription())
 			.price(stadiumCreateRequestDto.getPrice())
+			.user(userDetails.getUser())
 			.build();
 		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
@@ -51,7 +56,7 @@ public class StadiumService {
 		Pageable pageable = PageRequest.of(page - 1, size);
 		Page<Stadium> stadiums = stadiumRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
 		if (stadiums.isEmpty()) {
-			throw new IllegalArgumentException("등록한 구장이 없습니다");
+			throw new CustomApiException(ErrorCode.NO_REGISTERED_STADIUM);
 		}
 
 		return stadiums.map(StadiumResponseDto::new);
@@ -61,11 +66,11 @@ public class StadiumService {
 	public StadiumResponseDto updateStadium(Long stadiumId, StadiumUpdateRequestDto stadiumUpdateRequestDto,
 		UserDetailsImpl userDetails) {
 		Stadium stadium = stadiumRepository.findById(stadiumId).orElseThrow(
-			() -> new IllegalArgumentException("구장이 존재하지 않습니다")
+			() -> new CustomApiException(ErrorCode.NO_STADIUM_FOUND)
 		);
 
 		if (!userDetails.getUser().getId().equals(stadium.getUser().getId())) {
-			throw new IllegalArgumentException("자신의 구장만 수정 가능합니다");
+			throw new CustomApiException(ErrorCode.ONLY_OWN_STADIUM_CAN_BE_MODIFIED);
 		}
 
 		stadium.updateOf(
@@ -83,10 +88,10 @@ public class StadiumService {
 	@Transactional
 	public StadiumResponseDto deleteStadium(Long stadiumId, UserDetailsImpl userDetails) {
 		Stadium stadium = stadiumRepository.findById(stadiumId)
-			.orElseThrow(() -> new IllegalArgumentException("구장이 존재하지 않습니다"));
+			.orElseThrow(() -> new CustomApiException(ErrorCode.NO_STADIUM_FOUND));
 
 		if (!userDetails.getUser().getId().equals(stadium.getUser().getId())) {
-			throw new IllegalArgumentException("자신의 구장만 삭제 가능합니다");
+			throw new CustomApiException(ErrorCode.ONLY_OWN_STADIUM_CAN_BE_DELETED);
 		}
 
 		stadium.deleteOf();
@@ -96,7 +101,7 @@ public class StadiumService {
 	public Page<StadiumMatchResponseDto> findMatchesByStadium(Long stadiumId, int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size);
 		stadiumRepository.findById(stadiumId).orElseThrow(
-			() -> new IllegalArgumentException("구장이 존재하지 않습니다")
+			() -> new CustomApiException(ErrorCode.NO_STADIUM_FOUND)
 		);
 
 		Page<Object[]> result = matchRepository.findMatchesWithTotalAmountByStadiumId(stadiumId,
