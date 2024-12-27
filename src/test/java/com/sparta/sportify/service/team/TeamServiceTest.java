@@ -1,6 +1,7 @@
 package com.sparta.sportify.service.team;
 
 import com.sparta.sportify.dto.teamDto.req.TeamRequestDto;
+import com.sparta.sportify.dto.teamDto.res.DeleteResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamResponseDto;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
@@ -135,7 +136,7 @@ class TeamServiceTest {
         when(teamRepository.findById(1L)).thenReturn(Optional.of(existingTeam));
 
         // When
-        TeamResponseDto responseDto = teamService.updateTeam(1L, requestDto);
+        TeamResponseDto responseDto = teamService.updateTeam(1L, requestDto, userDetails);
 
         // Then
         assertNotNull(responseDto);
@@ -152,7 +153,7 @@ class TeamServiceTest {
         when(teamRepository.findById(1L)).thenReturn(Optional.of(existingTeam));
 
         // When
-        TeamResponseDto responseDto = teamService.deleteTeam(1L);
+        DeleteResponseDto responseDto = teamService.deleteTeam(1L, userDetails);
 
         // Then
         assertNotNull(responseDto);
