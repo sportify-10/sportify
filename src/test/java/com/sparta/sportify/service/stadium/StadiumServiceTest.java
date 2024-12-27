@@ -254,23 +254,34 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장에 예약된 매치 조회")
 	void findMatchesByStadium() {
-		when(matchRepository.findByStadiumTimeStadiumId(eq(1L), any(Pageable.class)))
-			.thenReturn(new PageImpl<>(List.of(match)));
-		when(reservationRepository.findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED)))
-			.thenReturn(10000); // 예약 총합
+		// Mock 데이터 설정
+		List<Object[]> content = List.of(
+			new Object[] {match, 10000L}, // Match 객체와 총 금액
+			new Object[] {match, null}   // 금액이 없을 때의 처리
+		);
 
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Object[]> pageResult = new PageImpl<>(content, pageable, content.size());
+
+		when(matchRepository.findMatchesWithTotalAmountByStadiumId(eq(1L), eq(ReservationStatus.CONFIRMED),
+			any(Pageable.class)))
+			.thenReturn(pageResult);
+
+		// 테스트 실행
 		Page<StadiumMatchResponseDto> result = stadiumService.findMatchesByStadium(1L, 1, 10);
 
 		// 검증
-		assertEquals(1, result.getTotalElements());
+		assertEquals(2, result.getTotalElements());
+
 		StadiumMatchResponseDto responseDto = result.getContent().get(0);
 		assertEquals("Dream Stadium", responseDto.getStadiumName());
 		assertEquals(10000, responseDto.getTotalAmount());
 		assertEquals(5, responseDto.getTeamAmount());
 		assertEquals(5, responseDto.getTeamBCount());
 
+		// Verify 호출 횟수
 		verify(stadiumRepository, times(1)).findById(1L);
-		verify(matchRepository, times(1)).findByStadiumTimeStadiumId(eq(1L), any(Pageable.class));
-		verify(reservationRepository, times(1)).findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED));
+		verify(matchRepository, times(1)).findMatchesWithTotalAmountByStadiumId(eq(1L), eq(ReservationStatus.CONFIRMED),
+			any(Pageable.class));
 	}
 }
