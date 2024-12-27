@@ -1,7 +1,9 @@
 package com.sparta.sportify.service.teamMember;
 
 import com.sparta.sportify.dto.teamDto.req.ApproveRequestDto;
+import com.sparta.sportify.dto.teamDto.req.RoleRequestDto;
 import com.sparta.sportify.dto.teamDto.res.ApproveResponseDto;
+import com.sparta.sportify.dto.teamDto.res.RoleResponseDto;
 import com.sparta.sportify.dto.teamDto.res.TeamMemberResponsePage;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.teamMember.TeamMember;
@@ -166,7 +168,7 @@ class TeamMemberServiceTest {
         user1.setId(2L);
         user1.setRole(UserRole.USER);
         user1.setCash(200000L);
-        userDetails = new UserDetailsImpl("user",user1.getRole(),user1);
+        userDetails = new UserDetailsImpl("user", user1.getRole(), user1);
         TeamMember approveMember = TeamMember.builder()
                 .user(userDetails.getUser())
                 .team(team)
@@ -179,7 +181,7 @@ class TeamMemberServiceTest {
 
         when(teamRepository.findById(team.getId())).thenReturn(Optional.of(team));
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(teamMemberRepository.findByUserAndTeam(any(),any()))
+        when(teamMemberRepository.findByUserAndTeam(any(), any()))
                 .thenReturn(Optional.of(approveMember))
                 .thenReturn(Optional.of(applyMember));
 
@@ -196,6 +198,7 @@ class TeamMemberServiceTest {
         assertEquals(user.getId(), responseDto.getUserId());
         assertTrue(responseDto.isApprove());
     }
+
     @Test
     @DisplayName("팀 멤버 승인 - 멤버 없음 예외")
     void approveTeamMember_TeamMemberNotFound_ShouldThrowException() {
@@ -206,13 +209,44 @@ class TeamMemberServiceTest {
 
         // When & Then
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-            teamMemberService.approveOrRejectApplication(team.getId(),userDetails, approveRequestDto);
+            teamMemberService.approveOrRejectApplication(team.getId(), userDetails, approveRequestDto);
         });
 
         assertEquals("팀원이 아닙니다", thrown.getMessage());
         verify(teamMemberRepository, times(1)).findByUserIdAndTeamId(user.getId(), team.getId());
     }
 
+
+    @Test
+    @DisplayName("권한 부여 성공 테스트")
+    void grantRole_Success() {
+        // given
+        Long teamId = 1L;
+        Long userId = 2L;
+        RoleRequestDto requestDto = new RoleRequestDto(userId, "TEAM_MANAGER");
+
+        User authUserEntity = new User();
+        authUserEntity.setId(3L);
+        when(userDetails.getUser()).thenReturn(authUserEntity);
+
+        TeamMember requester = new TeamMember();
+        requester.grantRole(TeamMemberRole.TEAM_OWNER);
+        when(teamMemberRepository.findByUserIdAndTeamId(authUserEntity.getId(), teamId))
+                .thenReturn(Optional.of(requester));
+
+        TeamMember targetMember = new TeamMember();
+        targetMember.grantRole(TeamMemberRole.USER);
+        when(teamMemberRepository.findByUserIdAndTeamId(userId, teamId))
+                .thenReturn(Optional.of(targetMember));
+
+        // when
+        RoleResponseDto responseDto = teamMemberService.grantRole(teamId, requestDto, userDetails);
+
+        // then
+        assertEquals(userId, responseDto.getUserId());
+        assertEquals("TEAM_MANAGER", responseDto.getRole());
+        verify(teamMemberRepository).save(targetMember);
+    }
 //    @Test
 //    @DisplayName("팀 멤버 권한 부여 - 성공")
 //    void assignRoleToTeamMember_ShouldSucceed() {
