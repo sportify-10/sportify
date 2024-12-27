@@ -1,19 +1,14 @@
 package com.sparta.sportify.jwt;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenProvider {
@@ -43,22 +38,23 @@ public class JwtTokenProvider {
             UserRole role = UserRole.valueOf(roleString);
 
             // 데이터베이스에서 사용자 조회
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+            User user = userRepository.findByEmail(email).orElseThrow(
+                    () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
+            );
 
             // UserDetailsImpl로 유저 정보 반환
             return new UserDetailsImpl(user.getEmail(), role, user);
 
         } catch (ExpiredJwtException e) {
-            throw new IllegalArgumentException("Token has expired", e);
+            throw new CustomApiException(ErrorCode.TOKEN_EXPIRED);
         } catch (UnsupportedJwtException e) {
-            throw new IllegalArgumentException("Unsupported JWT token", e);
+            throw new CustomApiException(ErrorCode.UNSUPPORTED_JWT_TOKEN);
         } catch (MalformedJwtException e) {
-            throw new IllegalArgumentException("Invalid JWT structure", e);
+            throw new CustomApiException(ErrorCode.INVALID_TOKEN);
         } catch (SignatureException e) {
-            throw new IllegalArgumentException("Invalid token signature", e);
+            throw new CustomApiException(ErrorCode.INVALID_TOKEN_SIGNATURE);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Token parsing error", e);
+            throw new CustomApiException(ErrorCode.TOKEN_PARSING_ERROR);
         }
     }
 }

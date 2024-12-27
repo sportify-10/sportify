@@ -60,9 +60,7 @@ class TeamServiceTest {
                 .build();
 
         // Mock User 객체 생성
-        user = new User();
-        user.setId(1L);
-        user.setCash(200000L);
+        user = User.builder().id(2L).cash(20000L).build();
 
     }
 

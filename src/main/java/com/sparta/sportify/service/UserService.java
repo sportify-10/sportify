@@ -1,11 +1,21 @@
 package com.sparta.sportify.service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.sparta.sportify.config.PasswordEncoder;
+import com.sparta.sportify.dto.user.req.LoginRequestDto;
+import com.sparta.sportify.dto.user.req.UserRequestDto;
+import com.sparta.sportify.dto.user.res.SignupResponseDto;
 import com.sparta.sportify.dto.user.res.UserDeleteResponseDto;
+import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
+import com.sparta.sportify.entity.teamMember.TeamMember;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
+import com.sparta.sportify.jwt.JwtUtil;
+import com.sparta.sportify.repository.TeamMemberRepository;
+import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -14,20 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sparta.sportify.config.PasswordEncoder;
-import com.sparta.sportify.dto.user.req.LoginRequestDto;
-import com.sparta.sportify.dto.user.req.UserRequestDto;
-import com.sparta.sportify.dto.user.res.SignupResponseDto;
-import com.sparta.sportify.dto.user.res.UserTeamResponseDto;
-import com.sparta.sportify.entity.teamMember.TeamMember;
-import com.sparta.sportify.entity.user.User;
-import com.sparta.sportify.entity.user.UserRole;
-import com.sparta.sportify.jwt.JwtUtil;
-import com.sparta.sportify.repository.TeamMemberRepository;
-import com.sparta.sportify.repository.UserRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ public class UserService {
     public User signup(UserRequestDto requestDto, UserRole role) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("중복된 이메일이 존재합니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         // 비밀번호 암호화
@@ -51,7 +51,7 @@ public class UserService {
 
 
         // User 객체 생성
-        User user = userRepository.save( User.builder()
+        User user = userRepository.save(User.builder()
                 .email(requestDto.getEmail())
                 .name(requestDto.getName())
                 .password(encodedPassword)
@@ -67,12 +67,13 @@ public class UserService {
     // 로그인
     public String login(LoginRequestDto requestDto) {
         // 이메일로 유저 검색
-        User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+        User user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(
+                () -> new CustomApiException(ErrorCode.INVALID_EMAIL)
+        );
 
         // 비밀번호 확인
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CustomApiException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         // JWT 토큰 생성 및 반환 (Bearer 형식 포함)
@@ -83,8 +84,9 @@ public class UserService {
     @Cacheable(value = "userCache", key = "#userId")
     public SignupResponseDto getUserById(Long userId) {
         // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
+        );
 
         // 유저 정보 DTO로 변환 후 응답 반환
         return new SignupResponseDto(user, null);  // 수정된 부분: SignupResponseDto 생성자로 변환
@@ -94,8 +96,9 @@ public class UserService {
     @Transactional
     public UserDeleteResponseDto deactivateUser(Long userId) {
         // 요청한 사용자 ID가 존재하는지 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
+        );
 
         // 사용자 비활성화
         user.disableUser();
@@ -106,10 +109,10 @@ public class UserService {
     }
 
 
-    public void updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
+    public SignupResponseDto updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
 
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
-            throw new RuntimeException("이메일이 중복되었습니다.");
+            throw new CustomApiException(ErrorCode.DUPLICATE_EMAIL);
         }
         String encodedPassword;
 
@@ -117,17 +120,20 @@ public class UserService {
         if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
             // 비밀번호를 암호화해서 저장
             encodedPassword = passwordEncoder.encode(requestDto.getPassword());
-            userDetails.getUser().setPassword(encodedPassword);
+            userDetails.getUser().updatePassword(encodedPassword);
         }
 
         // 수정 가능한 필드만 업데이트
-        userDetails.getUser().setName(requestDto.getName());
-        userDetails.getUser().setRegion(requestDto.getRegion());
-        userDetails.getUser().setAge(requestDto.getAge());
-        userDetails.getUser().setGender(requestDto.getGender());
+        userDetails.getUser().updateOf(
+                requestDto.getName(),
+                requestDto.getRegion(),
+                requestDto.getRegion(),
+                requestDto.getGender()
+        );
 
         // 변경된 유저 정보 저장
-        userRepository.save(userDetails.getUser());
+
+        return new SignupResponseDto(userRepository.save(userDetails.getUser()));
     }
 
     // 카카오 로그인 혹은 회원가입 처리
@@ -138,12 +144,14 @@ public class UserService {
 
         if (user == null) {
             // 카카오에서 받은 정보로 회원가입 처리
-            UserRequestDto userRequestDto = new UserRequestDto();
-            userRequestDto.setEmail(email);
-            userRequestDto.setName((String) userInfo.get("name"));
-            userRequestDto.setRegion((String) userInfo.get("region"));
-            userRequestDto.setGender((String) userInfo.get("gender"));
-            userRequestDto.setAge((Long) userInfo.get("age"));
+            UserRequestDto userRequestDto = UserRequestDto.builder()
+                    .email(email)
+                    .name((String) userInfo.get("name"))
+                    .region((String) userInfo.get("region"))
+                    .gender((String) userInfo.get("gender"))
+                    .age((Long) userInfo.get("age"))
+                    .build();
+
             user = signup(userRequestDto, UserRole.USER);
         }
 
@@ -159,19 +167,19 @@ public class UserService {
         //teamMember 상태 APPROVED 만 조회
         Page<TeamMember> teamMembers = teamMemberRepository.findTeams(userDetails.getUser().getId(), pageable);
 
-        if(teamMembers.isEmpty()) {
-            throw new IllegalArgumentException("가입되어 있는 팀이 없습니다");
+        if (teamMembers.isEmpty()) {
+            throw new CustomApiException(ErrorCode.TEAM_NOT_REGISTERED);
         }
 
         return teamMembers.map(teamMember -> new UserTeamResponseDto(
-            teamMember.getTeam().getId(),
-            teamMember.getTeam().getTeamName(),
-            teamMember.getTeam().getRegion(),
-            teamMember.getTeam().getActivityTime(),
-            teamMember.getTeam().getSkillLevel(),
-            teamMember.getTeam().getSportType(),
-            teamMember.getTeam().getTeamPoints(),
-            Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
+                teamMember.getTeam().getId(),
+                teamMember.getTeam().getTeamName(),
+                teamMember.getTeam().getRegion(),
+                teamMember.getTeam().getActivityTime(),
+                teamMember.getTeam().getSkillLevel(),
+                teamMember.getTeam().getSportType(),
+                teamMember.getTeam().getTeamPoints(),
+                Double.parseDouble(String.format("%.2f", teamMember.getTeam().getWinRate())) //0.xx
         ));
     }
 
@@ -183,8 +191,8 @@ public class UserService {
             return new PageImpl<>(Collections.emptyList(), pageable, 0); // 사용자 목록이 비어있을 경우 빈 페이지 반환
         }
         List<SignupResponseDto> users = userPage.getContent().stream()
-            .map(user -> new SignupResponseDto(user, user.getAccessToken()))
-            .collect(Collectors.toList());
+                .map(user -> new SignupResponseDto(user, user.getAccessToken()))
+                .collect(Collectors.toList());
 
         return new PageImpl<>(users, pageable, userPage.getTotalElements());
     }
