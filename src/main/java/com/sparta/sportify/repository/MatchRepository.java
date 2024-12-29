@@ -20,12 +20,13 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     Page<Match> findByStadiumTimeStadiumId(Long stadiumId, Pageable pageable);
 
 
-    //List<Match> findMatchesByStartTimeBetween(LocalDateTime start, LocalDateTime end);
-    @Query("SELECT m FROM Match m WHERE m.startTime BETWEEN :start AND :end")
-    List<Match> findMatchesByStartTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    // 특정 시간 범위에 시작하는 경기 찾기 (time과 date를 기반으로 startTime 계산)
+    @Query("SELECT m FROM Match m WHERE " +
+            "FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', m.time * 3600)) BETWEEN :start AND :end " +
+            "OR FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', (m.time + 2) * 3600)) BETWEEN :start AND :end")
+    List<Match> findMatchesByStartTimeBetween(@Param("start") LocalDateTime start,
+                                              @Param("end") LocalDateTime end);
 
-    @Query("SELECT m FROM Match m WHERE m.startingAt = :startingAt")
-    List<Match> findMatchesStartingAt(@Param("startingAt") LocalDateTime startingAt);
 
 
 }

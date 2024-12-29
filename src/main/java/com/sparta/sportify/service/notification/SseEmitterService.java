@@ -1,5 +1,6 @@
 package com.sparta.sportify.service.notification;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -26,7 +27,8 @@ public class SseEmitterService {
         return emitter;
     }
 
-    // 연결된 모든 클라이언트에 메시지 전송
+    // 연결된 모든 클라이언트에 메시지 전송 (비동기 처리)
+    @Async
     public void sendToAll(String message) {
         for (SseEmitter emitter : emitters) {
             try {

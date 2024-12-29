@@ -3,7 +3,6 @@ package com.sparta.sportify.service.notification;
 import com.sparta.sportify.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -36,16 +35,18 @@ public class NotificationController {
     }
 
     // DB에 저장된 알림 조회
+
     @GetMapping("/notifications/history")
     public ResponseEntity<List<NotificationResponseDto>> getNotifications() {
         List<NotificationResponseDto> notifications = notificationRepository.findAll()
                 .stream()
                 .map(notification -> new NotificationResponseDto(
-                        notification.getId(),
-                        notification.getMessage(),
-                        notification.getTimestamp()
+                        notification.getId(),                   // 엔티티의 ID 필드
+                        notification.getMessage(),              // 메시지 필드 (변경된 필드명)
+                        notification.getCreatedAt()             // 생성 시간 필드 (변경된 필드명)
                 ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(notifications);
     }
+
 }

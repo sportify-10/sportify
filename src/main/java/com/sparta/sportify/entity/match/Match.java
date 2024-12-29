@@ -62,8 +62,9 @@ public class Match {
         this.bTeamCount += count;
     }
 
-    private LocalDateTime startTime;
+
     private LocalDateTime startingAt;
+
 
     public LocalDateTime getStartTime() {
         String timeString = String.format("%02d:00", time);
