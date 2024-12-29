@@ -66,8 +66,9 @@ public class Match {
 	}
 
 
-    private LocalDateTime startTime;
+
     private LocalDateTime startingAt;
+
 
     public LocalDateTime getStartTime() {
         String timeString = String.format("%02d:00", time);

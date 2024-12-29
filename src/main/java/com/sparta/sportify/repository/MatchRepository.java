@@ -33,5 +33,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 	Page<Object[]> findMatchesWithTotalAmountByStadiumId(Long stadiumId, ReservationStatus status, Pageable pageable);
 }
 
+    
 
 

@@ -10,5 +10,5 @@ import java.time.LocalDateTime;
 public class NotificationResponseDto {
     private Long id;
     private String message;
-    private LocalDateTime timestamp;
+    private LocalDateTime createdAt;
 }

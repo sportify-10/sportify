@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 
 import java.time.LocalDateTime;
@@ -19,7 +21,6 @@ public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notification_id")
     private Long id;
 
     @Column(name = "type", nullable = false)
@@ -35,9 +36,11 @@ public class Notification {
     @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
@@ -46,16 +49,6 @@ public class Notification {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.modifiedAt = LocalDateTime.now();
-    }
 
     public enum NotificationStatus {
         PENDING,
