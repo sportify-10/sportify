@@ -22,7 +22,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "matchs")
+@Table(name = "matches")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -53,6 +53,7 @@ dependencies {
     implementation 'org.apache.kafka:kafka-clients'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.apache.kafka:kafka-streams:3.4.0'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'com.fasterxml.jackson.core:jackson-databind'

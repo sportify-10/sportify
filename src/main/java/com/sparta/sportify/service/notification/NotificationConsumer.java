@@ -56,18 +56,20 @@ public class NotificationConsumer {
     // 메시지에서 userId를 추출하는 메서드
     private Long extractUserIdFromMessage(String message) {
         try {
-            // 메시지가 JSON 형식일 경우
             JsonNode rootNode = objectMapper.readTree(message); // JSON 파싱
             JsonNode userIdNode = rootNode.path("userId"); // userId 추출
 
             if (!userIdNode.isMissingNode()) {
                 return userIdNode.asLong(); // userId가 있으면 반환
+            } else {
+                log.warn("User ID is missing in the message, using default value.");
+                return -1L; // 기본값으로 -1을 사용 (예시)
             }
         } catch (IOException e) {
-            log.warn("Error parsing message to extract userId (may not be in JSON format): {}", message, e);
+            log.error("Error parsing message to extract userId: {}", message, e);
         }
-
-        // 메시지가 JSON 형식이 아니라면 기본값을 반환하거나 다른 방법으로 처리
         return null; // userId가 없거나 파싱 오류 발생 시 null 반환
     }
+
+
 }
