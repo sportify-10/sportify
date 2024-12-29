@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService {
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private static final String TOPIC_NAME = "match-notification";
+    private static final String TOPIC_NAME = "match-notifications";
 
     public void sendMatchNotification(String key, String message) {
         kafkaTemplate.send(TOPIC_NAME, key, message);
