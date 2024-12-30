@@ -143,7 +143,7 @@ public class MatchService {
                 .filter(stadiumTime -> stadiumTime.getCron().contains(cronDay))
                 .flatMap(stadiumTime -> {
                     String cron = stadiumTime.getCron();
-                    List<Integer> startTimeList = CronUtil.extractStartTimes(cron, cronDay);
+                    List<Integer> startTimeList = CronUtil.extractStartTimes(cron);
 
                     // 각 startTime에 대해 매치를 찾고, 매치 정보로 변환
                     return startTimeList.stream()
