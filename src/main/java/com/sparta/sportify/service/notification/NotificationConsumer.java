@@ -12,42 +12,46 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationConsumer {
 
-    private final SseEmitterService sseEmitterService;
-    private final NotificationRepository notificationRepository;
-
-    private final ObjectMapper objectMapper = new ObjectMapper(); // Jackson ObjectMapper
+    private final SseEmitterService sseEmitterService; // SSE 전송 서비스
+    private final NotificationRepository notificationRepository; // 알림 저장소
+    private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 파싱을 위한 ObjectMapper
 
     @KafkaListener(topics = "match-notifications", groupId = "notification-group")
     public void consumeNotification(String message) {
         log.info("Received Kafka notification message: {}", message);
 
         try {
-            // 메시지에서 사용자 ID 추출
+            // 메시지에서 사용자 ID 및 메시지 추출
             Long userId = extractUserIdFromMessage(message);
+            String notificationMessage = extractNotificationMessage(message);
 
-            if (userId == null) {
-                log.error("User ID is missing in the message: {}", message);
-                return; // userId가 없으면 처리하지 않음
+            if (userId == null || notificationMessage == null) {
+                log.error("Invalid message format or missing data: {}", message);
+                return;
             }
 
             // DB에 저장할 Notification 객체 생성
             Notification notification = new Notification();
             notification.setType("MATCH");
-            notification.setStatus(NotificationStatus.PENDING);
+            notification.setStatus(Notification.NotificationStatus.PENDING);
             notification.setDeliveryMethod("PUSH");
-            notification.setMessage(message);
+            notification.setMessage(notificationMessage);
             notification.setCreatedAt(LocalDateTime.now());
-            notification.setUserId(userId); // 동적으로 받은 userId 설정
+            notification.setUserId(userId);
 
             // Notification 객체 저장
             notificationRepository.save(notification);
             log.info("Saved notification to database: {}", notification);
+
+            // SSE를 통해 클라이언트로 알림 전송
+            sseEmitterService.sendToUser(userId, notificationMessage);
+            log.info("Notification sent to user {} via SSE: {}", userId, notificationMessage);
+
         } catch (Exception e) {
             log.error("Failed to process notification message: {}", message, e);
         }
@@ -56,20 +60,30 @@ public class NotificationConsumer {
     // 메시지에서 userId를 추출하는 메서드
     private Long extractUserIdFromMessage(String message) {
         try {
-            JsonNode rootNode = objectMapper.readTree(message); // JSON 파싱
-            JsonNode userIdNode = rootNode.path("userId"); // userId 추출
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode userIdNode = rootNode.path("userId");
 
             if (!userIdNode.isMissingNode()) {
-                return userIdNode.asLong(); // userId가 있으면 반환
-            } else {
-                log.warn("User ID is missing in the message, using default value.");
-                return -1L; // 기본값으로 -1을 사용 (예시)
+                return userIdNode.asLong();
             }
         } catch (IOException e) {
             log.error("Error parsing message to extract userId: {}", message, e);
         }
-        return null; // userId가 없거나 파싱 오류 발생 시 null 반환
+        return null;
     }
 
+    // 메시지에서 알림 메시지를 추출하는 메서드
+    private String extractNotificationMessage(String message) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode messageNode = rootNode.path("message");
 
+            if (!messageNode.isMissingNode()) {
+                return messageNode.asText();
+            }
+        } catch (IOException e) {
+            log.error("Error parsing message to extract notification message: {}", message, e);
+        }
+        return null;
+    }
 }

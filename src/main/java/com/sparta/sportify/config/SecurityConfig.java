@@ -44,7 +44,10 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/oauth2/code/kakao",
                                 "/login",
-                                "/api/api/matches/notifications")
+                                "/api/matches/notifications",
+                                "/resources/template/index.html",
+                                "/sse/75",
+                                "/send/75")
                             .permitAll() // 회원가입/로그인은 인증 불필요
                         .anyRequest()
                             .authenticated() // 나머지는 인증 필요
