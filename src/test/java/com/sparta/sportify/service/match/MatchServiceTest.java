@@ -143,8 +143,84 @@ class MatchServiceTest {
 	}
 
 	@Test
-	@DisplayName("점수 추가 로직 테스트")
-	void createMatchResult_SavesMatchResultAndUpdatesPoints() {
+	@DisplayName("A팀 승리, 점수 추가 로직 테스트")
+	void createMatchResult_TeamAWin_SavesMatchResultAndUpdatesPoints() {
+		requestDto = new MatchResultRequestDto(10, 5, MatchStatus.CLOSED, 1L); // 요청 DTO 초기화
+
+		// Given
+		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.of(match));
+
+		MatchResult matchResult = MatchResult.builder()
+			.teamAScore(requestDto.getTeamAScore())
+			.teamBScore(requestDto.getTeamBScore())
+			.match(match)
+			.matchStatus(requestDto.getMatchStatus())
+			.matchDate(LocalDate.now())
+			.build();
+
+		when(matchResultRepository.save(any(MatchResult.class))).thenReturn(matchResult);
+
+		User userA = User.builder()
+			.id(1L)
+			.build();
+		User userB = User.builder()
+			.id(2L)
+			.build();
+		Team teamA = Team.builder()
+			.id(1L)
+			.teamName("TeamA")
+			.teamPoints(1000)
+			.build();
+		Team teamB = Team.builder()
+			.id(2L)
+			.teamName("TeamB")
+			.teamPoints(1000)
+			.build();
+		Reservation reservationA = Reservation.builder()
+			.user(userA)
+			.team(teamA)
+			.match(match)
+			.teamColor(TeamColor.A)
+			.build();
+		Reservation reservationB = Reservation.builder()
+			.user(userB)
+			.team(teamB)
+			.match(match)
+			.teamColor(TeamColor.B)
+			.build();
+
+		List<Reservation> reservations = new ArrayList<>();
+		reservations.add(reservationA);
+		reservations.add(reservationB);
+
+		when(reservationRepository.findAllByMatch(match)).thenReturn(reservations);
+
+		// When
+		MatchResultResponseDto savedResult = matchService.createMatchResult(requestDto);
+
+		// Then
+		assertNotNull(savedResult);
+		assertEquals(matchResult.getId(), savedResult.getId());
+		assertEquals(matchResult.getTeamAScore(), savedResult.getTeamAScore());
+		assertEquals(matchResult.getTeamBScore(), savedResult.getTeamBScore());
+		assertEquals(matchResult.getMatchStatus(), savedResult.getMatchStatus());
+		assertEquals(matchResult.getMatchDate(), savedResult.getMatchDate());
+
+		// User points verification
+		verify(userRepository, times(1)).save(userA); // userA의 점수 업데이트
+		verify(userRepository, times(1)).save(userB); // userB의 점수 업데이트
+		assertEquals(1010, userA.getLevelPoints()); // userA는 10점 증가
+		assertEquals(990, userB.getLevelPoints()); // userB는 -10점 감소
+
+		// Team points verification
+		//verify(teamRepository, times(1)).save(any(Team.class)); // 팀 점수 업데이트
+		assertEquals(1010, teamA.getTeamPoints()); // Team A는 10점 증가
+		assertEquals(990, teamB.getTeamPoints()); // Team B는 -10점 감소
+	}
+
+	@Test
+	@DisplayName("B팀 승리, 점수 추가 로직 테스트")
+	void createMatchResult_TeamBWin_SavesMatchResultAndUpdatesPoints() {
 		// Given
 		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.of(match));
 
@@ -217,6 +293,82 @@ class MatchServiceTest {
 	}
 
 	@Test
+	@DisplayName("무승부, 점수 추가 로직 테스트")
+	void createMatchResult_Draw_SavesMatchResultAndUpdatesPoints() {
+		requestDto = new MatchResultRequestDto(10, 10, MatchStatus.CLOSED, 1L); // 요청 DTO 초기화
+
+		// Given
+		when(matchRepository.findById(requestDto.getMatchId())).thenReturn(Optional.of(match));
+
+		MatchResult matchResult = MatchResult.builder()
+			.teamAScore(requestDto.getTeamAScore())
+			.teamBScore(requestDto.getTeamBScore())
+			.match(match)
+			.matchStatus(requestDto.getMatchStatus())
+			.matchDate(LocalDate.now())
+			.build();
+
+		when(matchResultRepository.save(any(MatchResult.class))).thenReturn(matchResult);
+
+		User userA = User.builder()
+			.id(1L)
+			.build();
+		User userB = User.builder()
+			.id(2L)
+			.build();
+		Team teamA = Team.builder()
+			.id(1L)
+			.teamName("TeamA")
+			.teamPoints(1000)
+			.build();
+		Team teamB = Team.builder()
+			.id(2L)
+			.teamName("TeamB")
+			.teamPoints(1000)
+			.build();
+		Reservation reservationA = Reservation.builder()
+			.user(userA)
+			.team(teamA)
+			.match(match)
+			.teamColor(TeamColor.A)
+			.build();
+		Reservation reservationB = Reservation.builder()
+			.user(userB)
+			.team(teamB)
+			.match(match)
+			.teamColor(TeamColor.B)
+			.build();
+
+		List<Reservation> reservations = new ArrayList<>();
+		reservations.add(reservationA);
+		reservations.add(reservationB);
+
+		when(reservationRepository.findAllByMatch(match)).thenReturn(reservations);
+
+		// When
+		MatchResultResponseDto savedResult = matchService.createMatchResult(requestDto);
+
+		// Then
+		assertNotNull(savedResult);
+		assertEquals(matchResult.getId(), savedResult.getId());
+		assertEquals(matchResult.getTeamAScore(), savedResult.getTeamAScore());
+		assertEquals(matchResult.getTeamBScore(), savedResult.getTeamBScore());
+		assertEquals(matchResult.getMatchStatus(), savedResult.getMatchStatus());
+		assertEquals(matchResult.getMatchDate(), savedResult.getMatchDate());
+
+		// User points verification
+		verify(userRepository, times(1)).save(userA); // userA의 점수 업데이트
+		verify(userRepository, times(1)).save(userB); // userB의 점수 업데이트
+		assertEquals(1005, userA.getLevelPoints()); // userA는 10점 증가
+		assertEquals(1005, userB.getLevelPoints()); // userB는 -10점 감소
+
+		// Team points verification
+		//verify(teamRepository, times(1)).save(any(Team.class)); // 팀 점수 업데이트
+		assertEquals(1005, teamA.getTeamPoints()); // Team A는 10점 증가
+		assertEquals(1005, teamB.getTeamPoints()); // Team B는 -10점 감소
+	}
+
+	@Test
 	@DisplayName("매치 결과값 조회 성공")
 	void getMatchResult_ReturnsMatchResultDto_WhenMatchFound() {
 		// Given
@@ -251,8 +403,76 @@ class MatchServiceTest {
 	}
 
 	@Test
-	@DisplayName("매치 단건조회 성공")
+	@DisplayName("매치 단건조회 성공, CLOSED")
 	void getMatchByDateAndTime_ReturnsMatchDetailResponseDto_WhenMatchFound() {
+		// Given
+		Long stadiumId = 1L;
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		Integer time = 15;
+		LocalDateTime now = LocalDateTime.now().minusHours(1); // 현재 시간이 시작 1시간 전
+
+		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(any(), any(), any())).thenReturn(
+			Optional.of(match));
+
+		// When
+		MatchDetailResponseDto response = matchService.getMatchByDateAndTime(stadiumId, date, time, now);
+
+		// Then
+		assertNotNull(response, "Response should not be null");
+		assertEquals(match.getId(), response.getMatchId(), "Match ID should match");
+		assertEquals(match.getDate(), response.getDate(), "Match date should match");
+		assertEquals(String.format("%02d:%02d", match.getTime(), 0), response.getTime(), "Match time should match");
+		assertEquals(match.getATeamCount(), response.getATeamCount(), "A Team count should match");
+		assertEquals(match.getBTeamCount(), response.getBTeamCount(), "B Team count should match");
+		assertEquals(stadiumTime.getStadium().getStadiumName(), response.getStadiumName(), "Stadium name should match");
+		assertEquals(MatchStatus.CLOSED, response.getStatus(), "Match status should be OPEN"); // 상태 검증
+	}
+
+	@Test
+	@DisplayName("매치 단건조회 성공, ALMOST_FULL")
+	void getMatchByDateAndTime_ReturnsMatchDetailResponseDto_WhenMatchFound_ALMOST_FULL() {
+		matchResult = MatchResult.builder()
+			.id(1L)
+			.teamAScore(10)
+			.teamBScore(5)
+			.matchStatus(MatchStatus.ALMOST_FULL)
+			.matchDate(LocalDate.now())
+			.build();
+		// Given
+		Long stadiumId = 1L;
+		LocalDate date = LocalDate.of(2024, 12, 27);
+		Integer time = 15;
+		LocalDateTime now = LocalDateTime.now().minusHours(1); // 현재 시간이 시작 1시간 전
+
+		when(stadiumTimeRepository.findByStadiumId(stadiumId)).thenReturn(Optional.of(stadiumTime));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(any(), any(), any())).thenReturn(
+			Optional.of(match));
+
+		// When
+		MatchDetailResponseDto response = matchService.getMatchByDateAndTime(stadiumId, date, time, now);
+
+		// Then
+		assertNotNull(response, "Response should not be null");
+		assertEquals(match.getId(), response.getMatchId(), "Match ID should match");
+		assertEquals(match.getDate(), response.getDate(), "Match date should match");
+		assertEquals(String.format("%02d:%02d", match.getTime(), 0), response.getTime(), "Match time should match");
+		assertEquals(match.getATeamCount(), response.getATeamCount(), "A Team count should match");
+		assertEquals(match.getBTeamCount(), response.getBTeamCount(), "B Team count should match");
+		assertEquals(stadiumTime.getStadium().getStadiumName(), response.getStadiumName(), "Stadium name should match");
+		assertEquals(MatchStatus.CLOSED, response.getStatus(), "Match status should be OPEN"); // 상태 검증
+	}
+
+	@Test
+	@DisplayName("매치 단건조회 성공, OPEN")
+	void getMatchByDateAndTime_ReturnsMatchDetailResponseDto_WhenMatchFound_OPEN() {
+		matchResult = MatchResult.builder()
+			.id(1L)
+			.teamAScore(10)
+			.teamBScore(5)
+			.matchStatus(MatchStatus.OPEN)
+			.matchDate(LocalDate.now())
+			.build();
 		// Given
 		Long stadiumId = 1L;
 		LocalDate date = LocalDate.of(2024, 12, 27);
