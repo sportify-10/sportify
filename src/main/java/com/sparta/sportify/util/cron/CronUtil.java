@@ -50,8 +50,13 @@ public class CronUtil {
 			String range = timeRanges[i];
 			String[] hours = range.split("-");
 
-			int start = Integer.parseInt(hours[0]);  // -문자 앞에 있는 값
-			startTimes.add(start);
+			int start = Integer.parseInt(hours[0]);
+			int end = Integer.parseInt(hours[1]);
+
+			// 2시간씩 증가하면서 추가
+			for (int j = start; j <= end; j += 2) {
+				startTimes.add(j);
+			}
 		}
 
 		return startTimes;
