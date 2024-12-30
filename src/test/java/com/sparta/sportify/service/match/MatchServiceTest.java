@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
-import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
