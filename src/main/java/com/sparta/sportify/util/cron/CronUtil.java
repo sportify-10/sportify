@@ -33,9 +33,16 @@ public class CronUtil {
         String[] parts = cronExpr.split(" ");
         String timeRange = parts[2];  // 시간 정보는 cron의 세 번째 부분에 위치
 
+        List<Integer> startTimes = new ArrayList<>();
+        if ("*".equals(timeRange)) { //모든 시간인 경우
+            for (int i = 0; i <= 22; i++) {
+                startTimes.add(i);
+            }
+            return startTimes;
+        }
+
         //"08-12,13-15,15-17"에서 ,기준으로 나누기
         String[] timeRanges = timeRange.split(",");
-        List<Integer> startTimes = new ArrayList<>();
 
         for (int i = 0; i < timeRanges.length; i++) {
             String range = timeRanges[i];
@@ -60,7 +67,7 @@ public class CronUtil {
             String startHour = hour[0];
             String endHour = hour[1];
 
-            if (i > 0) {
+            if₩ (i > 0) {
                 cronBuilder.append(",");
             }
 
