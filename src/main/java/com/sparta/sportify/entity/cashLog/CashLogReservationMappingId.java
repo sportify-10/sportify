@@ -1,9 +1,11 @@
 package com.sparta.sportify.entity.cashLog;
 
+import lombok.AllArgsConstructor;
+
 import java.io.Serializable;
 import java.util.Objects;
 
-
+@AllArgsConstructor
 public class CashLogReservationMappingId implements Serializable {
     private Long cashTransactionId;
     private Long reservationId;
