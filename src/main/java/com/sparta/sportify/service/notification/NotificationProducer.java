@@ -24,7 +24,8 @@ public class NotificationProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final MatchRepository matchRepository;
-    private final NotificationRepository notificationRepository; // Notification Repository 추가
+    private final NotificationRepository notificationRepository;
+
     @Scheduled(fixedRate = 60000) // 1분마다 실행
     public void sendMatchNotifications() {
         LocalDateTime now = LocalDateTime.now();
@@ -41,28 +42,30 @@ public class NotificationProducer {
                     match.getStartTime().toString()
             );
 
-            // 알림을 저장할 Notification 객체 생성
-            Notification notification = new Notification();
-            notification.setType("MATCH");
-            notification.setStatus(Notification.NotificationStatus.PENDING);
-            notification.setDeliveryMethod("PUSH");
-            notification.setMessage(notificationMessage);
-            notification.setCreatedAt(LocalDateTime.now());
-
-            // 알림을 받을 사용자 정보 가져오기 (이 예시에서는 userId가 Notification에 저장되어 있다고 가정)
-            Long userId = notification.getUserId(); // Notification 엔티티에 저장된 userId
+            // Stadium에서 userId 가져오기
+            Long userId = match.getStadiumTime().getStadium().getUser().getId(); // Stadium 엔티티의 userId
 
             if (userId != null) {
-                // userId가 존재하면 해당 사용자에게 알림을 전송
+                // 알림을 저장할 Notification 객체 생성
+                Notification notification = new Notification();
+                notification.setType("MATCH");
+                notification.setStatus(Notification.NotificationStatus.PENDING);
+                notification.setDeliveryMethod("PUSH");
+                notification.setMessage(notificationMessage);
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUserId(userId); // userId 설정
+
+                // Kafka 메시지 생성
                 String messageToSend = String.format("{\"userId\": %d, \"message\": \"%s\"}", userId, notificationMessage);
 
                 // Kafka로 메시지 전송
                 kafkaTemplate.send("match-notifications", messageToSend);
+
                 // 알림을 데이터베이스에 저장
                 notificationRepository.save(notification);
             } else {
                 // userId가 없는 경우 로그에 기록
-                log.error("No userId found for notification message: {}", notificationMessage);
+                log.error("No userId found for stadium in notification message: {}", notificationMessage);
             }
         }
     }
