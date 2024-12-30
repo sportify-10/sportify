@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -616,5 +617,117 @@ class MatchServiceTest {
 
 		// Then
 		assertNotNull(response);
+	}
+
+	@Test
+	@DisplayName("매치 상태 로직 테스트 성공, CLOSED")
+	public void testMatchStatusClosed() {
+		// Stadium 객체 생성
+		Stadium stadium = Stadium.builder()
+			.aTeamCount(10)
+			.bTeamCount(10)
+			.build();
+		// StadiumTime 객체 생성
+		StadiumTime stadiumTime = StadiumTime.builder()
+			.stadium(stadium)
+			.build();
+		// 경기가 종료된 상태
+		Match match = Match.builder()
+			.id(1L)
+			.date(LocalDate.now())
+			.time(10)
+			.aTeamCount(0)
+			.bTeamCount(0)
+			.stadiumTime(stadiumTime)
+			.build();
+
+		LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0));
+		MatchStatus status = matchService.determineMatchStatus(match, now);
+
+		assertEquals(MatchStatus.CLOSED, status);
+	}
+
+	@Test
+	@DisplayName("매치 상태 로직 테스트 성공, ALMOST_FULL, 인원수 80%")
+	public void testMatchStatusAlmostFull_BeforeStart() {
+		// Stadium 객체 생성
+		Stadium stadium = Stadium.builder()
+			.aTeamCount(10)
+			.bTeamCount(10)
+			.build();
+		// StadiumTime 객체 생성
+		StadiumTime stadiumTime = StadiumTime.builder()
+			.stadium(stadium)
+			.build();
+		// 경기 시작 전 예약 비율이 80% 이상
+		Match match = Match.builder()
+			.id(2L)
+			.date(LocalDate.now())
+			.time(10)
+			.aTeamCount(8)
+			.bTeamCount(8)
+			.stadiumTime(stadiumTime)
+			.build();
+
+		LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.of(9, 0)); // 현재 시간 09:00
+		MatchStatus status = matchService.determineMatchStatus(match, now);
+
+		assertEquals(MatchStatus.ALMOST_FULL, status);
+	}
+
+	@Test
+	@DisplayName("매치 상태 로직 테스트 성공, ALMOST_FULL, 시작 시간 4시간 이내")
+	public void testMatchStatusAlmostFull_Within4Hours() {
+		// Stadium 객체 생성
+		Stadium stadium = Stadium.builder()
+			.aTeamCount(10)
+			.bTeamCount(10)
+			.build();
+		// StadiumTime 객체 생성
+		StadiumTime stadiumTime = StadiumTime.builder()
+			.stadium(stadium)
+			.build();
+		// 경기 시작 4시간 이내
+		Match match = Match.builder()
+			.id(3L)
+			.date(LocalDate.now())
+			.time(10)
+			.aTeamCount(2)
+			.bTeamCount(1)
+			.stadiumTime(stadiumTime)
+			.build();
+
+		LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 0)); // 현재 시간 06:00
+		MatchStatus status = matchService.determineMatchStatus(match, now);
+
+		assertEquals(MatchStatus.ALMOST_FULL, status);
+	}
+
+	@Test
+	@DisplayName("매치 상태 로직 테스트 성공, OPEN")
+	public void testMatchStatusOpen() {
+		// Stadium 객체 생성
+		Stadium stadium = Stadium.builder()
+			.aTeamCount(10)
+			.bTeamCount(10)
+			.build();
+		// StadiumTime 객체 생성
+		StadiumTime stadiumTime = StadiumTime.builder()
+			.stadium(stadium)
+			.build();
+		// 경기 시작 시간이 멀고 예약 비율이 낮음
+		Match match = Match.builder()
+			.id(4L)
+			.date(LocalDate.now())
+			.time(20)
+			.aTeamCount(1)
+			.bTeamCount(1)
+			.stadiumTime(stadiumTime)
+			.build();
+
+		LocalDateTime now = LocalDateTime.of(LocalDate.now(), LocalTime.of(10, 0)); // 현재 시간 09:00
+		MatchStatus status = matchService.determineMatchStatus(match, now);
+
+		assertEquals(MatchStatus.OPEN, status);
 	}
 }
