@@ -15,25 +15,27 @@ public class NotificationService {
     private static final String TOPIC_NAME = "match-notifications";
     private final NotificationRepository notificationRepository;
 
+    // 특정 키와 메시지로 Kafka에 알림 전송
     public void sendMatchNotification(String key, String message) {
         kafkaTemplate.send(TOPIC_NAME, key, message);
     }
 
-    public void sendUserNotification(String message) {
-        kafkaTemplate.send("match-notifications", message);
+    // 특정 사용자에게 알림 전송 및 DB에 저장
+    public void sendUserNotification(Long userId, String message) {
+        // Kafka에 메시지 전송
+        kafkaTemplate.send(TOPIC_NAME, message);
 
-        // 예시로 userId를 1로 설정, 실제로는 적절한 userId를 가져와야 합니다.
-        Long userId = 1L; // 예시 userId (실제 값으로 변경 필요)
+        // 알림 엔티티 생성 및 초기화
+        Notification notification = Notification.builder()
+                .userId(userId)
+                .message(message)
+                .type("MATCH") // 알림 타입 설정
+                .status(Notification.NotificationStatus.PENDING) // 초기 상태 설정
+                .deliveryMethod("PUSH") // 전달 방법 설정
+                .createdAt(LocalDateTime.now()) // 생성 시간 설정
+                .build();
 
-        Notification notification = new Notification();
-        notification.setUserId(userId);
-        notification.setMessage(message);
-        notification.setType("MATCH"); // 알림 타입을 "MATCH"로 설정
-        notification.setStatus(Notification.NotificationStatus.PENDING);
-        notification.setDeliveryMethod("PUSH");
-        notification.setCreatedAt(LocalDateTime.now());
-
-        notificationRepository.save(notification);  // 알림 저장
+        // DB에 알림 저장
+        notificationRepository.save(notification);
     }
 }
-

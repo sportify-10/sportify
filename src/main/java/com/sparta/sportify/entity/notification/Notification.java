@@ -1,54 +1,45 @@
 package com.sparta.sportify.entity.notification;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
+import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notification")
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
 public class Notification {
 
+    @Setter
+    @Getter
+    @jakarta.persistence.Id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "type", nullable = false)
-    private String type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private NotificationStatus status;
-
-    @Column(name = "delivery_method", nullable = false)
-    private String deliveryMethod;
-
-    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
+    private Long userId;
     private String message;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    private String type; // 예: "MATCH"
+    private String deliveryMethod; // 예: "PUSH"
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(name = "modified_at")
-    private LocalDateTime modifiedAt;
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status; // 상태 (PENDING, SENT 등)
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Builder
+    public Notification(Long userId, String message, String type, String deliveryMethod, LocalDateTime createdAt, NotificationStatus status) {
+        this.userId = userId;
+        this.message = message;
+        this.type = type;
+        this.deliveryMethod = deliveryMethod;
+        this.createdAt = createdAt;
+        this.status = status;
+    }
 
     public enum NotificationStatus {
         PENDING,
