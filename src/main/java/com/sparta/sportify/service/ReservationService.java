@@ -9,9 +9,11 @@ import com.sparta.sportify.entity.cashLog.*;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.reservation.ReservationStatus;
-import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.team.Team;
+import com.sparta.sportify.entity.team.TeamColor;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.*;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.util.cron.CronUtil;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -34,223 +37,163 @@ public class ReservationService {
     private final CashLogReservationMappingRepository cashLogReservationMappingRepository;
     private final CashLogRepository cashLogRepository;
 
-
-    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
-    public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
-        StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                () -> new RuntimeException("구장이 운영중이 아닙니다.")
-        );
-
-        if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
-            throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
-        }
-
-        if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
-            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
-        }
-
-
+    private Match handleMatch(ReservationRequestDto requestDto, StadiumTime stadiumTime, List<User> users) {
         Match match = matchRepository.findByIdAndDateAndTime(
                 requestDto.getStadiumTimeId(),
                 requestDto.getReservationDate(),
                 requestDto.getTime()
-        ).map(findMatch -> {
-            switch (requestDto.getTeamColor()) {
-                case A -> findMatch.discountATeamCount(1);
-                case B -> findMatch.discountBTeamCount(1);
-                default -> throw new RuntimeException("잘못된 요청");
-            }
-            return matchRepository.save(findMatch);
-        }).orElseGet(() -> {
-            int aTeamCount = stadiumTime.getStadium().getATeamCount();
-            int bTeamCount = stadiumTime.getStadium().getBTeamCount();
-            switch (requestDto.getTeamColor()) {
-                case A -> aTeamCount = aTeamCount - 1;
-                case B -> bTeamCount = bTeamCount - 1;
-                default -> throw new RuntimeException("잘못된 요청");
-            }
-            return matchRepository.save(
-                    Match.builder()
-                            .date(requestDto.getReservationDate())
-                            .time(requestDto.getTime())
-                            .aTeamCount(aTeamCount)
-                            .bTeamCount(bTeamCount)
-                            .stadiumTime(stadiumTime)
+        ).map(existingMatch -> updateMatch(existingMatch, requestDto, users)).orElseGet(() -> createMatch(requestDto, stadiumTime, users));
+
+        return matchRepository.save(match);
+    }
+
+    private Match updateMatch(Match existingMatch, ReservationRequestDto requestDto, List<User> users) {
+        switch (requestDto.getTeamColor()) {
+            case A -> existingMatch.discountATeamCount(users.size());
+            case B -> existingMatch.discountBTeamCount(users.size());
+        }
+        return existingMatch;
+    }
+
+    private Match createMatch(ReservationRequestDto requestDto, StadiumTime stadiumTime, List<User> users) {
+        int aTeamCount = stadiumTime.getStadium().getATeamCount() - users.size();
+        int bTeamCount = stadiumTime.getStadium().getBTeamCount() - users.size();
+
+        if (requestDto.getTeamColor() == TeamColor.A && aTeamCount < 0 || requestDto.getTeamColor() == TeamColor.B && bTeamCount < 0) {
+            throw new CustomApiException(ErrorCode.NOT_ENOUGH_SPOTS_FOR_TEAM);
+        }
+
+        return Match.builder()
+                .date(requestDto.getReservationDate())
+                .time(requestDto.getTime())
+                .aTeamCount(aTeamCount)
+                .bTeamCount(bTeamCount)
+                .stadiumTime(stadiumTime)
+                .build();
+    }
+
+    private CashLog handleCashLog(UserDetailsImpl authUser, Long totalPrice) {
+        CashLog cashLog = cashLogRepository.save(
+                CashLog.builder()
+                        .price(totalPrice)
+                        .type(CashType.PAYMENT)
+                        .user(authUser.getUser())
+                        .build()
+        );
+        authUser.getUser().discountCash(totalPrice);
+        userRepository.save(authUser.getUser());
+
+        return cashLog;
+    }
+
+    private void handleCashLogReservationMapping(CashLog cashLog, List<Reservation> reservations) {
+        reservations.forEach(reservation -> {
+            CashLogReservationMappingId embeddedId = new CashLogReservationMappingId(cashLog.getId(), reservation.getId());
+
+            cashLogReservationMappingRepository.save(
+                    CashLogReservationMapping.builder()
+                            .id(embeddedId)
+                            .cashLog(cashLog)
+                            .reservation(reservation)
+                            .type(CashLogReservationMappingType.MINUS)
                             .build()
             );
         });
+    }
 
-        Stadium stadium = stadiumTime.getStadium();
+    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
+    public ReservationResponseDto reservationPersonal(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
+        StadiumTime stadiumTime = getStadiumTime(requestDto);
+
+        if (reservationRepository.existsByUserAndMatchTimeAndReservationDate(authUser.getUser(), requestDto.getTime(), requestDto.getReservationDate())) {
+            throw new CustomApiException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+        if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
+            throw new CustomApiException(ErrorCode.INVALID_OPERATION_TIME);
+        }
+
+        Match match = handleMatch(requestDto, stadiumTime, Collections.singletonList(authUser.getUser()));
 
         Reservation reservation = reservationRepository.save(
                 Reservation.builder()
                         .reservationDate(requestDto.getReservationDate())
-                        .totalAmount(stadium.getPrice())
+                        .totalAmount(stadiumTime.getStadium().getPrice())
                         .status(ReservationStatus.CONFIRMED)
                         .teamColor(requestDto.getTeamColor())
                         .user(authUser.getUser())
                         .match(match)
-                        .build());
-
-        CashLog cashLog = cashLogRepository.save(
-                CashLog.builder()
-                        .price(stadium.getPrice())
-                        .type(CashType.PAYMENT)
-                        .user(authUser.getUser())
                         .build()
         );
 
-        CashLogReservationMappingId embeddedId = new CashLogReservationMappingId();
-        embeddedId.setCashTransactionId(cashLog.getId());
-        embeddedId.setReservationId(reservation.getId());
+        CashLog cashLog = handleCashLog(authUser, stadiumTime.getStadium().getPrice());
 
-        cashLogReservationMappingRepository.save(
-                CashLogReservationMapping.builder()
-                        .id(embeddedId)
-                        .cashLog(cashLog)
-                        .reservation(reservation)
-                        .type(CashLogReservationMappingType.MINUS)
-                        .build()
-        );
-
-        authUser.getUser().setCash(authUser.getUser().getCash() - stadium.getPrice());
-        userRepository.save(authUser.getUser());
+        handleCashLogReservationMapping(cashLog, Collections.singletonList(reservation));
 
         return new ReservationResponseDto(reservation.getId());
     }
 
-    @RedissonLock(key = "'reservation-'.concat(#reqeustDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
+    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
+        StadiumTime stadiumTime = getStadiumTime(requestDto);
 
-        StadiumTime stadiumTime = stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
-                () -> new RuntimeException("구장이 운영중이 아닙니다.")
-        );
+        List<User> users = getUsers(requestDto);
 
-        if (!CronUtil.isCronDateAllowed(stadiumTime.getCron(), requestDto.getReservationDate(), requestDto.getTime())) {
-            throw new RuntimeException("구장 운영시간이 맞지 않습니다.");
-        }
-
-        List<User> users = userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList());
-        if (users.size() != requestDto.getTeamMemberIdList().size()) {
-            throw new RuntimeException("유저 정보가 잘못됨 ");
-        }
-
-        if (reservationRepository.existsByUsersAndMatchTimeAndReservationDate(users, requestDto.getTime(), requestDto.getReservationDate())) {
-            throw new RuntimeException("이미 중복된 시간에 예약을 하였습니다.");
-        }
-
+        Match match = handleMatch(requestDto, stadiumTime, users);
 
         Team team = teamRepository.findById(requestDto.getTeamId()).orElseThrow(
-                () -> new RuntimeException("팀을 찾을 수 없습니다")
+                () -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND)
         );
-
-
-        Match match = matchRepository.findByIdAndDateAndTime(requestDto.getStadiumTimeId(), requestDto.getReservationDate(), requestDto.getTime()).map(findMatch -> {
-            switch (requestDto.getTeamColor()) {
-                case A -> {
-                    if (findMatch.getATeamCount() < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
-                    }
-                    findMatch.discountATeamCount(users.size());
-                }
-                case B -> {
-                    if (findMatch.getBTeamCount() < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
-                    }
-                    findMatch.discountBTeamCount(users.size());
-                }
-                default -> throw new RuntimeException("잘못된 요청");
-            }
-            return matchRepository.save(findMatch);
-        }).orElseGet(() -> {
-            int aTeamCount = stadiumTime.getStadium().getATeamCount();
-            int bTeamCount = stadiumTime.getStadium().getBTeamCount();
-            switch (requestDto.getTeamColor()) {
-                case A -> {
-                    if (aTeamCount < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
-                    }
-                    aTeamCount = aTeamCount - users.size();
-                }
-                case B -> {
-                    if (bTeamCount < users.size()) {
-                        throw new RuntimeException("요청한 인원수보다 남은 자리수가 적습니다.");
-                    }
-                    bTeamCount = bTeamCount - users.size();
-                }
-                default -> throw new RuntimeException("잘못된 요청");
-            }
-            return matchRepository.save(
-                    Match.builder()
-                            .date(requestDto.getReservationDate())
-                            .time(requestDto.getTime())
-                            .aTeamCount(aTeamCount)
-                            .bTeamCount(bTeamCount)
-                            .stadiumTime(stadiumTime)
-                            .build()
-            );
-        });
-
-        Stadium stadium = stadiumTime.getStadium();
-
 
         List<Reservation> reservations = users.stream()
-                .map(user -> Reservation.builder()
-                        .reservationDate(requestDto.getReservationDate())
-                        .totalAmount(stadium.getPrice())
-                        .status(ReservationStatus.CONFIRMED)
-                        .teamColor(requestDto.getTeamColor())
-                        .user(user)
-                        .team(team)
-                        .match(match)
-                        .build())
-                .map(reservationRepository::save)
+                .map(user -> reservationRepository.save(
+                        Reservation.builder()
+                                .reservationDate(requestDto.getReservationDate())
+                                .totalAmount(stadiumTime.getStadium().getPrice())
+                                .status(ReservationStatus.CONFIRMED)
+                                .teamColor(requestDto.getTeamColor())
+                                .user(user)
+                                .team(team)
+                                .match(match)
+                                .build()
+                ))
                 .toList();
 
-        CashLog cashLog = cashLogRepository.save(
-                CashLog.builder()
-                        .price(stadium.getPrice() * users.size())
-                        .type(CashType.PAYMENT)
-                        .user(authUser.getUser())
-                        .build()
-        );
+        CashLog cashLog = handleCashLog(authUser, stadiumTime.getStadium().getPrice() * users.size());
 
-        reservations.forEach(reservation -> {
-                    CashLogReservationMappingId embeddedId = new CashLogReservationMappingId();
-                    embeddedId.setCashTransactionId(cashLog.getId());
-                    embeddedId.setReservationId(reservation.getId());
-
-                    cashLogReservationMappingRepository.save(
-                            CashLogReservationMapping.builder()
-                                    .id(embeddedId)
-                                    .cashLog(cashLog)
-                                    .reservation(reservation)
-                                    .type(CashLogReservationMappingType.MINUS)
-                                    .build()
-                    );
-                }
-        );
-
-        authUser.getUser().setCash(authUser.getUser().getCash() - (stadium.getPrice() * users.size()));
-        userRepository.save(authUser.getUser());
+        handleCashLogReservationMapping(cashLog, reservations);
 
         return new ReservationResponseDto(reservations.stream().map(Reservation::getId).toList());
     }
 
+    private StadiumTime getStadiumTime(ReservationRequestDto requestDto) {
+        return stadiumTimeRepository.findById(requestDto.getStadiumTimeId()).orElseThrow(
+                () -> new CustomApiException(ErrorCode.STADIUM_NOT_OPERATIONAL)
+        );
+    }
+
+    private List<User> getUsers(ReservationRequestDto requestDto) {
+        List<User> users = userRepository.findUsersByIdIn(requestDto.getTeamMemberIdList());
+        if (users.size() != requestDto.getTeamMemberIdList().size()) {
+            throw new CustomApiException(ErrorCode.USER_INFO_INVALID);
+        }
+        if (reservationRepository.existsByUsersAndMatchTimeAndReservationDate(users, requestDto.getTime(), requestDto.getReservationDate())) {
+            throw new CustomApiException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+        return users;
+    }
 
     @Transactional
     public ReservationFindResponseDto findReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new RuntimeException("찾을 수 없는 예약 ID입니다.")
+                () -> new CustomApiException(ErrorCode.RESERVATION_NOT_FOUND)
         );
 
         if (reservation.getUser().getId() != authUser.getUser().getId()) {
-            throw new RuntimeException("해당 유저 정보가 다릅니다");
+            throw new CustomApiException(ErrorCode.USER_INFO_MISMATCH);
         }
 
         return new ReservationFindResponseDto(reservation);
     }
-
 
     @Transactional
     public Slice<ReservationFindResponseDto> findReservationsForInfiniteScroll(
@@ -263,17 +206,18 @@ public class ReservationService {
     @Transactional
     public ReservationResponseDto deleteReservation(Long reservationId, UserDetailsImpl authUser) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new RuntimeException("예약ID를 찾을 수 없습니다.")
+                () -> new CustomApiException(ErrorCode.RESERVATION_NOT_FOUND)
         );
+
         if (reservation.getUser().getId() != authUser.getUser().getId()) {
-            throw new RuntimeException("해당 유저 정보가 다릅니다.");
+            throw new CustomApiException(ErrorCode.USER_INFO_MISMATCH);
         }
 
         reservation.markAsDeleted();
         reservationRepository.save(reservation);
 
         Match match = matchRepository.findById(reservation.getMatch().getId()).orElseThrow(
-                () -> new RuntimeException("해당 유저 정보가 다릅니다.")
+                () -> new CustomApiException(ErrorCode.MATCH_NOT_FOUND)
         );
 
         switch (reservation.getTeamColor()) {
@@ -284,9 +228,9 @@ public class ReservationService {
                 match.addBTeamCount(1);
             }
         }
+
         matchRepository.save(match);
 
         return new ReservationResponseDto(reservation.getId());
     }
-
 }

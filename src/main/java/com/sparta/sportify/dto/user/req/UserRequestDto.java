@@ -3,15 +3,13 @@ package com.sparta.sportify.dto.user.req;
 import com.sparta.sportify.entity.user.UserRole;
 import jakarta.validation.constraints.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserRequestDto {
 
     @NotBlank(message = "이메일은 필수 항목입니다.")
@@ -42,9 +40,21 @@ public class UserRequestDto {
 
     private UserRole role;
 
-    public UserRequestDto(String username, String password, String mail, UserRole userRole) {
+
+    public UserRequestDto(String email, String password, String name, String region, String gender, int age) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.region = region;
+        this.gender = gender;
+        this.age = (long) age; // 테스트 코드와 필드 타입이 일치하지 않는 부분 해결
     }
 
-    public UserRequestDto(String mail, String validPassword) {
+    public UserRequestDto(String email, String name, String region, String gender, String password) {
+        this.email = email;
+        this.name = name;
+        this.region = region;
+        this.gender = gender;
+        this.password = password;
     }
 }

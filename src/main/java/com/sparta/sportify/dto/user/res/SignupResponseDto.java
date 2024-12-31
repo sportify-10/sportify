@@ -2,6 +2,8 @@ package com.sparta.sportify.dto.user.res;
 
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +32,9 @@ public class SignupResponseDto {
     }
 
     public SignupResponseDto(User user) {
+        if (user == null) {
+            throw new CustomApiException(ErrorCode.USER_NOT_FOUND);
+        }
         this.email = user.getEmail();
         this.name = user.getName();
         this.role = user.getRole();

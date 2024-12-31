@@ -1,6 +1,8 @@
 package com.sparta.sportify.jwt;
 
 import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -57,9 +59,9 @@ public class JwtUtil {
 
 
         } catch (SignatureException e) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new CustomApiException(ErrorCode.INVALID_TOKEN);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Token parsing error"+ e.getMessage());
+            throw new CustomApiException(ErrorCode.TOKEN_PARSING_ERROR);
         }
     }
 

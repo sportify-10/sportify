@@ -1,6 +1,9 @@
 package com.sparta.sportify.entity.match;
 
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +28,7 @@ import jakarta.persistence.Table;
 @Getter
 @Builder
 public class Match {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -12,19 +12,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CashResponseDto {
-	private Long userId;
-	private Long balance;
-	private LocalDateTime createAt;
-	private CashType type;
-	private String tid;
-	private Long ChargeAmount;
+    private Long userId;
+    private Long balance;
+    private LocalDateTime createAt;
+    private CashType type;
+    private Long ChargeAmount;
 
-	public CashResponseDto(CashLog cashLog) {
-		this.userId = cashLog.getUser().getId();
-		this.type = cashLog.getType();
-		this.ChargeAmount = cashLog.getPrice();
-		this.balance = cashLog.getUser().getCash();
-		this.createAt = cashLog.getCreateAt();
-	}
+    public CashResponseDto(CashLog cashLog) {
+        this.userId = cashLog.getUser().getId();
+        this.type = cashLog.getType();
+        this.ChargeAmount = cashLog.getPrice();
+        this.balance = cashLog.getUser().getCash();
+        this.createAt = cashLog.getCreateAt();
+    }
 
 }

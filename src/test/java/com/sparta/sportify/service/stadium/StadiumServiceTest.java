@@ -1,22 +1,13 @@
 package com.sparta.sportify.service.stadium;
 
-import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
-import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
-import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
-import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
-import com.sparta.sportify.entity.StadiumTime.StadiumTime;
-import com.sparta.sportify.entity.match.Match;
-import com.sparta.sportify.entity.reservation.ReservationStatus;
-import com.sparta.sportify.entity.stadium.Stadium;
-import com.sparta.sportify.entity.stadium.StadiumStatus;
-import com.sparta.sportify.entity.user.User;
-import com.sparta.sportify.entity.user.UserRole;
-import com.sparta.sportify.repository.MatchRepository;
-import com.sparta.sportify.repository.ReservationRepository;
-import com.sparta.sportify.repository.StadiumRepository;
-import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
-import com.sparta.sportify.service.StadiumService;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,13 +19,22 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.sparta.sportify.dto.stadium.request.StadiumCreateRequestDto;
+import com.sparta.sportify.dto.stadium.request.StadiumUpdateRequestDto;
+import com.sparta.sportify.dto.stadium.response.StadiumMatchResponseDto;
+import com.sparta.sportify.dto.stadium.response.StadiumResponseDto;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.entity.match.Match;
+import com.sparta.sportify.entity.reservation.ReservationStatus;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.StadiumRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
+import com.sparta.sportify.service.StadiumService;
 
 class StadiumServiceTest {
 
@@ -46,13 +46,6 @@ class StadiumServiceTest {
 
 	@Mock
 	private MatchRepository matchRepository;
-
-	@Mock
-	private ReservationRepository reservationRepository;
-
-	@Mock
-	private StadiumTimeRepository stadiumTimeRepository;
-
 
 	private StadiumCreateRequestDto stadiumCreateRequestDto;
 	private StadiumUpdateRequestDto stadiumUpdateRequestDto;
@@ -100,16 +93,16 @@ class StadiumServiceTest {
 		notUserDetails = new UserDetailsImpl(notOwner.getName(), notOwner.getRole(), notOwner);
 
 		stadium = Stadium.builder()
-			.id(1L) // ID는 일반적으로 자동 생성되므로 필요 시 설정
-			.stadiumName("Dream Stadium") // 구장 이름
-			.location("Seoul, South Korea") // 위치
-			.aTeamCount(5) // A팀 인원
-			.bTeamCount(5) // B팀 인원
-			.description("A fantastic stadium for sports events.") // 설명
-			.price(100000L) // 가격
-			.status(StadiumStatus.APPROVED) // 상태 (Enum)
-			.deletedAt(null) // 삭제 시간 (없음)
-			.user(userDetails.getUser()) // 유저 객체 (User 객체를 미리 생성하여 전달)
+			.id(1L)
+			.stadiumName("Dream Stadium")
+			.location("Seoul, South Korea")
+			.aTeamCount(5)
+			.bTeamCount(5)
+			.description("A fantastic stadium for sports events.")
+			.price(100000L)
+			.status(StadiumStatus.APPROVED)
+			.deletedAt(null)
+			.user(userDetails.getUser())
 			.build();
 		when(stadiumRepository.save(any(Stadium.class))).thenReturn(stadium);
 
@@ -145,7 +138,7 @@ class StadiumServiceTest {
 		when(stadiumRepository.findByStadiumName(stadiumCreateRequestDto.getStadiumName()))
 			.thenReturn(Optional.of(new Stadium()));
 
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.createStadium(stadiumCreateRequestDto, userDetails);
 		});
 
@@ -170,7 +163,7 @@ class StadiumServiceTest {
 	@DisplayName("구장 존재하지 않아 에러")
 	void notFoundStadium() {
 		when(stadiumRepository.findById(stadium.getId())).thenReturn(Optional.empty());
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.updateStadium(stadium.getId(), stadiumUpdateRequestDto, userDetails);
 		});
 
@@ -181,7 +174,7 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 주인이 아닌 사람의 수정 요청 시 에러")
 	void notOwnerStadium() {
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.updateStadium(stadium.getId(), stadiumUpdateRequestDto, notUserDetails);
 		});
 
@@ -200,7 +193,7 @@ class StadiumServiceTest {
 	@Test
 	@DisplayName("구장 주인이 아닌 사람의 삭제 요청 시 에러")
 	void notOwnerDeleteStadium() {
-		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.deleteStadium(stadium.getId(), notUserDetails);
 		});
 
@@ -242,34 +235,57 @@ class StadiumServiceTest {
 		Page<Stadium> stadiumPage = Page.empty();
 		when(stadiumRepository.findAllByUserId(any(Long.class), any(Pageable.class))).thenReturn(stadiumPage);
 
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
 			stadiumService.getStadiums(userDetails, 1, 10);
 		});
 
-		assertEquals("등록한 구장이 없습니다", exception.getMessage());
+		assertEquals("등록한 구장이 없습니다", thrown.getMessage());
 		verify(stadiumRepository, times(1)).findAllByUserId(user.getId(), PageRequest.of(0, 10));
 	}
 
 	@Test
 	@DisplayName("구장에 예약된 매치 조회")
 	void findMatchesByStadium() {
-		when(matchRepository.findByStadiumTimeStadiumId(eq(1L), any(Pageable.class)))
-			.thenReturn(new PageImpl<>(List.of(match)));
-		when(reservationRepository.findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED)))
-			.thenReturn(10000); // 예약 총합
+		List<Object[]> content = List.of(
+			new Object[] {match, 10000L},
+			new Object[] {match, null}
+		);
+
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Object[]> pageResult = new PageImpl<>(content, pageable, content.size());
+
+		when(matchRepository.findMatchesWithTotalAmountByStadiumId(eq(1L), eq(ReservationStatus.CONFIRMED),
+			any(Pageable.class)))
+			.thenReturn(pageResult);
 
 		Page<StadiumMatchResponseDto> result = stadiumService.findMatchesByStadium(1L, 1, 10);
 
-		// 검증
-		assertEquals(1, result.getTotalElements());
+		assertEquals(2, result.getTotalElements());
+
 		StadiumMatchResponseDto responseDto = result.getContent().get(0);
 		assertEquals("Dream Stadium", responseDto.getStadiumName());
 		assertEquals(10000, responseDto.getTotalAmount());
-		assertEquals(5, responseDto.getTeamAmount());
+		assertEquals(5, responseDto.getTeamACount());
 		assertEquals(5, responseDto.getTeamBCount());
 
 		verify(stadiumRepository, times(1)).findById(1L);
-		verify(matchRepository, times(1)).findByStadiumTimeStadiumId(eq(1L), any(Pageable.class));
-		verify(reservationRepository, times(1)).findTotalAmountByMatchId(eq(1L), eq(ReservationStatus.CONFIRMED));
+		verify(matchRepository, times(1)).findMatchesWithTotalAmountByStadiumId(eq(1L), eq(ReservationStatus.CONFIRMED),
+			any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("저장된 구장이 없어 에러메시지")
+	void findMatchesByStadium_noStadium() {
+		Long stadiumId = 999L;
+		int page = 1;
+		int size = 10;
+
+		when(stadiumRepository.findById(stadiumId)).thenReturn(Optional.empty());
+
+		CustomApiException thrown = assertThrows(CustomApiException.class, () -> {
+			stadiumService.findMatchesByStadium(stadiumId, page, size);
+		});
+
+		assertEquals("구장이 존재하지 않습니다", thrown.getMessage());
 	}
 }
