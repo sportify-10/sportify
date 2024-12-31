@@ -14,6 +14,8 @@ public class NotificationService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private static final String TOPIC_NAME = "match-notifications";
     private final NotificationRepository notificationRepository;
+    private final SseEmitterService sseEmitterService;  // SseEmitterService 주입
+
 
     // 특정 키와 메시지로 Kafka에 알림 전송
     public void sendMatchNotification(String key, String message) {
@@ -37,5 +39,8 @@ public class NotificationService {
 
         // DB에 알림 저장
         notificationRepository.save(notification);
+
+        // SSE로 사용자에게 알림 전송
+        sseEmitterService.sendToUser(userId, message);
     }
 }
