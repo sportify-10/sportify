@@ -48,8 +48,6 @@ public class CashService {
         cashLogRepository.save(cashLog);
 
         return responseDto;
-
-
     }
 
     public CashResponseDto approveCashPayment(UserDetailsImpl userDetails, KakaoPayApproveRequestDto request) {
@@ -103,9 +101,9 @@ public class CashService {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<CashLog> cashLogs = cashLogRepository.findAllByUserId(userDetails.getUser().getId(), pageable);
 
-		if (cashLogs.isEmpty()) {
-			throw new CustomApiException(ErrorCode.CASH_LOG_NOT_FOUND);
-		}
+        if (cashLogs.isEmpty()) {
+            throw new CustomApiException(ErrorCode.CASH_LOG_NOT_FOUND);
+        }
 
         return cashLogs.map(cashLog -> new CashLogsResponseDto(
                 cashLog.getPrice(),

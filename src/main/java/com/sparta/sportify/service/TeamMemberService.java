@@ -36,6 +36,10 @@ public class TeamMemberService {
                 () -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND)
         );
         User user = authUser.getUser();
+        boolean isAlreadyPending = teamMemberRepository.existsByUserAndTeamAndStatus(user, team, TeamMember.Status.PENDING);
+        if (isAlreadyPending) {
+            throw new CustomApiException(ErrorCode.ALREADY_PENDING);
+        }
         // 승인된 상태(가입) 확인
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(user, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
@@ -62,11 +66,10 @@ public class TeamMemberService {
                 approveMember.getTeamMemberRole() != TeamMemberRole.MANAGER) {
             throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
         }
-
-
         // 신청 상태 확인
         TeamMember teamMember = teamMemberRepository.findByUserAndTeam(applyUser, team)
                 .orElseThrow(() -> new CustomApiException(ErrorCode.APPLICATION_NOT_FOUND));
+
 
         boolean isAlreadyApproved = teamMemberRepository.existsByUserAndTeamAndStatus(applyUser, team, TeamMember.Status.APPROVED);
         if (isAlreadyApproved) {
@@ -95,12 +98,7 @@ public class TeamMemberService {
         }
         TeamMember teamMember = teamMemberRepository.findByUserIdAndTeamId(requestDto.getUserId(), teamId)
                 .orElseThrow(() -> new CustomApiException(ErrorCode.NOT_TEAM_MEMBER));
-        TeamMemberRole role;
-        try {
-            role = TeamMemberRole.valueOf(requestDto.getRole());
-        } catch (IllegalArgumentException e) {
-            throw new CustomApiException(ErrorCode.INSUFFICIENT_PERMISSION);
-        }
+        TeamMemberRole role = TeamMemberRole.valueOf(String.valueOf(requestDto.getRole()));
 
         teamMember.grantRole(role);
         teamMemberRepository.save(teamMember);
