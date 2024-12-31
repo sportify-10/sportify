@@ -1,9 +1,11 @@
 package com.sparta.sportify.dto.teamDto.res;
 
 import com.sparta.sportify.entity.teamMember.TeamMember;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class TeamMemberResponseDto {
     private Long teamMemberId;
     private Long teamId;
