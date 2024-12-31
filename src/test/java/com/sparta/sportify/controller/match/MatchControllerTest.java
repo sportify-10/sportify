@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.sparta.sportify.dto.match.MatchDetailResponseDto;
+import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
+import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
+import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.matchResult.MatchStatus;
 import com.sparta.sportify.service.MatchService;
 
@@ -58,7 +63,7 @@ class MatchControllerTest {
 			"Team B",
 			MatchStatus.OPEN
 		);
-		// 필요한 데이터로 responseDto를 설정
+
 		when(matchService.getMatchByDateAndTime(any(), any(), any(), any()))
 			.thenReturn(responseDto);
 
@@ -75,13 +80,12 @@ class MatchControllerTest {
 		// Given
 		Long matchId = 1L;
 
-		// MatchResultResponseDto 객체 생성
 		MatchResultResponseDto responseDto = new MatchResultResponseDto(
 			matchId,
 			1,
 			2,
-			MatchStatus.CLOSED, // MatchStatus 설정
-			LocalDate.now() // 현재 날짜 설정
+			MatchStatus.CLOSED,
+			LocalDate.now()
 		);
 
 		when(matchService.getMatchResult(matchId)).thenReturn(responseDto);
@@ -94,4 +98,63 @@ class MatchControllerTest {
 			.andExpect(jsonPath("$.message").value("경기 결과 조회"));
 	}
 
+	@Test
+	public void testCreateMatchResult() throws Exception {
+		// Given
+		Long matchId = 1L;
+
+		MatchResultRequestDto requestDto = new MatchResultRequestDto();
+		requestDto.setTeamAScore(1);
+		requestDto.setTeamBScore(2);
+		requestDto.setMatchStatus(MatchStatus.CLOSED);
+		requestDto.setMatchId(matchId);
+
+		MatchResultResponseDto responseDto = new MatchResultResponseDto(
+			matchId,
+			requestDto.getTeamAScore(),
+			requestDto.getTeamBScore(),
+			requestDto.getMatchStatus(),
+			LocalDate.now()
+		);
+
+		when(matchService.createMatchResult(any(MatchResultRequestDto.class)))
+			.thenReturn(responseDto);
+
+		// When & Then
+		mockMvc.perform(post("/api/matches/result/{matchId}", matchId) // POST 요청 URL
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(
+					"{\"teamAScore\": 1, \"teamBScore\": 2, \"matchStatus\": \"CLOSED\", \"matchId\":" + matchId + "}")
+			)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("경기 결과 기록"));
+	}
+
+	@Test
+	public void testGetMatchesByDate() throws Exception {
+		// Given
+		LocalDate date = LocalDate.now();
+
+		MatchByStadiumResponseDto matchByStadiumResponseDto = new MatchByStadiumResponseDto(
+			1L,
+			"Stadium A",
+			"A great stadium",
+			"Location A",
+			"14:00",
+			"16:00",
+			MatchStatus.OPEN
+		);
+
+		List<MatchByStadiumResponseDto> matches = Collections.singletonList(matchByStadiumResponseDto);
+		MatchesByDateResponseDto responseDto = new MatchesByDateResponseDto(matches);
+
+		when(matchService.getMatchesByDate(date)).thenReturn(responseDto);
+
+		// When & Then
+		mockMvc.perform(get("/api/matches")
+				.param("date", date.toString())
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("날짜별 매치 조회 성공"));
+	}
 }
