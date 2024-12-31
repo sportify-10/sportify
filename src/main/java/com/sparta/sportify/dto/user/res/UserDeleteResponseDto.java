@@ -11,4 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDeleteResponseDto {
     Long id;
+    Long userId;
+
+
+    public UserDeleteResponseDto(Long userId) {
+        this.userId = userId;
+    }
 }
