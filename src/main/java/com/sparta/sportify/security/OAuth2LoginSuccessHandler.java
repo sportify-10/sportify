@@ -1,7 +1,6 @@
 package com.sparta.sportify.security;
 
-import com.sparta.sportify.entity.User;
-import com.sparta.sportify.jwt.JwtTokenProvider;
+import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import jakarta.servlet.ServletException;
@@ -10,13 +9,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor

@@ -1,4 +1,4 @@
-package com.sparta.sportify.entity;
+package com.sparta.sportify.entity.user;
 
 import com.sparta.sportify.config.PasswordEncoder;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
@@ -75,6 +75,11 @@ public class User {
 
     public String getAccessToken() {
         return null;
+    }
+
+    public void disableUser() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
     }
 
     public User(UserRequestDto requestDto) {
