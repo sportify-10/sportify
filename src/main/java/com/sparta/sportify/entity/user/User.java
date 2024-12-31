@@ -84,7 +84,7 @@ public class User {
         this.password = password;
     }
 
-    public void updateOf(String name, String region, String age, String gender) {
+    public void updateOf(String name, String region, String gender, Long age) {
         this.name = name;
         this.region = region;
         this.gender = gender;

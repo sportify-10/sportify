@@ -1,6 +1,6 @@
 package com.sparta.sportify.service;
 
-import com.sparta.sportify.config.PasswordEncoder;
+import com.sparta.sportify.config.CustomPasswordEncoder;
 import com.sparta.sportify.dto.user.req.LoginRequestDto;
 import com.sparta.sportify.dto.user.req.UserRequestDto;
 import com.sparta.sportify.dto.user.res.SignupResponseDto;
@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,15 +111,23 @@ public class UserService {
 
 
     public SignupResponseDto updateUser(UserRequestDto requestDto, UserDetailsImpl userDetails) {
+        if (requestDto == null) {
+            throw new CustomApiException(ErrorCode.INVALID_REQUEST); // requestDto가 null일 경우 예외 처리
+        }
 
+        if (userDetails == null) {
+            throw new CustomApiException(ErrorCode.USER_NOT_FOUND); // userDetails가 null일 경우 예외 처리
+        }
+
+        // 이메일 중복 체크
         if (userRepository.existsByEmailAndIdNot(requestDto.getEmail(), userDetails.getUser().getId())) {
             throw new CustomApiException(ErrorCode.DUPLICATE_EMAIL);
         }
-        String encodedPassword;
+
+        String encodedPassword = null;
 
         // 비밀번호 수정이 요청된 경우
         if (requestDto.getPassword() != null && !requestDto.getPassword().isEmpty()) {
-            // 비밀번호를 암호화해서 저장
             encodedPassword = passwordEncoder.encode(requestDto.getPassword());
             userDetails.getUser().updatePassword(encodedPassword);
         }
@@ -127,14 +136,14 @@ public class UserService {
         userDetails.getUser().updateOf(
                 requestDto.getName(),
                 requestDto.getRegion(),
-                requestDto.getRegion(),
-                requestDto.getGender()
+                requestDto.getGender(),
+                requestDto.getAge()
         );
 
         // 변경된 유저 정보 저장
-
         return new SignupResponseDto(userRepository.save(userDetails.getUser()));
     }
+
 
     // 카카오 로그인 혹은 회원가입 처리
     public SignupResponseDto saveOrLogin(Map<String, Object> userInfo) {

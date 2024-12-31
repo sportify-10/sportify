@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final PasswordEncoder customPasswordEncoder;
+    private final CustomPasswordEncoder customPasswordEncoder;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -26,8 +26,8 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler successHandler;
 
 
-    public SecurityConfig(@Qualifier("customPasswordEncoder") PasswordEncoder passwordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2LoginSuccessHandler successHandler) {
-        this.customPasswordEncoder = passwordEncoder;
+    public SecurityConfig(@Qualifier("customPasswordEncoder") CustomPasswordEncoder passwordEncoder, CustomPasswordEncoder customPasswordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2LoginSuccessHandler successHandler) {
+        this.customPasswordEncoder = customPasswordEncoder;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customOAuth2UserService = customOAuth2UserService;
         this.successHandler = successHandler;
