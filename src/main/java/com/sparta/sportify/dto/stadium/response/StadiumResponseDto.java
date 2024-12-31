@@ -5,11 +5,13 @@ import java.time.LocalDateTime;
 import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.stadium.StadiumStatus;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class StadiumResponseDto {
 	private Long id;
 	private String stadiumName;

@@ -1,5 +1,6 @@
 package com.sparta.sportify.service.match;
 
+import static com.sparta.sportify.entity.stadium.QStadium.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,9 +27,16 @@ import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
+import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
+import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
+import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.matchResult.MatchResult;
 import com.sparta.sportify.entity.matchResult.MatchStatus;
+import com.sparta.sportify.entity.stadium.Stadium;
+import com.sparta.sportify.entity.stadium.StadiumStatus;
+import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.stadium.StadiumStatus;
@@ -38,6 +47,8 @@ import com.sparta.sportify.exception.CustomApiException;
 import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
+import com.sparta.sportify.repository.StadiumTimeRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.repository.TeamRepository;
@@ -73,8 +84,32 @@ class MatchServiceTest {
 	private StadiumTime stadiumTime;
 	private Stadium stadium;
 
+	@Mock
+	private StadiumTimeRepository stadiumTimeRepository;
+
+	private User user;
+	private UserDetailsImpl userDetails;
+	private Stadium stadium;
+	private Stadium stadium2;
+	private StadiumTime stadiumTime;
+	private StadiumTime stadiumTime2;
+	private Match match;
+	private Match match2;
+
 	@BeforeEach
 	void setUp() {
+		user = User.builder()
+			.id(1L)
+			.active(true)
+			.age(20L)
+			.deletedAt(null)
+			.email("test@example.com")
+			.name("John Doe")
+			.password("password123")
+			.role(UserRole.USER)
+			.cash(1000L)
+			.build();
+		userDetails = new UserDetailsImpl(user.getName(), user.getRole(), user);
 		stadium = new Stadium(
 			1L,
 			"National Stadium",
@@ -108,6 +143,34 @@ class MatchServiceTest {
 			.teamBScore(5)
 			.matchStatus(MatchStatus.CLOSED)
 			.matchDate(LocalDate.now())
+			.build();
+
+		stadium2 = Stadium.builder()
+			.id(1L)
+			.stadiumName("A구장")
+			.location("서울")
+			.aTeamCount(5)
+			.bTeamCount(5)
+			.description("종아요~")
+			.price(100000L)
+			.status(StadiumStatus.APPROVED)
+			.deletedAt(null)
+			.user(user)
+			.build();
+
+		stadiumTime2 = StadiumTime.builder()
+			.id(1L)
+			.cron("0 0 08-10,10-12,20-22 ? * MON,TUE")
+			.stadium(stadium)
+			.build();
+
+		match2 = Match.builder()
+			.id(1L)
+			.date(LocalDate.of(2024, 12, 31))
+			.time(20)
+			.aTeamCount(4)
+			.bTeamCount(6)
+			.stadiumTime(stadiumTime)
 			.build();
 	}
 
@@ -729,5 +792,28 @@ class MatchServiceTest {
 		MatchStatus status = matchService.determineMatchStatus(match, now);
 
 		assertEquals(MatchStatus.OPEN, status);
+	}
+
+	@Test
+	@DisplayName("날짜별 매치 조회 테스트")
+	void getMatchesByDateTest() {
+		LocalDate date = LocalDate.of(2024, 12, 31);
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase();
+
+		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(eq(stadiumTime.getId()), eq(date), anyInt()))
+			.thenReturn(Optional.of(match));
+
+		MatchesByDateResponseDto responseDto = matchService.getMatchesByDate(date);
+
+		//"0 0 08-10,10-12,20-22 ? * MON,TUE" 시간 3개 x 요일 2개
+		assertEquals(6, responseDto.getData().size());//
+
+		MatchByStadiumResponseDto matchResponse = responseDto.getData().get(0);
+		assertEquals("A구장", matchResponse.getStadiumName());
+		assertEquals("08:00", matchResponse.getStartTime());
+		assertEquals("10:00", matchResponse.getEndTime());
+		assertEquals(MatchStatus.ALMOST_FULL, matchResponse.getStatus(), "Match status should be PENDING");
 	}
 }
