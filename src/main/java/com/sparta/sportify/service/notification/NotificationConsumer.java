@@ -16,16 +16,15 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class NotificationConsumer {
 
     private final NotificationRepository notificationRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final SseEmitterService sseEmitterService; // SSE 전송 서비스 추가
 
-    // Kafka에서 최신 메시지 반환
-    // 최신 Kafka 메시지를 저장하기 위한 필드
-    @Getter
-    private volatile String latestKafkaMessage;
+    // 최신 Kafka 메시지를 저장하기 위한 필드 (volatile 제거)
+    private String latestKafkaMessage;
 
     @KafkaListener(topics = "match-notifications", groupId = "notification-group")
     public void consumeNotification(String message) {
@@ -36,11 +35,12 @@ public class NotificationConsumer {
         log.info("Updated latestKafkaMessage: {}", latestKafkaMessage);
 
         try {
-            // 메시지에서 userId 및 message 추출
+            // 메시지에서 userId, message 및 scheduledTime 추출
             Long userId = extractUserIdFromMessage(message);
             String notificationMessage = extractNotificationMessage(message);
-            LocalDateTime scheduledTime = extractScheduledTimeFromMessage(message);
+            LocalDateTime scheduledTime = extractScheduledTimeFromMessage(notificationMessage);
 
+            // 알림 내용이 없거나 필요한 정보가 부족한 경우 처리
             if (userId == null || notificationMessage == null || scheduledTime == null) {
                 log.error("Invalid message format or missing data: {}", message);
                 return;
@@ -49,17 +49,18 @@ public class NotificationConsumer {
             // 현재 시간이 예정된 경기 시간이 지나지 않았는지 확인
             if (LocalDateTime.now().isAfter(scheduledTime)) {
                 log.info("The scheduled match time has passed. Notification not sent.");
-                return;  // 예정된 시간 이후에는 알림 전송하지 않음
+                return;  // 예정된 시간 이후에는 알림을 보내지 않음
             }
 
             // 알림 DB 저장
-            Notification notification = new Notification();
-            notification.setType("MATCH");
-            notification.setStatus(Notification.NotificationStatus.PENDING);
-            notification.setDeliveryMethod("PUSH");
-            notification.setMessage(notificationMessage);
-            notification.setCreatedAt(LocalDateTime.now());
-            notification.setUserId(userId);
+            Notification notification = Notification.builder()
+                    .userId(userId)
+                    .message(notificationMessage)
+                    .type("MATCH")
+                    .status(Notification.NotificationStatus.PENDING)
+                    .deliveryMethod("PUSH")
+                    .createdAt(LocalDateTime.now())
+                    .build();
             notificationRepository.save(notification);
 
             log.info("Saved notification to database: {}", notification);
@@ -95,16 +96,21 @@ public class NotificationConsumer {
         }
     }
 
-    // 메시지에서 예정된 경기 시간 추출
-    private LocalDateTime extractScheduledTimeFromMessage(String message) {
+    // 메시지에서 예정된 경기 시간 추출 (경기 시간 파싱 개선)
+    private LocalDateTime extractScheduledTimeFromMessage(String messageText) {
         try {
-            JsonNode rootNode = objectMapper.readTree(message);
-            String messageText = rootNode.path("message").asText();
-            // 경기 시간 파싱 (예: "2024-12-31T14:00에 시작합니다!"에서 "2024-12-31T14:00" 추출)
-            String dateTimeString = messageText.substring(messageText.indexOf("2024"), messageText.indexOf("에"));
+            // 메시지에서 경기 시간이 "2024-12-31T14:00"과 같은 형식으로 포함된다고 가정
+            int startIdx = messageText.indexOf("2024");  // 경기 시작 시간을 포함하는 부분의 시작
+            int endIdx = messageText.indexOf("에"); // "에" 뒤로 끝나는 시점
+            if (startIdx == -1 || endIdx == -1) {
+                log.error("Invalid format for scheduled time in message: {}", messageText);
+                return null;
+            }
+
+            String dateTimeString = messageText.substring(startIdx, endIdx).trim();
             return LocalDateTime.parse(dateTimeString);
         } catch (Exception e) {
-            log.error("Error parsing scheduled time from message: {}", message, e);
+            log.error("Error parsing scheduled time from message: {}", messageText, e);
             return null;
         }
     }
