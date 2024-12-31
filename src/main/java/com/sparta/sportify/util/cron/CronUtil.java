@@ -54,7 +54,7 @@ public class CronUtil {
 			int end = Integer.parseInt(hours[1]);
 
 			// 2시간씩 증가하면서 추가
-			for (int j = start; j <= end; j += 2) {
+			for (int j = start; j < end; j += 2) {
 				startTimes.add(j);
 			}
 		}
