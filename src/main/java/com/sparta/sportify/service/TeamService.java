@@ -74,7 +74,7 @@ public class TeamService {
 
     @Transactional
     public TeamResponseDto updateTeam(Long teamId, TeamRequestDto requestDto, UserDetailsImpl authUser) {
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다.: " + teamId));
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new CustomApiException(ErrorCode.TEAM_NOT_FOUND));
         TeamMember user = teamMemberRepository.findById(authUser.getUser().getId()).orElseThrow(
                 () -> new CustomApiException(ErrorCode.USER_NOT_FOUND)
         );
