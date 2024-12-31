@@ -1,6 +1,5 @@
 package com.sparta.sportify.service.match;
 
-import static com.sparta.sportify.entity.stadium.QStadium.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -11,7 +10,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,34 +23,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sparta.sportify.dto.match.MatchDetailResponseDto;
 import com.sparta.sportify.dto.match.MatchResultRequestDto;
 import com.sparta.sportify.dto.match.MatchResultResponseDto;
-import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
-import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.dto.match.response.MatchByStadiumResponseDto;
 import com.sparta.sportify.dto.match.response.MatchesByDateResponseDto;
 import com.sparta.sportify.entity.StadiumTime.StadiumTime;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.entity.matchResult.MatchResult;
 import com.sparta.sportify.entity.matchResult.MatchStatus;
-import com.sparta.sportify.entity.stadium.Stadium;
-import com.sparta.sportify.entity.stadium.StadiumStatus;
-import com.sparta.sportify.entity.user.User;
-import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.entity.reservation.Reservation;
 import com.sparta.sportify.entity.stadium.Stadium;
 import com.sparta.sportify.entity.stadium.StadiumStatus;
 import com.sparta.sportify.entity.team.Team;
 import com.sparta.sportify.entity.team.TeamColor;
 import com.sparta.sportify.entity.user.User;
+import com.sparta.sportify.entity.user.UserRole;
 import com.sparta.sportify.exception.CustomApiException;
 import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.MatchRepository;
 import com.sparta.sportify.repository.MatchResultRepository;
-import com.sparta.sportify.repository.StadiumTimeRepository;
-import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.repository.ReservationRepository;
 import com.sparta.sportify.repository.StadiumTimeRepository;
 import com.sparta.sportify.repository.TeamRepository;
 import com.sparta.sportify.repository.UserRepository;
+import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.MatchService;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,16 +76,10 @@ class MatchServiceTest {
 	private StadiumTime stadiumTime;
 	private Stadium stadium;
 
-	@Mock
-	private StadiumTimeRepository stadiumTimeRepository;
-
 	private User user;
 	private UserDetailsImpl userDetails;
-	private Stadium stadium;
 	private Stadium stadium2;
-	private StadiumTime stadiumTime;
 	private StadiumTime stadiumTime2;
-	private Match match;
 	private Match match2;
 
 	@BeforeEach
@@ -161,7 +147,7 @@ class MatchServiceTest {
 		stadiumTime2 = StadiumTime.builder()
 			.id(1L)
 			.cron("0 0 08-10,10-12,20-22 ? * MON,TUE")
-			.stadium(stadium)
+			.stadium(stadium2)
 			.build();
 
 		match2 = Match.builder()
@@ -170,7 +156,7 @@ class MatchServiceTest {
 			.time(20)
 			.aTeamCount(4)
 			.bTeamCount(6)
-			.stadiumTime(stadiumTime)
+			.stadiumTime(stadiumTime2)
 			.build();
 	}
 
@@ -801,9 +787,9 @@ class MatchServiceTest {
 		DayOfWeek dayOfWeek = date.getDayOfWeek();
 		String cronDay = dayOfWeek.toString().substring(0, 3).toUpperCase();
 
-		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime));
-		when(matchRepository.findByStadiumTimeIdAndDateAndTime(eq(stadiumTime.getId()), eq(date), anyInt()))
-			.thenReturn(Optional.of(match));
+		when(stadiumTimeRepository.findByCronDay(cronDay)).thenReturn(Arrays.asList(stadiumTime2));
+		when(matchRepository.findByStadiumTimeIdAndDateAndTime(eq(stadiumTime2.getId()), eq(date), anyInt()))
+			.thenReturn(Optional.of(match2));
 
 		MatchesByDateResponseDto responseDto = matchService.getMatchesByDate(date);
 
