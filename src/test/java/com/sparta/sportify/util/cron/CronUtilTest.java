@@ -29,7 +29,7 @@ class CronUtilTest {
 
 		List<Integer> result = CronUtil.extractStartTimes(cronExpr);
 
-		List<Integer> expected = List.of(8, 13, 15);
+		List<Integer> expected = List.of(8, 10, 13, 15);
 		assertThat(result).isEqualTo(expected);
 	}
 }
