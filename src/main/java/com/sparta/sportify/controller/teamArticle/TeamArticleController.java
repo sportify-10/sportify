@@ -6,12 +6,10 @@ import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.service.TeamArticleService;
 import com.sparta.sportify.util.api.ApiResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/team/article")
@@ -87,12 +85,4 @@ public class TeamArticleController {
                 )
         );
     }
-	@PostMapping("{teamId}")
-	public ResponseEntity<ApiResult<TeamArticleResponseDto>> createPost(
-		@PathVariable Long teamId,
-		@AuthenticationPrincipal UserDetailsImpl userDetails,
-		@RequestBody TeamArticleRequestDto teamArticleRequestDto
-	){
-		return ResponseEntity.ok(ApiResult.success("게시글 등록 성공", teamArticleService.createPost(teamId,userDetails, teamArticleRequestDto)));
-	}
 }

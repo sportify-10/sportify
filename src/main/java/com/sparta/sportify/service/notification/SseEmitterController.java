@@ -60,7 +60,7 @@ public class SseEmitterController {
         return ResponseEntity.ok(emitter);
     }
 
-    //eventPayload 를 SSE 로 연결된 모든 클라이언트에게 broadcasting 한다.
+    //NotificationPayload 를 SSE 로 연결된 모든 클라이언트에게 broadcasting 한다.
     @PostMapping(path = "/v1/sse/broadcast")
     public ResponseEntity<Void> broadcast(@RequestBody NotificationPayload eventPayload) {
         sseEmitterService.broadcast(eventPayload);

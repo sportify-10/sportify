@@ -1,117 +1,112 @@
 package com.sparta.sportify.service.notification;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.sportify.entity.notification.Notification;
 import com.sparta.sportify.repository.NotificationRepository;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-
 public class NotificationConsumer {
 
     private final NotificationRepository notificationRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final SseEmitterService sseEmitterService; // SSE 전송 서비스 추가
+    private final SseEmitterService sseEmitterService;
+    private final ObjectMapper objectMapper;
 
-    // 최신 Kafka 메시지를 저장하기 위한 필드 (volatile 제거)
-    private String latestKafkaMessage;
-
-    @KafkaListener(topics = "match-notifications", groupId = "notification-group")
+    @KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeNotification(String message) {
-        log.info("Received Kafka notification message: {}", message);
-
-        // 최신 메시지 업데이트
-        latestKafkaMessage = message;
-        log.info("Updated latestKafkaMessage: {}", latestKafkaMessage);
+        log.debug("Received notification: {}", message);
 
         try {
-            // 메시지에서 userId, message 및 scheduledTime 추출
-            Long userId = extractUserIdFromMessage(message);
-            String notificationMessage = extractNotificationMessage(message);
-            LocalDateTime scheduledTime = extractScheduledTimeFromMessage(notificationMessage);
+            NotificationPayload payload = parseMessage(message);
+            if (payload == null) return;
 
-            // 알림 내용이 없거나 필요한 정보가 부족한 경우 처리
-            if (userId == null || notificationMessage == null || scheduledTime == null) {
-                log.error("Invalid message format or missing data: {}", message);
-                return;
+            if (isNotificationValid(payload)) {
+                processNotification(payload);
             }
-
-            // 현재 시간이 예정된 경기 시간이 지나지 않았는지 확인
-            if (LocalDateTime.now().isAfter(scheduledTime)) {
-                log.info("The scheduled match time has passed. Notification not sent.");
-                return;  // 예정된 시간 이후에는 알림을 보내지 않음
-            }
-
-            // 알림 DB 저장
-            Notification notification = Notification.builder()
-                    .userId(userId)
-                    .message(notificationMessage)
-                    .type("MATCH")
-                    .status(Notification.NotificationStatus.PENDING)
-                    .deliveryMethod("PUSH")
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            notificationRepository.save(notification);
-
-            log.info("Saved notification to database: {}", notification);
-
-            // SSE를 통해 클라이언트로 알림 전송
-            sseEmitterService.sendToUser(userId, notificationMessage);
-            log.info("Notification sent to user {} via SSE: {}", userId, notificationMessage);
-
         } catch (Exception e) {
-            log.error("Failed to process notification message: {}", message, e);
+            log.error("알림 처리 실패: {}", message, e);
         }
     }
 
-    // 메시지에서 userId 추출
-    private Long extractUserIdFromMessage(String message) {
+    private NotificationPayload parseMessage(String message) {
         try {
-            JsonNode rootNode = objectMapper.readTree(message);
-            return rootNode.path("userId").asLong();
+            return objectMapper.readValue(message, NotificationPayload.class);
         } catch (IOException e) {
-            log.error("Error parsing message to extract userId: {}", message, e);
+            log.error("메시지 파싱 실패: {}", message, e);
             return null;
         }
     }
 
-    // 메시지에서 알림 내용 추출
-    private String extractNotificationMessage(String message) {
-        try {
-            JsonNode rootNode = objectMapper.readTree(message);
-            return rootNode.path("message").asText();
-        } catch (IOException e) {
-            log.error("Error parsing message to extract notification message: {}", message, e);
-            return null;
+    private boolean isNotificationValid(NotificationPayload payload) {
+        if (!isValidPayload(payload)) {
+            log.error("유효하지 않은 페이로드: {}", payload);
+            return false;
         }
+
+        LocalDateTime scheduledTime = extractScheduledTime(payload.getMessage());
+        if (scheduledTime == null || LocalDateTime.now().isAfter(scheduledTime)) {
+            log.info("만료된 알림: {}", payload);
+            return false;
+        }
+
+        return true;
     }
 
-    // 메시지에서 예정된 경기 시간 추출 (경기 시간 파싱 개선)
-    private LocalDateTime extractScheduledTimeFromMessage(String messageText) {
+    private void processNotification(NotificationPayload payload) {
+        saveNotification(payload);
+        sendNotification(payload);
+    }
+
+    private void saveNotification(NotificationPayload payload) {
+        Notification notification = createNotification(payload);
+        notificationRepository.save(notification);
+        log.debug("알림 저장 완료: {}", notification.getId());
+    }
+
+    private void sendNotification(NotificationPayload payload) {
+        sseEmitterService.sendToUser(payload.getUserId(), payload.getMessage());
+        log.debug("SSE 알림 전송 완료: userId={}", payload.getUserId());
+    }
+
+    private LocalDateTime extractScheduledTime(String message) {
         try {
-            // 메시지에서 경기 시간이 "2024-12-31T14:00"과 같은 형식으로 포함된다고 가정
-            int startIdx = messageText.indexOf("2024");  // 경기 시작 시간을 포함하는 부분의 시작
-            int endIdx = messageText.indexOf("에"); // "에" 뒤로 끝나는 시점
-            if (startIdx == -1 || endIdx == -1) {
-                log.error("Invalid format for scheduled time in message: {}", messageText);
-                return null;
+            Matcher matcher = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}")
+                    .matcher(message);
+            if (matcher.find()) {
+                return LocalDateTime.parse(matcher.group());
             }
-
-            String dateTimeString = messageText.substring(startIdx, endIdx).trim();
-            return LocalDateTime.parse(dateTimeString);
+            return null;
         } catch (Exception e) {
-            log.error("Error parsing scheduled time from message: {}", messageText, e);
+            log.error("시간 추출 실패: {}", message, e);
             return null;
         }
+    }
+
+    private Notification createNotification(NotificationPayload payload) {
+        return Notification.builder()
+                .userId(payload.getUserId())
+                .message(payload.getMessage())
+                .type("MATCH")
+                .status(Notification.NotificationStatus.PENDING)
+                .deliveryMethod("PUSH")
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    private boolean isValidPayload(NotificationPayload payload) {
+        return payload != null
+                && payload.getUserId() != null
+                && StringUtils.hasText(payload.getMessage());
     }
 }
