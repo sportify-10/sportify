@@ -68,7 +68,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
-    private String getNameAttributeKey(String provider) {
+    public String getNameAttributeKey(String provider) {
         switch (provider.toLowerCase()) {
             case "kakao":
                 return "id"; // 카카오의 기본 키
