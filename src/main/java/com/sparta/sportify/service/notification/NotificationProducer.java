@@ -3,6 +3,7 @@ package com.sparta.sportify.service.notification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.sportify.entity.match.Match;
 import com.sparta.sportify.repository.MatchRepository;
+import com.sparta.sportify.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

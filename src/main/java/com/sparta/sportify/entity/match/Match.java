@@ -28,9 +28,10 @@ import jakarta.persistence.Table;
 @Getter
 @Builder
 public class Match {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private LocalDate date;
     private Integer time;
@@ -39,32 +40,31 @@ public class Match {
     private String name;
 
 
-	@ManyToOne
-	@JoinColumn(name = "stadium_time_id", nullable = false)
-	private StadiumTime stadiumTime;
+    @ManyToOne
+    @JoinColumn(name = "stadium_time_id", nullable = false)
+    private StadiumTime stadiumTime;
 
-	public void discountATeamCount(int count) {
-		this.aTeamCount -= count;
-		if (this.aTeamCount < 0) {
-			throw new CustomApiException(ErrorCode.ERR_USER_LIMIT_EXCEEDED);
-		}
-	}
+    public void discountATeamCount(int count) {
+        this.aTeamCount -= count;
 
-	public void discountBTeamCount(int count) {
-		this.bTeamCount -= count;
-		if (this.bTeamCount < 0) {
-			throw new CustomApiException(ErrorCode.ERR_USER_LIMIT_EXCEEDED);
-		}
-	}
+        if(this.aTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
+    }
+    public void discountBTeamCount(int count) {
+        this.bTeamCount -= count;
 
-	public void addATeamCount(int count) {
-		this.aTeamCount += count;
-	}
+        if(this.bTeamCount < 0) {
+            throw new RuntimeException("인원수가 초과되었습니다.");
+        }
+    }
 
-	public void addBTeamCount(int count) {
-		this.bTeamCount += count;
-	}
-
+    public void addATeamCount(int count) {
+        this.aTeamCount += count;
+    }
+    public void addBTeamCount(int count) {
+        this.bTeamCount += count;
+    }
 
 
     private LocalDateTime startingAt;
@@ -76,21 +76,26 @@ public class Match {
         return LocalDateTime.of(date, localTime);
     }
 
-	public LocalDateTime getEndTime() {
-		return getStartTime().plusHours(2); // 종료 시간은 시작 시간 + 2시간
-	}
+    public LocalDateTime getEndTime() {
+        return getStartTime().plusHours(2); // 종료 시간은 시작 시간 + 2시간
+    }
 
-	public double getTotalMatchCount() {
-		return aTeamCount + bTeamCount;
-	}
+    public double getTotalMatchCount() {
+        return aTeamCount + bTeamCount;
+    }
 
-	public double getTotalStadiumCapacity() {
-		return stadiumTime.getStadium().getATeamCount() + stadiumTime.getStadium().getBTeamCount();
-	}
+    public double getTotalStadiumCapacity() {
+        return stadiumTime.getStadium().getATeamCount() + stadiumTime.getStadium().getBTeamCount();
+    }
 
-	public double getReservationPercentage() {
-		double totalCapacity = getTotalStadiumCapacity();
-		return totalCapacity > 0 ? (getTotalMatchCount() / totalCapacity) * 100 : 0;
-	}
+    public double getReservationPercentage() {
+        double totalCapacity = getTotalStadiumCapacity();
+        return totalCapacity > 0 ? (getTotalMatchCount() / totalCapacity) * 100 : 0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
 }
 
