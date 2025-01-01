@@ -55,7 +55,7 @@ public class CashService {
                         userDetails.getUser().getId(),
                         CashType.PENDING, // 승인 가능한 로그는 CHARGE 타입
                         request.getAmount()) // 요청 금액과 일치하는 로그 조회
-                .orElseThrow(() -> new IllegalArgumentException("승인할 결제 로그를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.CHARGE_LOG_NOT_FOUND));
         String tid = existingCashLog.getTid();
         kakaoPayService.approvePayment(request, tid);
 
@@ -79,7 +79,7 @@ public class CashService {
                         userDetails.getUser().getId(),
                         CashType.CHARGE, // 환불은 CHARGE 타입에서만 가능
                         request.getAmount()) // 요청 금액과 일치하는 로그 조회
-                .orElseThrow(() -> new IllegalArgumentException("환불할 결제 로그를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomApiException(ErrorCode.REFUND_LOG_NOT_FOUND));
         String tid = existingCashLog.getTid();
         kakaoPayService.refundPayment(request, tid);
         CashLog refundCashLog = CashLog.builder()
