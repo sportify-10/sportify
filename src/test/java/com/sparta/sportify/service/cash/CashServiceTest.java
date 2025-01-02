@@ -1,5 +1,6 @@
 package com.sparta.sportify.service.cash;
 
+import com.sparta.sportify.dto.cash.request.CashRefundRequestDto;
 import com.sparta.sportify.dto.cash.request.CashRequestDto;
 import com.sparta.sportify.dto.cash.response.CashLogsResponseDto;
 import com.sparta.sportify.dto.cash.response.CashResponseDto;
@@ -188,7 +189,7 @@ class CashServiceTest {
     void testCashRefund() {
         // Given
         user.setCash(10000L); // 초기 cash 설정
-        CashRequestDto requestDto = new CashRequestDto(9000L); // 환불 요청 금액
+        CashRefundRequestDto requestDto = new CashRefundRequestDto(1L, 9000L); // 환불 요청 금액
 
         CashLog chargeCashLog = CashLog.builder()
                 .id(1L)

@@ -1,5 +1,6 @@
 package com.sparta.sportify.controller.cash;
 
+import com.sparta.sportify.dto.cash.request.CashRefundRequestDto;
 import com.sparta.sportify.dto.cash.request.CashRequestDto;
 import com.sparta.sportify.dto.cash.response.CashLogsResponseDto;
 import com.sparta.sportify.dto.cash.response.CashResponseDto;
@@ -58,14 +59,14 @@ public class CashController {
 
         // 결제 승인 및 캐시 충전
         CashResponseDto responseDto = cashService.approveCashPayment(userDetails, approveRequestDto);
-		
+
         return ResponseEntity.ok(ApiResult.success("캐쉬 충전 성공", responseDto));
     }
 
     @PostMapping("cancel")
     public ResponseEntity<ApiResult<CashResponseDto>> cancelCash(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody CashRequestDto refundRequestDto) {
+            @RequestBody CashRefundRequestDto refundRequestDto) {
 
         CashResponseDto responseDto = cashService.CashRefund(userDetails, refundRequestDto);
 
