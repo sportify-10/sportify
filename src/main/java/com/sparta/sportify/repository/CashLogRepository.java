@@ -23,7 +23,10 @@ public interface CashLogRepository extends JpaRepository<CashLog, Long> {
 
     Optional<CashLog> findByUserIdAndCouponId(Long userId, Long couponId);
 
-    Optional<CashLog> findByUserIdAndTypeAndPrice(Long userId, CashType type, Long price);
+    @Query("SELECT c FROM CashLog c WHERE c.user.id = :userId AND c.type = :type AND c.price = :price ORDER BY c.createAt DESC")
+    Optional<CashLog> findByUserIdAndTypeAndPrice(@Param("userId") Long userId,
+                                                  @Param("type") CashType type,
+                                                  @Param("price") Long price);
 
     @Query("SELECT c FROM CashLog c WHERE c.user.id = :userId AND c.type = :type ORDER BY c.createAt DESC")
     Optional<CashLog> findFirstByUserIdAndTypeOrderByCreateAtDesc(@Param("userId") Long userId, @Param("type") CashType cashType);
