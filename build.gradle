@@ -85,7 +85,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 
-
     implementation 'org.springframework.security:spring-security-oauth2-core'
     implementation 'org.springframework.security:spring-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // 비동기 웹을 위한 의존성
@@ -105,6 +104,7 @@ dependencies {
 
     implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 
+    runtimeOnly 'com.h2database:h2'
 }
 
 dependencyManagement {
