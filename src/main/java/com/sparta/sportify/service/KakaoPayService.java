@@ -6,7 +6,6 @@ import com.sparta.sportify.dto.kakaoPay.request.KakaoPayApproveRequestDto;
 import com.sparta.sportify.dto.kakaoPay.response.KakaoPayReadyResponseDto;
 import com.sparta.sportify.security.UserDetailsImpl;
 import com.sparta.sportify.util.payment.KakaoPayApi;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,13 +14,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class KakaoPayService {
 
     @Value("${kakao.pay.secret-key-dev}")
     private String secretKeyDev;
 
     private final KakaoPayApi kakaoPayApi;
+
+    public KakaoPayService(@Value("${kakao.pay.secret-key-dev}") String secretKeyDev, KakaoPayApi kakaoPayApi) {
+        this.secretKeyDev = secretKeyDev;
+        this.kakaoPayApi = kakaoPayApi;
+    }
 
     public KakaoPayReadyResponseDto preparePayment(UserDetailsImpl authUser, CashRequestDto cashRequestDto) {
         Map<String, String> parameters = Map.of(
@@ -61,4 +64,5 @@ public class KakaoPayService {
 
         return responseDto;
     }
+
 }

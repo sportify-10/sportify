@@ -59,7 +59,9 @@ public enum ErrorCode {
     STADIUMTIME_NOT_FOUND(404, "경기 시간을 찾을 수 없습니다"),
     ERR_USER_LIMIT_EXCEEDED(429, "인원수가 초과되었습니다."),
     ALREADY_PENDING(400, "이미 신청 상태입니다"),
-    INVALID_ROLE(403, "없는 권한입니다");
+    INVALID_ROLE(403, "없는 권한입니다"),
+    CHARGE_LOG_NOT_FOUND(404, "승인할 결제 로그를 찾을수 없습니다"),
+    REFUND_LOG_NOT_FOUND(404, "환불할 결제 로그를 찾을수 없습니다");
 
     private final int status;
     private final String message;
