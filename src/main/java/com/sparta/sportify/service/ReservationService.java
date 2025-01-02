@@ -72,21 +72,21 @@ public class ReservationService {
                 .build();
     }
 
-    private CashLog handleCashLog(UserDetailsImpl authUser, Long totalPrice) {
+    private CashLog handleCashLog(UserDetailsImpl authUser, Long totalPrice, CashType cashType) {
         CashLog cashLog = cashLogRepository.save(
                 CashLog.builder()
                         .price(totalPrice)
-                        .type(CashType.PAYMENT)
+                        .type(cashType)
                         .user(authUser.getUser())
                         .build()
         );
-        authUser.getUser().discountCash(totalPrice);
+        authUser.getUser().addCash(totalPrice);
         userRepository.save(authUser.getUser());
 
         return cashLog;
     }
 
-    private void handleCashLogReservationMapping(CashLog cashLog, List<Reservation> reservations) {
+    private void handleCashLogReservationMapping(CashLog cashLog, List<Reservation> reservations, CashLogReservationMappingType cashLogReservationMappingType) {
         reservations.forEach(reservation -> {
             CashLogReservationMappingId embeddedId = new CashLogReservationMappingId(cashLog.getId(), reservation.getId());
 
@@ -95,7 +95,7 @@ public class ReservationService {
                             .id(embeddedId)
                             .cashLog(cashLog)
                             .reservation(reservation)
-                            .type(CashLogReservationMappingType.MINUS)
+                            .type(cashLogReservationMappingType)
                             .build()
             );
         });
@@ -125,9 +125,9 @@ public class ReservationService {
                         .build()
         );
 
-        CashLog cashLog = handleCashLog(authUser, stadiumTime.getStadium().getPrice());
+        CashLog cashLog = handleCashLog(authUser, -stadiumTime.getStadium().getPrice(), CashType.PAYMENT);
 
-        handleCashLogReservationMapping(cashLog, Collections.singletonList(reservation));
+        handleCashLogReservationMapping(cashLog, Collections.singletonList(reservation), CashLogReservationMappingType.MINUS);
 
         return new ReservationResponseDto(reservation.getId());
     }
@@ -158,9 +158,9 @@ public class ReservationService {
                 ))
                 .toList();
 
-        CashLog cashLog = handleCashLog(authUser, stadiumTime.getStadium().getPrice() * users.size());
+        CashLog cashLog = handleCashLog(authUser, -stadiumTime.getStadium().getPrice() * users.size(), CashType.PAYMENT);
 
-        handleCashLogReservationMapping(cashLog, reservations);
+        handleCashLogReservationMapping(cashLog, reservations, CashLogReservationMappingType.MINUS);
 
         return new ReservationResponseDto(reservations.stream().map(Reservation::getId).toList());
     }
@@ -231,15 +231,9 @@ public class ReservationService {
 
         matchRepository.save(match);
 
-//        CashLogReservationMapping cashLogReservationMapping = cashLogReservationMappingRepository.findCashLogReservationMappingById(reservation.getId());
-//
-//        CashLog cashlog = cashLogReservationMapping.getCashLog();
-//
-//        cashlog.refund();
-//        cashLogRepository.save(cashlog);
-//
-//        authUser.getUser().addCash(reservation.getTotalAmount());
-//        userRepository.save(authUser.getUser());
+        CashLog cashLog = handleCashLog(authUser, reservation.getTotalAmount(), CashType.CHARGE);
+
+        handleCashLogReservationMapping(cashLog, Collections.singletonList(reservation), CashLogReservationMappingType.PLUS);
 
 
         return new ReservationResponseDto(reservation.getId());
