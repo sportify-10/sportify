@@ -1,14 +1,14 @@
 package com.sparta.sportify.dto.match.response;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class MatchesByDateResponseDto {
-	private final List<MatchByStadiumResponseDto> data;
+    public List<MatchByStadiumResponseDto> data;
 }
