@@ -12,9 +12,7 @@ import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.CashLogRepository;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.UserDetailsImpl;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +35,10 @@ public class CashService {
     public KakaoPayReadyResponseDto prepareCashPayment(UserDetailsImpl userDetails, CashRequestDto request) {
 
         KakaoPayReadyResponseDto responseDto = kakaoPayService.preparePayment(userDetails, request);
+        boolean isAlreadyPending = cashLogRepository.existsByUserAndCashType(userDetails.getUser(), CashType.PENDING);
+        if (isAlreadyPending) {
+            throw new CustomApiException(ErrorCode.ALREADY_PENDING);
+        }
 
         CashLog cashLog = CashLog.builder()
                 .price(request.getAmount()) // 충전 금액
