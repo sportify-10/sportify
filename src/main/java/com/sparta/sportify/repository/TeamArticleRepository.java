@@ -8,5 +8,5 @@ import com.sparta.sportify.entity.teamArticle.TeamArticle;
 
 public interface TeamArticleRepository extends JpaRepository<TeamArticle, Long> {
 
-	Page<TeamArticle> findAllByTeamId(Long teamId, Pageable pageable);
+	Page<TeamArticle> findAllByTeamIdAndDeletedAtIsNull(Long teamId, Pageable pageable);
 }
