@@ -80,9 +80,9 @@ public class KakaoPayApi {
         body.put("quantity", "1");
         body.put("total_amount", parameters.get("totalAmount"));
         body.put("tax_free_amount", "0");
-        body.put("approval_url", "http://localhost:8080/api/cash/success");
-        body.put("cancel_url", "http://localhost:8080/api/cash/cancel");
-        body.put("fail_url", "http://localhost:8080/api/cash/fail");
+        body.put("approval_url", "http://43.201.213.222:8080/api/cash/success");
+        body.put("cancel_url", "http://43.201.213.222:8080/api/cash/cancel");
+        body.put("fail_url", "http://43.201.213.222:8080/api/cash/fail");
         return body;
     }
 
