@@ -35,7 +35,7 @@ public class CashService {
     public KakaoPayReadyResponseDto prepareCashPayment(UserDetailsImpl userDetails, CashRequestDto request) {
 
         KakaoPayReadyResponseDto responseDto = kakaoPayService.preparePayment(userDetails, request);
-        boolean isAlreadyPending = cashLogRepository.existsByUserAndCashType(userDetails.getUser(), CashType.PENDING);
+        boolean isAlreadyPending = cashLogRepository.existsByUserAndType(userDetails.getUser(), CashType.PENDING);
         if (isAlreadyPending) {
             throw new CustomApiException(ErrorCode.ALREADY_PENDING);
         }

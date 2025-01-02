@@ -28,5 +28,5 @@ public interface CashLogRepository extends JpaRepository<CashLog, Long> {
     @Query("SELECT c FROM CashLog c WHERE c.user.id = :userId AND c.type = :type ORDER BY c.createAt DESC")
     Optional<CashLog> findFirstByUserIdAndTypeOrderByCreateAtDesc(@Param("userId") Long userId, @Param("type") CashType cashType);
 
-    boolean existsByUserAndCashType(User user, CashType cashType);
+    boolean existsByUserAndType(User user, CashType type);
 }
