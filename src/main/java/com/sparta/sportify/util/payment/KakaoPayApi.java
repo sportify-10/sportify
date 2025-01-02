@@ -75,7 +75,7 @@ public class KakaoPayApi {
         HashMap<String, String> body = new HashMap<>();
         body.put("cid", "TC0ONETIME");
         body.put("partner_order_id", "order_1234");
-        body.put("partner_user_id", "1");
+        body.put("partner_user_id", parameters.get("partner_user_id"));
         body.put("item_name", "캐쉬 충전");
         body.put("quantity", "1");
         body.put("total_amount", parameters.get("totalAmount"));
