@@ -78,7 +78,7 @@ public class CashService {
     }
 
     public CashResponseDto CashRefund(UserDetailsImpl userDetails, CashRequestDto request) {
-        CashLog existingCashLog = cashLogRepository.findByUserIdAndTypeAndPrice(
+        CashLog existingCashLog = cashLogRepository.findFirstByUserIdAndTypeAndPriceOrderByCreateAtDesc(
                         userDetails.getUser().getId(),
                         CashType.CHARGE, // 환불은 CHARGE 타입에서만 가능
                         request.getAmount()) // 요청 금액과 일치하는 로그 조회
