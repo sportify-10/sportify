@@ -3,6 +3,7 @@ package com.sparta.sportify.dto.kakaoPay.request;
 import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

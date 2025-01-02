@@ -28,6 +28,7 @@ public class KakaoPayService {
 
     public KakaoPayReadyResponseDto preparePayment(UserDetailsImpl authUser, CashRequestDto cashRequestDto) {
         Map<String, String> parameters = Map.of(
+                "partner_user_id", String.valueOf(authUser.getUser().getId()),
                 "totalAmount", String.valueOf(cashRequestDto.getAmount())
         );
 

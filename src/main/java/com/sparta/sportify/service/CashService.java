@@ -57,6 +57,7 @@ public class CashService {
                         request.getAmount()) // 요청 금액과 일치하는 로그 조회
                 .orElseThrow(() -> new CustomApiException(ErrorCode.CHARGE_LOG_NOT_FOUND));
         String tid = existingCashLog.getTid();
+        request.setUserId(String.valueOf(userDetails.getUser().getId()));
         kakaoPayService.approvePayment(request, tid);
 
         CashLog updatedCashLog = CashLog.builder()
