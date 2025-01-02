@@ -1,13 +1,12 @@
 package com.sparta.sportify.security;
 
 import com.sparta.sportify.entity.user.User;
-import com.sparta.sportify.exception.CustomApiException;
-import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.jwt.JwtUtil;
 import com.sparta.sportify.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -28,9 +27,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         CustomOAuth2User customUser = (CustomOAuth2User) authentication.getPrincipal();
 
         // 사용자 등록 또는 업데이트 로직 (userRepository 사용)
-        User user = userRepository.findByOauthId(customUser.getProviderId()).orElseThrow(
-                () -> new CustomApiException(ErrorCode.MISSING_OAUTH2_USER_INFO)
-        );
+        User user = userRepository.findByOauthId(customUser.getProviderId())
+                .orElseThrow(() -> new IllegalArgumentException("OAuth2 사용자 정보가 없습니다: " + customUser.getProviderId()));
 
         // JWT 생성
         String jwt = jwtUtil.generateToken(user.getEmail(), user.getRole());

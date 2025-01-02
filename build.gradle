@@ -31,6 +31,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'org.apache.commons:commons-text:1.10.0' //JaroWinklerSimilarity(두 글자 유사도 계산)
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-text:1.10.0' //JaroWinklerSimilarity(두 글자 유사도 계산)
     implementation 'org.springframework.boot:spring-boot-starter-websocket' // 웹소켓
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
@@ -47,9 +50,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.apache.kafka:kafka-streams'
 //    implementation 'org.springframework.cloud:spring-cloud-starter-zookeeper-discovery'
+    implementation 'org.apache.kafka:kafka-clients'
+    implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.apache.kafka:kafka-streams:3.4.0'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -89,6 +96,9 @@ dependencies {
 
     //Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
+
 
     implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 

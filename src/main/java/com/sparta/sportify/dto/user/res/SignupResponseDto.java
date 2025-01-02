@@ -44,19 +44,4 @@ public class SignupResponseDto {
         this.levelPoints = user.getLevelPoints();
         this.active = user.isActive();
     }
-
-//    public SignupResponseDto(User user) {
-//        if (user == null) {
-//            throw new IllegalArgumentException("User cannot be null");
-//        }
-//        this.email = user.getEmail();
-//        this.name = user.getName();
-//        this.role = user.getRole();
-//        this.region = user.getRegion();
-//        this.age = user.getAge();
-//        this.gender = user.getGender();
-//        this.levelPoints = user.getLevelPoints();
-//        this.active = user.isActive();
-//    }
-
 }

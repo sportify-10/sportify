@@ -51,6 +51,7 @@ public class TeamArticle {
 	@ManyToOne
 	@JoinColumn(name = "team_id", nullable = false)
 	private Team team;
+	private String userName;
 
 	// @OneToMany(mappedBy = "article", cascade = CascadeType.REMOVE)
 	// private List<Comment> comments = new ArrayList<>();

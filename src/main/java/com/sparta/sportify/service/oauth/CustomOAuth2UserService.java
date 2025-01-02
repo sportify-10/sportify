@@ -2,8 +2,6 @@ package com.sparta.sportify.service.oauth;
 
 import com.sparta.sportify.entity.user.User;
 import com.sparta.sportify.entity.user.UserRole;
-import com.sparta.sportify.exception.CustomApiException;
-import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.repository.UserRepository;
 import com.sparta.sportify.security.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +44,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String nameAttributeKey = getNameAttributeKey(provider);
 
 
+
+
         CustomOAuth2User cuser = new CustomOAuth2User(
                 oAuth2User.getAuthorities(),
                 attributes,
@@ -60,10 +60,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return cuser;
     }
 
-    private Map<String, Object> oAuthGetAttributes(Map<String, Object> attributes, String provider) {
-        if (provider.toLowerCase().equals("naver")) {
+    private Map<String, Object> oAuthGetAttributes(Map<String, Object> attributes,String provider) {
+        if(provider.toLowerCase().equals("naver")){
             return (Map<String, Object>) attributes.get("response");
-        } else {
+        }else{
             return attributes;
         }
     }
@@ -77,7 +77,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "google":
                 return "sub"; // 구글의 기본 키
             default:
-                throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
+                throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
         }
     }
 
@@ -90,7 +90,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else if ("google".equals(provider)) {
             return (String) attributes.get("sub");
         }
-        throw new CustomApiException(ErrorCode.UNSUPPORTED_OAUTH_PROVIDER);
+        throw new IllegalArgumentException("지원하지 않는 OAuth 공급자입니다.");
     }
 
 
@@ -113,7 +113,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (properties != null && properties.containsKey("nickname")) {
                 return (String) properties.get("nickname");
             }
-        } else if ("naver".equals(registrationId)) {
+        }else if ("naver".equals(registrationId)) {
             return String.valueOf(attributes.get("nickname"));
         }
         return "anonymous"; // 닉네임 기본값
@@ -134,24 +134,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if (existingUser.isEmpty()) {
             // 새로운 사용자 등록
-            User user = User.builder()
-                    .email(email)
-                    .oauthId(oauthId)
-                    .oauthProvider(registrationId.toLowerCase())
-                    .name(nickname)
-                    .password(UUID.randomUUID().toString())
-                    .role(UserRole.USER)
-                    .build();
+            User user = new User();
+            user.setEmail(email);
+            user.setOauthId(oauthId);
+            user.setOauthProvider(registrationId.toLowerCase()); // OAuth 제공자 저장
+            user.setName(nickname); // 닉네임 저장
+            user.setPassword(UUID.randomUUID().toString()); // 임시 비밀번호
+            user.setRole(UserRole.USER);
 
             return userRepository.save(user);
         } else {
             // 기존 사용자 업데이트 (필요 시 닉네임 변경 가능)
             User user = existingUser.get();
-            user.updateNickname(nickname); // 닉네임 업데이트
+            user.setName(nickname); // 닉네임 업데이트
             return userRepository.save(user);
         }
     }
-
     public String extractUserAttributes(OAuth2User oAuth2User) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         logger.info("OAuth2User attributes: {}", attributes);
@@ -164,7 +162,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return kakaoAccount.get("email").toString(); // 이메일 반환
     }
-
     public String extractNaverUserAttributes(OAuth2User oAuth2User) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         logger.info("OAuth2User attributes: {}", attributes);
@@ -179,7 +176,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return response.get("email").toString(); // 이메일 반환
     }
-
     public String extractGoogleUserAttributes(OAuth2User oAuth2User) {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         logger.info("OAuth2User attributes: {}", attributes);
