@@ -28,7 +28,7 @@ public class ReservationController {
             @RequestBody ReservationRequestDto requestDto,
             @AuthenticationPrincipal UserDetailsImpl authUser
     ) {
-        if (requestDto.getTeamMemberIdList().isEmpty()) {
+        if (requestDto.getTeamMemberIdList() == null || requestDto.getTeamMemberIdList().isEmpty()) {
             return new ResponseEntity<>(
                     ApiResult.success(
                             "개인예약 성공",
