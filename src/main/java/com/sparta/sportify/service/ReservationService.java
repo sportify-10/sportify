@@ -132,7 +132,7 @@ public class ReservationService {
         return new ReservationResponseDto(reservation.getId());
     }
 
-    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate()).concat('/').concat(#requestDto.getStadiumTimeId())")
+    @RedissonLock(key = "'reservation-'.concat(#requestDto.getReservationDate().toString()).concat('/').concat(#requestDto.getStadiumTimeId().toString())")
     public ReservationResponseDto reservationGroup(ReservationRequestDto requestDto, UserDetailsImpl authUser) {
         StadiumTime stadiumTime = getStadiumTime(requestDto);
 
