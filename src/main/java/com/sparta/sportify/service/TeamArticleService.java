@@ -57,10 +57,9 @@ public class TeamArticleService {
 
 		teamMemberRepository.findByUserIdAndTeamId(userDetails.getUser().getId(), teamId)
 			.filter(member -> member.getStatus() == TeamMember.Status.APPROVED)
-			.filter(member -> member.getDeletedAt() == null)
 			.orElseThrow(() -> new CustomApiException(ErrorCode.ONLY_TEAM_MEMBER_CAN_VIEW));
 
-		Page<TeamArticle> teamArticle = teamArticleRepository.findAllByTeamId(teamId, pageable);
+		Page<TeamArticle> teamArticle = teamArticleRepository.findAllByTeamIdAndDeletedAtIsNull(teamId, pageable);
 		if (teamArticle.getContent().isEmpty()) {
 			throw new CustomApiException(ErrorCode.POST_NOT_FOUND);
 		}

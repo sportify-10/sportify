@@ -146,7 +146,7 @@ class TeamArticleServiceTest {
 		int size = 10;
 
 		Page<TeamArticle> mockPage = new PageImpl<>(List.of(teamArticle));
-		when(teamArticleRepository.findAllByTeamId(team.getId(),
+		when(teamArticleRepository.findAllByTeamIdAndDeletedAtIsNull(team.getId(),
 			PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createAt"))))
 			.thenReturn(mockPage);
 
@@ -169,7 +169,7 @@ class TeamArticleServiceTest {
 		int size = 10;
 
 		Page<TeamArticle> emptyPage = new PageImpl<>(new ArrayList<>());
-		when(teamArticleRepository.findAllByTeamId(teamId,
+		when(teamArticleRepository.findAllByTeamIdAndDeletedAtIsNull(teamId,
 			PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createAt"))))
 			.thenReturn(emptyPage);
 
