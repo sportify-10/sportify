@@ -1,5 +1,6 @@
 package com.sparta.sportify.service;
 
+import com.sparta.sportify.dto.cash.request.CashRefundRequestDto;
 import com.sparta.sportify.dto.cash.request.CashRequestDto;
 import com.sparta.sportify.dto.cash.response.CashResponseDto;
 import com.sparta.sportify.dto.kakaoPay.request.KakaoPayApproveRequestDto;
@@ -53,7 +54,7 @@ public class KakaoPayService {
         kakaoPayApi.sendKakaoPayApproveRequest(secretKeyDev, parameters);
     }
 
-    public CashResponseDto refundPayment(CashRequestDto requestDto, String tid) {
+    public CashResponseDto refundPayment(CashRefundRequestDto requestDto, String tid) {
         Map<String, String> parameters = Map.of(
                 "tid", tid,
                 "cancel_amount", String.valueOf(requestDto.getAmount())

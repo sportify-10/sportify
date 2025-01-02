@@ -1,5 +1,6 @@
 package com.sparta.sportify.service;
 
+import com.sparta.sportify.dto.cash.request.CashRefundRequestDto;
 import com.sparta.sportify.dto.cash.request.CashRequestDto;
 import com.sparta.sportify.dto.cash.response.CashLogsResponseDto;
 import com.sparta.sportify.dto.cash.response.CashResponseDto;
@@ -77,11 +78,11 @@ public class CashService {
         return new CashResponseDto(updatedCashLog);
     }
 
-    public CashResponseDto CashRefund(UserDetailsImpl userDetails, CashRequestDto request) {
-        CashLog existingCashLog = cashLogRepository.findFirstByUserIdAndTypeAndPriceOrderByCreateAtDesc(
+    public CashResponseDto CashRefund(UserDetailsImpl userDetails, CashRefundRequestDto request) {
+        CashLog existingCashLog = cashLogRepository.findByUserIdAndTypeAndCashLogId(
                         userDetails.getUser().getId(),
                         CashType.CHARGE, // 환불은 CHARGE 타입에서만 가능
-                        request.getAmount()) // 요청 금액과 일치하는 로그 조회
+                        request.getCashLogId()) // 요청 금액과 일치하는 로그 조회
                 .orElseThrow(() -> new CustomApiException(ErrorCode.REFUND_LOG_NOT_FOUND));
         String tid = existingCashLog.getTid();
         kakaoPayService.refundPayment(request, tid);
