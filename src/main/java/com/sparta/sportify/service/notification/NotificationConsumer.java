@@ -100,7 +100,7 @@ public class NotificationConsumer {
     private LocalDateTime extractScheduledTimeFromMessage(String messageText) {
         try {
             // 메시지에서 경기 시간이 "2024-12-31T14:00"과 같은 형식으로 포함된다고 가정
-            int startIdx = messageText.indexOf("2024");  // 경기 시작 시간을 포함하는 부분의 시작
+            int startIdx = messageText.indexOf("2025");  // 경기 시작 시간을 포함하는 부분의 시작
             int endIdx = messageText.indexOf("에"); // "에" 뒤로 끝나는 시점
             if (startIdx == -1 || endIdx == -1) {
                 log.error("Invalid format for scheduled time in message: {}", messageText);

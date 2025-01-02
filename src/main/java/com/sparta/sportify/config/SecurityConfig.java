@@ -26,7 +26,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler successHandler;
 
 
-    public SecurityConfig(@Qualifier("customPasswordEncoder") CustomPasswordEncoder passwordEncoder, CustomPasswordEncoder customPasswordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2LoginSuccessHandler successHandler) {
+    public SecurityConfig(@Qualifier("customPasswordEncoder") CustomPasswordEncoder customPasswordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, CustomOAuth2UserService customOAuth2UserService, OAuth2LoginSuccessHandler successHandler) {
         this.customPasswordEncoder = customPasswordEncoder;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customOAuth2UserService = customOAuth2UserService;
@@ -46,8 +46,9 @@ public class SecurityConfig {
                                 "/login",
                                 "/api/matches/notifications",
                                 "/resources/template/index.html",
-                                "/sse/75",
-                                "/send/75",
+                                "/sse/44",
+                                "/send/44",
+                                "/sendToAll",
                                 "/v1/sse/subscribe",
                                 "/v1/sse/broadcast")
                             .permitAll() // 회원가입/로그인은 인증 불필요
