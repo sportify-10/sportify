@@ -10,6 +10,10 @@ public class CashLogReservationMappingId implements Serializable {
     private Long cashTransactionId;
     private Long reservationId;
 
+    // 기본 생성자 추가
+    public CashLogReservationMappingId() {
+    }
+
     // Getter & Setter
     public Long getCashTransactionId() {
         return cashTransactionId;
