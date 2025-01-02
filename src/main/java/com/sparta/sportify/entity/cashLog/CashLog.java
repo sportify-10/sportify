@@ -43,4 +43,8 @@ public class CashLog {
     @ManyToOne
     @JoinColumn(name = "coupon_id", nullable = true)
     private Coupon coupon;
+
+    public void refund() {
+        this.type = CashType.REFUND;
+    }
 }

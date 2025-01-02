@@ -231,6 +231,17 @@ public class ReservationService {
 
         matchRepository.save(match);
 
+        CashLogReservationMapping cashLogReservationMapping = cashLogReservationMappingRepository.findCashLogReservationMappingById(reservation.getId());
+
+        CashLog cashlog = cashLogReservationMapping.getCashLog();
+
+        cashlog.refund();
+        cashLogRepository.save(cashlog);
+
+        authUser.getUser().addCash(reservation.getTotalAmount());
+        userRepository.save(authUser.getUser());
+
+
         return new ReservationResponseDto(reservation.getId());
     }
 }

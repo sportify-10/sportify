@@ -4,12 +4,14 @@ import com.sparta.sportify.entity.reservation.Reservation;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
 @Table(name = "cash_logs_reservation_mapping")
 public class CashLogReservationMapping {
     @EmbeddedId
