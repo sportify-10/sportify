@@ -98,11 +98,6 @@
       <td>/api/users/teams</td>
     </tr>
     <tr>
-      <td>캐시 충전</td>
-      <td>POST</td>
-      <td>/api/users/{userId}/cash/charge</td>
-    </tr>
-    <tr>
       <td>캐시 내역 조회</td>
       <td>GET</td>
       <td>/api/users/{userId}/cash/transaction</td>
