@@ -45,7 +45,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 		teamSessions.putIfAbsent(teamId, new ArrayList<>());
 		teamSessions.get(teamId).add(session);
 
-		UserDetailsImpl userDetails = (UserDetailsImpl) session.getAttributes().get("user");
+		UserDetailsImpl userDetails = (UserDetailsImpl)session.getAttributes().get("user");
 
 		// 입장 메시지
 		String joinMessage = userDetails.getUser().getName() + "이(가) 입장했습니다.";
@@ -64,14 +64,15 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 		teamRepository.findById(teamId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 팀이 존재하지 않습니다."));
 
-		String containsProfanity =  badWordFilter.containsSimilarBadWord(message.getPayload());
+		String containsProfanity = badWordFilter.containsSimilarBadWord(message.getPayload());
 
-		sendMessageToTeamSessions(teamId, containsProfanity, session);
+		sendMessageToTeamSessions(teamId, userDetails.getUser().getId() + ":" + containsProfanity, session);
 
 		//조회 용 캐시
 		RList<TeamChatResponseDto> messageList = redissonClient.getList("team:" + teamId + ":messages");
 		//DB 저장용 캐시
-		RList<TeamChatResponseDto> messageListDatabase = redissonClient.getList("teamChats::team:" + teamId + ":messages");
+		RList<TeamChatResponseDto> messageListDatabase = redissonClient.getList(
+			"teamChats::team:" + teamId + ":messages");
 		TeamChatResponseDto chatData = new TeamChatResponseDto(
 			userDetails.getUser().getId(),
 			teamId,
@@ -92,7 +93,7 @@ public class TeamChatWebSocketHandler extends TextWebSocketHandler {
 
 		System.out.println("WebSocket 연결 종료: " + session.getId());
 
-		UserDetailsImpl userDetails = (UserDetailsImpl) session.getAttributes().get("user");
+		UserDetailsImpl userDetails = (UserDetailsImpl)session.getAttributes().get("user");
 
 		// 퇴장 메시지
 		String leaveMessage = userDetails.getUser().getName() + "이(가) 퇴장했습니다.";
