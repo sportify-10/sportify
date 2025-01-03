@@ -46,8 +46,8 @@ public class SecurityConfig {
                                 "/login",
                                 "/api/matches/notifications",
                                 "/resources/template/index.html",
-                                "/sse/74",
-                                "/send/74",
+                                "/sse/73",
+                                "/send/73",
                                 "/sendToAll",
                                 "/v1/sse/subscribe",
                                 "/v1/sse/broadcast")
