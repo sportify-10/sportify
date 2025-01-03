@@ -200,8 +200,8 @@ class CashServiceTest {
                 .tid("tid123")
                 .build();
 
-        when(cashLogRepository.findByUserIdAndTypeAndPrice(
-                eq(user.getId()), eq(CashType.CHARGE), eq(requestDto.getAmount())))
+        when(cashLogRepository.findFirstByUserIdAndTypeAndCashLogIdOrderByCreatedAtDesc(
+                eq(user.getId()), eq(CashType.CHARGE), eq(requestDto.getCashLogId())))
                 .thenReturn(java.util.Optional.of(chargeCashLog));
 
         Map<String, String> parameters = Map.of(
@@ -234,8 +234,8 @@ class CashServiceTest {
         assertEquals(CashType.REFUND, response.getType());
         assertEquals(1000L, response.getBalance()); // 10000 - 9000 = 1000
 
-        verify(cashLogRepository, times(1)).findByUserIdAndTypeAndPrice(
-                eq(user.getId()), eq(CashType.CHARGE), eq(requestDto.getAmount()));
+        verify(cashLogRepository, times(1)).findFirstByUserIdAndTypeAndCashLogIdOrderByCreatedAtDesc(
+                eq(user.getId()), eq(CashType.CHARGE), eq(requestDto.getCashLogId()));
 
         verify(kakaoPayApi, times(1)).sendKakaoPayCancelRequest(eq(secretKey), eq(parameters));
 
