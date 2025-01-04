@@ -18,16 +18,17 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface MatchRepository extends JpaRepository<Match, Long> {
 
-	Optional<Match> findByIdAndDateAndTime(Long id, LocalDate date, Integer time);
-	Optional<Match> findByStadiumTimeIdAndDateAndTime(Long id, LocalDate date, Integer time);
+    Optional<Match> findByIdAndDateAndTime(Long id, LocalDate date, Integer time);
+
+    Optional<Match> findByStadiumTimeIdAndDateAndTime(Long id, LocalDate date, Integer time);
 
 
-	// 특정 시간 범위에 시작하는 경기 찾기 (time과 date를 기반으로 startTime 계산)
-	@Query("SELECT m FROM Match m WHERE " +
-			"FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', m.time * 3600)) BETWEEN :start AND :end " +
-			"OR FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', (m.time + 2) * 3600)) BETWEEN :start AND :end")
-	List<Match> findMatchesByStartTimeBetween(@Param("start") LocalDateTime start,
-											  @Param("end") LocalDateTime end);
+    // 특정 시간 범위에 시작하는 경기 찾기 (time과 date를 기반으로 startTime 계산)
+    @Query("SELECT m FROM Match m WHERE " +
+            "FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', m.time * 3600)) BETWEEN :start AND :end " +
+            "OR FUNCTION('TIMESTAMP', m.date, FUNCTION('SEC_TO_TIME', (m.time + 2) * 3600)) BETWEEN :start AND :end")
+    List<Match> findMatchesByStartTimeBetween(@Param("start") LocalDateTime start,
+                                              @Param("end") LocalDateTime end);
 
 
 
@@ -40,5 +41,5 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 			"WHERE s.id = :stadiumId " +
 			"GROUP BY m.id")
 	Page<Object[]> findMatchesWithTotalAmountByStadiumId(Long stadiumId, ReservationStatus status, Pageable pageable);
-
 }
+
