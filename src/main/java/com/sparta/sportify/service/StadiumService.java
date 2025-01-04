@@ -42,12 +42,12 @@ public class StadiumService {
 		}
 
 
-        if (stadiumName.isPresent()) {
-            throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
-        }
+		if (stadiumName.isPresent()) {
+			throw new IllegalArgumentException("구장 이름이 이미 존재합니다");
+		}
 		Stadium stadium = Stadium.builder()
 
-                .stadiumName(stadiumCreateRequestDto.getStadiumName())
+			.stadiumName(stadiumCreateRequestDto.getStadiumName())
 			.location(stadiumCreateRequestDto.getLocation())
 			.aTeamCount(stadiumCreateRequestDto.getATeamCount())
 			.bTeamCount(stadiumCreateRequestDto.getBTeamCount())
@@ -56,7 +56,7 @@ public class StadiumService {
 			.user(userDetails.getUser())
 			.build();
 
-        return new StadiumResponseDto(stadiumRepository.save(stadium));
+		return new StadiumResponseDto(stadiumRepository.save(stadium));
 	}
 
 	public Page<StadiumResponseDto> getStadiums(UserDetailsImpl userDetails, int page, int size) {

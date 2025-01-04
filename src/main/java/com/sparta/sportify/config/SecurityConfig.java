@@ -48,8 +48,6 @@ public class SecurityConfig {
                                 "/resources/template/index.html",
                                 "/sse/44",
                                 "/send/44",
-                                "/sse/74",
-                                "/send/74",
                                 "/sendToAll",
                                 "/v1/sse/subscribe",
                                 "/v1/sse/broadcast")
