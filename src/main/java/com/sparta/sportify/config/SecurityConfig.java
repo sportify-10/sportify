@@ -1,9 +1,10 @@
 package com.sparta.sportify.config;
 
+import com.sparta.sportify.exception.CustomApiException;
+import com.sparta.sportify.exception.ErrorCode;
 import com.sparta.sportify.jwt.JwtAuthenticationFilter;
 import com.sparta.sportify.security.OAuth2LoginSuccessHandler;
 import com.sparta.sportify.service.oauth.CustomOAuth2UserService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,9 +52,9 @@ public class SecurityConfig {
                                 "/sendToAll",
                                 "/v1/sse/subscribe",
                                 "/v1/sse/broadcast")
-                            .permitAll() // 회원가입/로그인은 인증 불필요
+                        .permitAll() // 회원가입/로그인은 인증 불필요
                         .anyRequest()
-                            .authenticated() // 나머지는 인증 필요
+                        .authenticated() // 나머지는 인증 필요
 
                 )
 
@@ -64,7 +65,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                            throw new CustomApiException(ErrorCode.UNAUTHORIZED);
                         })
                 );
         // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 추가
