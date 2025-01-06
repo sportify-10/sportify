@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
-
+    UNAUTHORIZED(401, "인증되지않은 사용자입니다."),
     USER_NOT_FOUND(404, "존재하지 않는 유저입니다"),
     COUPON_NOT_FOUND(404, "존재하지 않는 쿠폰입니다"),
     COUPON_ALREADY_EXISTS(409, "쿠폰이 이미 존재합니다"),
